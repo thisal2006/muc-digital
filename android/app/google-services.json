@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "492466770104",
+    "project_id": "muc-digital-4390a",
+    "storage_bucket": "muc-digital-4390a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:492466770104:android:7887933148f4c7c274a44d",
+        "android_client_info": {
+          "package_name": "com.example.muc_digital"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCXcu8stPnoJbMvLlD3eogU_HdlSU63r4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
