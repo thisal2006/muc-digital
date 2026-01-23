@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/onboarding');
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/onboarding'); // Or '/user_agreement' if no onboarding
-    });
-
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -16,35 +29,14 @@ class SplashScreen extends StatelessWidget {
             colors: [Colors.green[700]!, Colors.orange[700]!],
           ),
         ),
-        child: Center(
+        child: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.eco, size: 60, color: Colors.green[700]),
-              ),
+              Icon(Icons.eco, size: 100, color: Colors.white),
               SizedBox(height: 20),
-              Text(
-                'MUC Digital',
-                style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                'Maharagama Urban Council',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-              SizedBox(height: 100),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (index) => Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4),
-                  child: CircleAvatar(radius: 4, backgroundColor: Colors.white.withOpacity(0.5)),
-                )),
-              ),
+              Text('MUC Digital', style: TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.bold)),
+              Text('Maharagama Urban Council', style: TextStyle(fontSize: 18, color: Colors.white)),
             ],
           ),
         ),
