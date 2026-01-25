@@ -23,17 +23,11 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for iOS.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macOS.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux.',
@@ -46,19 +40,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_API_KEY_HERE',
-    appId: 'YOUR_APP_ID_HERE',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'muc-digital-2024',
-    authDomain: 'muc-digital-2024.firebaseapp.com',
-    storageBucket: 'muc-digital-2024.appspot.com',
+    apiKey: 'AIzaSyAe4oeEmqgUTBRow6oGQg-lL86WGPxIM08',
+    appId: '1:492466770104:web:d4a6d04761ef2fef74a44d',
+    messagingSenderId: '492466770104',
+    projectId: 'muc-digital-4390a',
+    authDomain: 'muc-digital-4390a.firebaseapp.com',
+    storageBucket: 'muc-digital-4390a.firebasestorage.app',
+    measurementId: 'G-PBL12DDNWR',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY_HERE',
-    appId: 'YOUR_ANDROID_APP_ID_HERE',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'muc-digital-2024',
-    storageBucket: 'muc-digital-2024.appspot.com',
+    apiKey: 'AIzaSyBCXcu8stPnoJbMvLlD3eogU_HdlSU63r4',
+    appId: '1:492466770104:android:7887933148f4c7c274a44d',
+    messagingSenderId: '492466770104',
+    projectId: 'muc-digital-4390a',
+    storageBucket: 'muc-digital-4390a.firebasestorage.app',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyCTqtZYIOAmpgJRtOSZaXxhD1WOBpLDyRo',
+    appId: '1:492466770104:ios:e7f436de8ef483f474a44d',
+    messagingSenderId: '492466770104',
+    projectId: 'muc-digital-4390a',
+    storageBucket: 'muc-digital-4390a.firebasestorage.app',
+    iosBundleId: 'com.example.mucDigital',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyCTqtZYIOAmpgJRtOSZaXxhD1WOBpLDyRo',
+    appId: '1:492466770104:ios:e7f436de8ef483f474a44d',
+    messagingSenderId: '492466770104',
+    projectId: 'muc-digital-4390a',
+    storageBucket: 'muc-digital-4390a.firebasestorage.app',
+    iosBundleId: 'com.example.mucDigital',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyAe4oeEmqgUTBRow6oGQg-lL86WGPxIM08',
+    appId: '1:492466770104:web:4705151756e36e4974a44d',
+    messagingSenderId: '492466770104',
+    projectId: 'muc-digital-4390a',
+    authDomain: 'muc-digital-4390a.firebaseapp.com',
+    storageBucket: 'muc-digital-4390a.firebasestorage.app',
+    measurementId: 'G-CWR1WK96G2',
+  );
+
 }
