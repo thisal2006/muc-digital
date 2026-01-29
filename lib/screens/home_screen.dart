@@ -2,7 +2,7 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../widgets/app_drawer.dart';
+import '../widgets/app_drawer.dart'; // Make sure this file exists
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -10,14 +10,14 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFFAFDFC),
       drawer: const AppDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black87),
+            icon: const Icon(Icons.menu_rounded, color: Color(0xFF1B5E20), size: 28),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
@@ -26,138 +26,127 @@ class HomeScreen extends StatelessWidget {
           child: Text(
             'Welcome Back!',
             style: GoogleFonts.poppins(
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: const Color(0xFF1A1A1A),
             ),
           ),
         ),
         actions: [
           FadeInRight(
-            duration: const Duration(milliseconds: 800),
-            child: Stack(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.notifications, color: Colors.black87),
-                  onPressed: () {},
-                ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Text(
-                      '3',
-                      style: TextStyle(color: Colors.white, fontSize: 10),
-                    ),
-                  ),
-                ),
-              ],
+            duration: const Duration(milliseconds: 700),
+            child: IconButton(
+              icon: Badge(
+                label: const Text('3', style: TextStyle(fontSize: 10)),
+                backgroundColor: Colors.red,
+                child: const Icon(Icons.notifications_rounded, color: Color(0xFF1B5E20)),
+              ),
+              onPressed: () {},
             ),
           ),
         ],
       ),
+
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            // Search bar
+            // Search bar – nicer, with shadow
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
               child: FadeInUp(
                 duration: const Duration(milliseconds: 700),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search services...',
-                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: const BorderSide(color: Colors.grey, width: 0.5),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search services...',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1B5E20)),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
                 ),
               ),
             ),
 
-            // Stats row – bigger, animated
+            // Stats – more vibrant, icons inside
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   FadeInLeft(
                     duration: const Duration(milliseconds: 800),
-                    child: _StatCircle('3', 'Bookings', Colors.green[700]!),
+                    child: _StatCard('3', 'Bookings', Icons.book_online, const Color(0xFF1B5E20)),
                   ),
                   FadeInUp(
-                    duration: const Duration(milliseconds: 900),
-                    child: _StatCircle('1', 'Pending', Colors.orange[700]!),
+                    duration: const Duration(milliseconds: 850),
+                    child: _StatCard('1', 'Pending', Icons.hourglass_empty, const Color(0xFFF57C00)),
                   ),
                   FadeInRight(
-                    duration: const Duration(milliseconds: 1000),
-                    child: _StatCircle('2', 'Complaints', Colors.red[700]!),
+                    duration: const Duration(milliseconds: 900),
+                    child: _StatCard('2', 'Complaints', Icons.report_problem, const Color(0xFFD32F2F)),
                   ),
                 ],
               ),
             ),
 
-            // Service cards grid – with scale animation on tap
+            // Service cards – colorful, elevated, subtle scale on tap
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
+                childAspectRatio: 1.05,
                 children: const [
                   ServiceCard(
-                    icon: Icons.local_shipping,
+                    icon: Icons.local_shipping_rounded,
                     title: 'Garbage Tracker',
                     subtitle: 'Track trucks & schedule pickup',
-                    color: Color(0xFF2E7D32),
+                    color: Color(0xFF1B5E20),
                     route: '/garbage_tracker',
                   ),
                   ServiceCard(
-                    icon: Icons.apartment,
+                    icon: Icons.apartment_rounded,
                     title: 'Property Booking',
                     subtitle: 'Book halls & grounds',
-                    color: Color(0xFFFF7043),
+                    color: Color(0xFFF57C00),
                   ),
                   ServiceCard(
-                    icon: Icons.directions_car,
+                    icon: Icons.directions_car_rounded,
                     title: 'Vehicle Booking',
                     subtitle: 'Reserve municipal vehicles',
                     color: Color(0xFF1976D2),
                   ),
                   ServiceCard(
-                    icon: Icons.location_on,
+                    icon: Icons.location_on_rounded,
                     title: 'Cemetery Booking',
                     subtitle: 'Cemetery & crematorium',
                     color: Color(0xFF7B1FA2),
                   ),
                   ServiceCard(
-                    icon: Icons.emergency,
+                    icon: Icons.emergency_rounded,
                     title: 'Emergency',
                     subtitle: 'Quick contact services',
                     color: Color(0xFFD32F2F),
                   ),
                   ServiceCard(
-                    icon: Icons.report,
+                    icon: Icons.report_rounded,
                     title: 'Complaints',
                     subtitle: 'File & track complaints',
                     color: Color(0xFF795548),
@@ -165,65 +154,66 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
+
+            const SizedBox(height: 24),
           ],
         ),
       ),
+
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF2E7D32),
-        unselectedItemColor: Colors.grey[600],
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
         backgroundColor: Colors.white,
-        elevation: 12,
+        elevation: 16,
+        selectedItemColor: const Color(0xFF1B5E20),
+        unselectedItemColor: Colors.grey[600],
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Bookings'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Updates'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_month_rounded), label: 'Bookings'),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications_rounded), label: 'Updates'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_rounded), label: 'Chat'),
         ],
       ),
     );
   }
 
-  Widget _StatCircle(String number, String label, Color color) {
-    return Column(
-      children: [
-        Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [color, color.withOpacity(0.7)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.4),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Text(
-              number,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+  Widget _StatCard(String number, String label, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withOpacity(0.85)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-        ),
-      ],
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 28),
+          const SizedBox(height: 8),
+          Text(
+            number,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -246,38 +236,56 @@ class ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          if (route != null) Navigator.pushNamed(context, route!);
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min, // ← helps with height
-            children: [
-              Icon(icon, size: 40, color: color),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Flexible( // ← This is the key fix
-                child: Text(
-                  subtitle,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis, // cuts with ... if too long
-                  maxLines: 2, // allow 2 lines
+    return FadeInUp(
+      duration: const Duration(milliseconds: 800),
+      child: Material(
+        elevation: 5,
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          splashColor: color.withOpacity(0.15),
+          highlightColor: color.withOpacity(0.08),
+          onTap: () {
+            if (route != null) Navigator.pushNamed(context, route!);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, size: 48, color: color),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1A1A1A),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ),
       ),
