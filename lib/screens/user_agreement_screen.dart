@@ -30,11 +30,10 @@ class UserAgreementScreen extends StatelessWidget {
               children: [
                 const Spacer(flex: 1),
 
-                // White card with text
+                // White card with scrollable content
                 Expanded(
                   flex: 5,
                   child: Container(
-                    padding: const EdgeInsets.all(28),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(24),
@@ -47,6 +46,7 @@ class UserAgreementScreen extends StatelessWidget {
                       ],
                     ),
                     child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(28),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -101,18 +101,18 @@ class UserAgreementScreen extends StatelessWidget {
 
                 // I Agree button
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
                   child: SizedBox(
                     width: double.infinity,
+                    height: 56,
                     child: ElevatedButton(
                       onPressed: () {
-                        // This line makes the button work
-                        Navigator.pushReplacementNamed(context, '/home'); // or '/phone_login' if you have it
+                        // Fixed navigation
+                        Navigator.pushReplacementNamed(context, '/home'); // or '/phone_login'
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2E7D32),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                         elevation: 4,
                       ),
