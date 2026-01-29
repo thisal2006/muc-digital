@@ -2,10 +2,78 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../widgets/app_drawer.dart'; // Make sure this file exists
+import '../widgets/app_drawer.dart'; // adjust path if needed
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  final List<Map<String, dynamic>> _services = [
+    {
+      'icon': Icons.local_shipping_rounded,
+      'title': 'Garbage Tracker',
+      'subtitle': 'Track trucks & schedule pickup',
+      'color': const Color(0xFF1B5E20),
+      'route': '/garbage_tracker',
+    },
+    {
+      'icon': Icons.apartment_rounded,
+      'title': 'Property Booking',
+      'subtitle': 'Book halls & grounds',
+      'color': const Color(0xFFF57C00),
+      'route': null,
+    },
+    {
+      'icon': Icons.directions_car_rounded,
+      'title': 'Vehicle Booking',
+      'subtitle': 'Reserve municipal vehicles',
+      'color': const Color(0xFF1976D2),
+      'route': null,
+    },
+    {
+      'icon': Icons.location_on_rounded,
+      'title': 'Cemetery Booking',
+      'subtitle': 'Cemetery & crematorium',
+      'color': const Color(0xFF7B1FA2),
+      'route': null,
+    },
+    {
+      'icon': Icons.emergency_rounded,
+      'title': 'Emergency',
+      'subtitle': 'Quick contact services',
+      'color': const Color(0xFFD32F2F),
+      'route': '/emergency',
+    },
+    {
+      'icon': Icons.report_rounded,
+      'title': 'Complaints',
+      'subtitle': 'File & track complaints',
+      'color': const Color(0xFF795548),
+      'route': null,
+    },
+  ];
+
+  List<Map<String, dynamic>> get _filteredServices {
+    if (_searchQuery.isEmpty) return _services;
+    final query = _searchQuery.toLowerCase();
+    return _services.where((service) {
+      return service['title'].toLowerCase().contains(query) ||
+          service['subtitle'].toLowerCase().contains(query);
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,37 +119,48 @@ class HomeScreen extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            // Search bar – nicer, with shadow
+            // Search bar with clear button
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
               child: FadeInUp(
                 duration: const Duration(milliseconds: 700),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search services...',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1B5E20)),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                  decoration: InputDecoration(
+                    hintText: 'Search services...',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1B5E20)),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.grey),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    )
+                        : null,
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: BorderSide.none,
                     ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: const BorderSide(color: Colors.grey, width: 0.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 2),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
               ),
             ),
 
-            // Stats – more vibrant, icons inside
+            // Stats row
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -103,55 +182,29 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            // Service cards – colorful, elevated, subtle scale on tap
+            // Filtered service cards
             Padding(
               padding: const EdgeInsets.all(16),
-              child: GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
-                childAspectRatio: 1.05,
-                children: const [
-                  ServiceCard(
-                    icon: Icons.local_shipping_rounded,
-                    title: 'Garbage Tracker',
-                    subtitle: 'Track trucks & schedule pickup',
-                    color: Color(0xFF1B5E20),
-                    route: '/garbage_tracker',
-                  ),
-                  ServiceCard(
-                    icon: Icons.apartment_rounded,
-                    title: 'Property Booking',
-                    subtitle: 'Book halls & grounds',
-                    color: Color(0xFFF57C00),
-                  ),
-                  ServiceCard(
-                    icon: Icons.directions_car_rounded,
-                    title: 'Vehicle Booking',
-                    subtitle: 'Reserve municipal vehicles',
-                    color: Color(0xFF1976D2),
-                  ),
-                  ServiceCard(
-                    icon: Icons.location_on_rounded,
-                    title: 'Cemetery Booking',
-                    subtitle: 'Cemetery & crematorium',
-                    color: Color(0xFF7B1FA2),
-                  ),
-                  ServiceCard(
-                    icon: Icons.emergency_rounded,
-                    title: 'Emergency',
-                    subtitle: 'Quick contact services',
-                    color: Color(0xFFD32F2F),
-                  ),
-                  ServiceCard(
-                    icon: Icons.report_rounded,
-                    title: 'Complaints',
-                    subtitle: 'File & track complaints',
-                    color: Color(0xFF795548),
-                  ),
-                ],
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: GridView.count(
+                  key: ValueKey<int>(_filteredServices.length),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 20,
+                  childAspectRatio: 1.05,
+                  children: _filteredServices.map((service) {
+                    return ServiceCard(
+                      icon: service['icon'] as IconData,
+                      title: service['title'] as String,
+                      subtitle: service['subtitle'] as String,
+                      color: service['color'] as Color,
+                      route: service['route'] as String?,
+                    );
+                  }).toList(),
+                ),
               ),
             ),
 
@@ -279,7 +332,7 @@ class ServiceCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
