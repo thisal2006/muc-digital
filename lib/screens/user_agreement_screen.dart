@@ -28,11 +28,10 @@ class UserAgreementScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               children: [
-                const Spacer(flex: 1),
+                const Spacer(),
 
-                // White card with scrollable content
+                // White card with FULL scrollable content
                 Expanded(
-                  flex: 5,
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -45,7 +44,7 @@ class UserAgreementScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: SingleChildScrollView(
+                    child: SingleChildScrollView(  // ← This fixes text overflow
                       padding: const EdgeInsets.all(28),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,13 +100,12 @@ class UserAgreementScreen extends StatelessWidget {
 
                 // I Agree button
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+                  padding: const EdgeInsets.fromLTRB(32, 16, 32, 32),
                   child: SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Fixed navigation
                         Navigator.pushReplacementNamed(context, '/home'); // or '/phone_login'
                       },
                       style: ElevatedButton.styleFrom(
