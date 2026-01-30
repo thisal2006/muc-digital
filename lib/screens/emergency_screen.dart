@@ -2,7 +2,7 @@
 import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyScreen extends StatelessWidget {
-  4 EmergencyScreen({super.key});
+   EmergencyScreen({super.key});
 
   final List<Map<String, String>> contacts = [
     {'name': 'Police Emergency', 'number': '119'},
