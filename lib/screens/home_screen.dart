@@ -3,7 +3,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../widgets/app_drawer.dart';
-import 'announcements_screen.dart'; // ← make sure this file exists
+import 'announcements_screen.dart'; // Make sure this file exists
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,14 +16,16 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const _HomeDashboardContent(),          // Home tab content
-    const Center(child: Text('Bookings - Coming soon')), // Bookings tab
+    const _HomeDashboardContent(),          // Home tab
+    const Center(child: Text('Bookings page - Coming soon')), // Bookings tab
     const AnnouncementsScreen(),            // Updates tab → Announcements
-    const Center(child: Text('Chat - Coming soon')),     // Chat tab
+    const Center(child: Text('Chat page - Coming soon')),     // Chat tab
   ];
 
   void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override
@@ -169,7 +171,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
-          // Search bar
+          // Search bar with clear button
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
             child: FadeInUp(
@@ -179,7 +181,11 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4)),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
                 child: TextField(
@@ -206,7 +212,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
             ),
           ),
 
-          // Stats row
+          // Stats row – animated
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
@@ -228,7 +234,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
             ),
           ),
 
-          // Service cards
+          // Service cards grid
           Padding(
             padding: const EdgeInsets.all(16),
             child: AnimatedSwitcher(
@@ -240,7 +246,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                 crossAxisCount: 2,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
-                childAspectRatio: 1.05,
+                childAspectRatio: 1.05, // slightly taller to prevent overflow
                 children: _filteredServices.map((service) {
                   return FadeInUp(
                     duration: const Duration(milliseconds: 800),
@@ -267,17 +273,37 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color, color.withOpacity(0.85)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        gradient: LinearGradient(
+          colors: [color, color.withOpacity(0.85)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 8))],
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: Colors.white, size: 28),
           const SizedBox(height: 8),
-          Text(number, style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          Text(
+            number,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
         ],
       ),
     );
@@ -333,7 +359,11 @@ class ServiceCard extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 title,
-                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1A1A1A)),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1A1A1A),
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),
