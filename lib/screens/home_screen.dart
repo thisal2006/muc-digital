@@ -1,9 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:animate_do/animate_do.dart';
 
-import '../widgets/app_drawer.dart'; // adjust path if needed
+import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -65,8 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_searchQuery.isEmpty) return _services;
     final query = _searchQuery.toLowerCase();
     return _services.where((service) {
-      return service['title'].toLowerCase().contains(query) ||
-          service['subtitle'].toLowerCase().contains(query);
+      return service['title'].toString().toLowerCase().contains(query) ||
+          service['subtitle'].toString().toLowerCase().contains(query);
     }).toList();
   }
 
@@ -125,43 +124,43 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
               child: FadeInUp(
                 duration: const Duration(milliseconds: 700),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                  decoration: InputDecoration(
-                    hintText: 'Search services...',
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1B5E20)),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.grey),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                    )
-                        : null,
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                    decoration: InputDecoration(
+                      hintText: 'Search services...',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1B5E20)),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: const BorderSide(color: Colors.grey, width: 0.5),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 2),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
               ),
             ),
 
-            // Stats row
+            // Stats row – animated & vibrant
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -195,14 +194,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisCount: 2,
                   mainAxisSpacing: 20,
                   crossAxisSpacing: 20,
-                  childAspectRatio: 1.05,
+                  childAspectRatio: 1.0, // balanced
                   children: _filteredServices.map((service) {
-                    return ServiceCard(
-                      icon: service['icon'] as IconData,
-                      title: service['title'] as String,
-                      subtitle: service['subtitle'] as String,
-                      color: service['color'] as Color,
-                      route: service['route'] as String?,
+                    return FadeInUp(
+                      duration: const Duration(milliseconds: 800),
+                      child: ServiceCard(
+                        icon: service['icon'] as IconData,
+                        title: service['title'] as String,
+                        subtitle: service['subtitle'] as String,
+                        color: service['color'] as Color,
+                        route: service['route'] as String?,
+                      ),
                     );
                   }).toList(),
                 ),
@@ -290,56 +292,55 @@ class ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FadeInUp(
-      duration: const Duration(milliseconds: 800),
-      child: Material(
-        elevation: 5,
+    return Material(
+      elevation: 5,
+      borderRadius: BorderRadius.circular(20),
+      color: Colors.white,
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        color: Colors.white,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          splashColor: color.withOpacity(0.15),
-          highlightColor: color.withOpacity(0.08),
-          onTap: () {
-            if (route != null) Navigator.pushNamed(context, route!);
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
+        splashColor: color.withOpacity(0.15),
+        highlightColor: color.withOpacity(0.08),
+        onTap: () {
+          if (route != null) Navigator.pushNamed(context, route!);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Icon(icon, size: 48, color: color),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1A1A1A),
-                  ),
-                  textAlign: TextAlign.center,
+                child: Icon(icon, size: 48, color: color),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1A1A1A),
                 ),
-                const SizedBox(height: 6),
-                Text(
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Flexible(
+                child: Text(
                   subtitle,
                   style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
