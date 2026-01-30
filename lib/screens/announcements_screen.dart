@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart'; // ← fixes DateFormat error
 
 class AnnouncementsScreen extends StatelessWidget {
   const AnnouncementsScreen({super.key});
@@ -20,18 +20,30 @@ class AnnouncementsScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)));
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(
+              child: Text(
+                'Error loading announcements: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+              ),
+            );
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(
-              child: Text(
-                'No announcements yet',
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.notifications_off_rounded, size: 80, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No announcements yet',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ],
               ),
             );
           }
@@ -44,8 +56,9 @@ class AnnouncementsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final doc = announcements[index];
               final data = doc.data() as Map<String, dynamic>;
-              final title = data['title'] ?? 'No Title';
-              final description = data['description'] ?? '';
+
+              final title = data['title'] as String? ?? 'No Title';
+              final description = data['description'] as String? ?? '';
               final timestamp = data['timestamp'] as Timestamp?;
               final date = timestamp != null
                   ? DateFormat('MMM dd, yyyy • hh:mm a').format(timestamp.toDate())
@@ -83,6 +96,7 @@ class AnnouncementsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -102,14 +116,15 @@ class AnnouncementsScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF1B5E20),
+        foregroundColor: Colors.white,
         onPressed: () {
-          // TODO: Add new announcement (admin only) - we'll implement later
+          // TODO: Implement add announcement form (admin only)
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Add announcement - coming soon')),
+            const SnackBar(content: Text('Add announcement - coming soon (admin only)')),
           );
         },
-        backgroundColor: const Color(0xFF1B5E20),
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -135,20 +150,14 @@ class AnnouncementDetailScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              date,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
+            Text(date, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
             const SizedBox(height: 16),
-            Text(
-              description,
-              style: const TextStyle(fontSize: 16, height: 1.5),
-            ),
+            Text(description, style: const TextStyle(fontSize: 16, height: 1.6)),
           ],
         ),
       ),
