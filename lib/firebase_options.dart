@@ -39,7 +39,7 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
+  static  FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyAe4oeEmqgUTBRow6oGQg-lL86WGPxIM08',
     appId: '1:492466770104:web:d4a6d04761ef2fef74a44d',
     messagingSenderId: '492466770104',
@@ -49,7 +49,7 @@ class DefaultFirebaseOptions {
     measurementId: 'G-PBL12DDNWR',
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
+  static final FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBCXcu8stPnoJbMvLlD3eogU_HdlSU63r4',
     appId: '1:492466770104:android:7887933148f4c7c274a44d',
     messagingSenderId: '492466770104',
@@ -57,7 +57,7 @@ class DefaultFirebaseOptions {
     storageBucket: 'muc-digital-4390a.firebasestorage.app',
   );
 
-  static const FirebaseOptions macos = FirebaseOptions(
+  static final FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCTqtZYIOAmpgJRtOSZaXxhD1WOBpLDyRo',
     appId: '1:492466770104:ios:e7f436de8ef483f474a44d',
     messagingSenderId: '492466770104',
@@ -66,7 +66,7 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.mucDigital',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
+  static final FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCTqtZYIOAmpgJRtOSZaXxhD1WOBpLDyRo',
     appId: '1:492466770104:ios:e7f436de8ef483f474a44d',
     messagingSenderId: '492466770104',
@@ -75,7 +75,7 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.mucDigital',
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
+  static  FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyAe4oeEmqgUTBRow6oGQg-lL86WGPxIM08',
     appId: '1:492466770104:web:4705151756e36e4974a44d',
     messagingSenderId: '492466770104',
