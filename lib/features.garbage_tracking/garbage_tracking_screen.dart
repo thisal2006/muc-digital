@@ -21,36 +21,51 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   @override
   void initState() {
     super.initState();
-    _listenToTruckLocation();
+    //_listenToTruckLocation();
   }
 
   void _listenToTruckLocation() {
     _truckRef.onValue.listen((event) async {
-      final data = event.snapshot.value as Map?;
+      try {
 
-      if (data != null) {
+        if (!event.snapshot.exists) return;
+
+        final data = Map<String, dynamic>.from(
+            event.snapshot.value as Map);
+
         final lat = data['lat'];
         final lng = data['lng'];
 
-        if (lat != null && lng != null) {
-          setState(() {
-            _truckLocation = LatLng(lat.toDouble(), lng.toDouble());
-          });
+        if (lat == null || lng == null) return;
 
-          final controller = await _controller.future;
-          controller.animateCamera(
-            CameraUpdate.newLatLng(_truckLocation),
+        setState(() {
+          _truckLocation = LatLng(
+            (lat as num).toDouble(),
+            (lng as num).toDouble(),
           );
-        }
+        });
+
+        final controller = await _controller.future;
+        controller.animateCamera(
+          CameraUpdate.newLatLng(_truckLocation),
+        );
+
+      } catch (e) {
+        print("Firebase parsing error: $e");
       }
     });
   }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Garbage Truck Live Tracking")),
       body: GoogleMap(
+        myLocationEnabled: true,
+        myLocationButtonEnabled: true,
+
         initialCameraPosition: CameraPosition(
           target: _truckLocation,
           zoom: 15,
