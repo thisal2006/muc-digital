@@ -68,6 +68,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/emergency': (context) =>  EmergencyScreen(),
         '/announcements': (context) => const AnnouncementsScreen(),
         '/tracking': (context) => const GarbageTrackingScreen(),
+        '/garbage_tracker': (context) => const GarbageTrackingScreen(),
       },
     );
   }
