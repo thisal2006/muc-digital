@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; // ← fixes DateFormat error
+import 'package:intl/intl.dart'; // this fixes DateFormat
 
 class AnnouncementsScreen extends StatelessWidget {
   const AnnouncementsScreen({super.key});
@@ -119,7 +119,6 @@ class AnnouncementsScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
         onPressed: () {
-          // TODO: Implement add announcement form (admin only)
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Add announcement - coming soon (admin only)')),
           );
