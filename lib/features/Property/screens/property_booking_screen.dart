@@ -19,12 +19,12 @@ class _PropertyBookingScreenState extends State<PropertyBookingScreen> {
 
       // 1. TOP APP BAR
       appBar: AppBar(
-        backgroundColor: const Color(0xFFE67E22), // The Orange Color
+        backgroundColor: const Color(0xFFE67E22), // That Orange Color
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            // Navigator.pop(context); // Enable this when having a previous screen
+            Navigator.pop(context);
           },
         ),
         title: const Text(
@@ -35,7 +35,7 @@ class _PropertyBookingScreenState extends State<PropertyBookingScreen> {
 
       // 2. THE LIST OF PROPERTIES
       body: ListView.builder(
-        // Add padding at bottom so the last card isn't hidden by the nav bar
+        // Added padding at bottom so the last card isn't hidden by the nav bar
         padding: const EdgeInsets.only(bottom: 20, top: 10),
         itemCount: dummyProperties.length,
         itemBuilder: (context, index) {
@@ -66,9 +66,8 @@ class _PropertyBookingScreenState extends State<PropertyBookingScreen> {
   }
 }
 
-// ---------------------------------------------------------
 // CUSTOM WIDGET: THE CARD UI
-// ---------------------------------------------------------
+
 class PropertyCard extends StatelessWidget {
   final Property property;
 
@@ -94,16 +93,21 @@ class PropertyCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // IMAGE
+          // IMAGE SECTION
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Image.network(
+            child: Image.asset(
               property.imageUrl,
               height: 150,
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                return Container(height: 150, color: Colors.grey[300], child: const Icon(Icons.broken_image));
+                // Shows a broken image icon if the file isn't found
+                return Container(
+                    height: 150,
+                    color: Colors.grey[300],
+                    child: const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey))
+                );
               },
             ),
           ),
