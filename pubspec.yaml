@@ -65,6 +65,7 @@ flutter:
   # ✅ This is the correct place for assets
   assets:
     - assets/images/
+    - assets/icons/truck.png
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -100,3 +101,4 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+

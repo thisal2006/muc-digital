@@ -1,109 +1,107 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class GarbageTrackingScreen extends StatefulWidget {
   const GarbageTrackingScreen({super.key});
 
   @override
-  State<GarbageTrackingScreen> createState() => _GarbageTrackingScreenState();
+  State<GarbageTrackingScreen> createState() =>
+      _GarbageTrackingScreenState();
 }
 
 class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
-  GoogleMapController? _mapController;
-  Timer? _timer;
-  int _index = 0;
 
-  // 🔴 LONG ROUTE — SO YOU WILL SEE MOVEMENT
-  final List<LatLng> _route = const [
-    LatLng(6.8485, 79.9260),
-    LatLng(6.8492, 79.9268),
-    LatLng(6.8500, 79.9277),
-    LatLng(6.8508, 79.9286),
-    LatLng(6.8516, 79.9296),
-    LatLng(6.8524, 79.9306),
-    LatLng(6.8532, 79.9316),
-    LatLng(6.8540, 79.9326),
-    LatLng(6.8548, 79.9336),
-  ];
+  final DatabaseReference _truckRef =
+  FirebaseDatabase.instance.ref('trucks');
 
-  Set<Marker> _markers = {};
-  Set<Polyline> _polylines = {};
+  final Completer<GoogleMapController> _mapController = Completer();
+
+  final Map<String, Marker> _markers = {};
+
+  BitmapDescriptor? truckIcon;
+
+  // ⭐ Load custom icon
+  Future<void> _loadIcon() async {
+    truckIcon = await BitmapDescriptor.fromAssetImage(
+      const ImageConfiguration(size: Size(48,48)),
+      'assets/icons/truck.png',
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-
-    _markers.add(
-      Marker(
-        markerId: const MarkerId('truck'),
-        position: _route.first,
-        icon: BitmapDescriptor.defaultMarkerWithHue(
-          BitmapDescriptor.hueGreen,
-        ),
-      ),
-    );
-
-    _polylines.add(
-      Polyline(
-        polylineId: const PolylineId('route'),
-        points: _route,
-        color: Colors.green,
-        width: 5,
-      ),
-    );
+    _initialize();
   }
 
-  void _startMovement() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_index >= _route.length) {
-        timer.cancel();
-        return;
+  Future<void> _initialize() async {
+    await _loadIcon();
+    _listenToTrucks();
+  }
+
+  // ⭐ REALTIME LISTENER
+  void _listenToTrucks() {
+
+    _truckRef.onValue.listen((event) async {
+
+      final data = event.snapshot.value;
+
+      if (data == null) return;
+
+      final trucks = Map<String, dynamic>.from(data as Map);
+
+      for (var entry in trucks.entries) {
+
+        final id = entry.key;
+        final truck = Map<String, dynamic>.from(entry.value);
+
+        final lat = (truck['lat'] as num).toDouble();
+        final lng = (truck['lng'] as num).toDouble();
+
+        final position = LatLng(lat, lng);
+
+        final marker = Marker(
+          markerId: MarkerId(id),
+          position: position,
+          icon: truckIcon ?? BitmapDescriptor.defaultMarker,
+          infoWindow: InfoWindow(
+            title: "Truck $id",
+            snippet: truck['status'] ?? '',
+          ),
+        );
+
+        _markers[id] = marker;
       }
 
-      setState(() {
-        _markers = {
-          Marker(
-            markerId: const MarkerId('truck'),
-            position: _route[_index],
-            icon: BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueGreen,
-            ),
-          ),
-        };
-      });
+      if (!mounted) return;
 
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLng(_route[_index]),
-      );
-
-      _index++;
+      setState(() {});
     });
   }
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Garbage Truck Tracking'),
-        backgroundColor: Colors.green,
+        title: const Text("Live Garbage Truck Tracking"),
       ),
+
       body: GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: _route.first,
-          zoom: 16,
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(6.9271, 79.8612),
+          zoom: 13,
         ),
-        markers: _markers,
-        polylines: _polylines,
+
+        markers: _markers.values.toSet(),
+
+        myLocationEnabled: true,
+        myLocationButtonEnabled: true,
+
         onMapCreated: (controller) {
-          _mapController = controller;
-          _startMovement(); // 🚨 THIS IS THE KEY
+          _mapController.complete(controller);
         },
       ),
     );
