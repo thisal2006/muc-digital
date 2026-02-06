@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../dump_points/presentation/dump_points_screen.dart';
 
 class GarbageTrackingScreen extends StatefulWidget {
   const GarbageTrackingScreen({super.key});
@@ -42,11 +43,11 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
       height: 70,
     );
 
-    _listenToTrucks(); // ⭐ YOU FORGOT THIS
+    _listenToTrucks();
   }
 
   //--------------------------------------------------
-  // SMOOTH MOVEMENT (NO CONTROLLERS NEEDED)
+  // SMOOTH MOVEMENT
   //--------------------------------------------------
 
   Future<void> _animateTruck(
@@ -55,7 +56,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
       LatLng newPos,
       ) async {
 
-    const steps = 30; // higher = smoother
+    const steps = 30;
     const delay = Duration(milliseconds: 30);
 
     double latStep =
@@ -76,9 +77,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
           positionParam: interpolated,
         );
 
-        if (mounted) {
-          setState(() {});
-        }
+        if (mounted) setState(() {});
       }
 
       await Future.delayed(delay);
@@ -108,10 +107,6 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
 
         final newPosition = LatLng(lat, lng);
 
-        //----------------------------------------
-        // FIRST LOAD
-        //----------------------------------------
-
         if (!_truckPositions.containsKey(id)) {
 
           _truckPositions[id] = newPosition;
@@ -128,10 +123,6 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
 
         } else {
 
-          //----------------------------------------
-          // SMOOTH MOVE
-          //----------------------------------------
-
           final oldPosition = _truckPositions[id]!;
 
           _animateTruck(id, oldPosition, newPosition);
@@ -140,10 +131,21 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
         }
       }
 
-      if (mounted) {
-        setState(() {});
-      }
+      if (mounted) setState(() {});
     });
+  }
+
+  //--------------------------------------------------
+  // NAVIGATION
+  //--------------------------------------------------
+
+  void _openDumpPoints() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const DumpPointsScreen(),
+      ),
+    );
   }
 
   //--------------------------------------------------
@@ -154,24 +156,116 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
   Widget build(BuildContext context) {
 
     return Scaffold(
+
       appBar: AppBar(
         title: const Text("Live Garbage Truck Tracking"),
       ),
 
-      body: GoogleMap(
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(6.9271, 79.8612),
-          zoom: 13,
-        ),
+      body: Stack(
+        children: [
 
-        markers: _markers.values.toSet(),
+          GoogleMap(
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(6.9271, 79.8612),
+              zoom: 13,
+            ),
+            markers: _markers.values.toSet(),
+            myLocationEnabled: true,
+            myLocationButtonEnabled: true,
+            onMapCreated: (controller) {
+              _mapController.complete(controller);
+            },
+          ),
 
-        myLocationEnabled: true,
-        myLocationButtonEnabled: true,
+          //----------------------------------
+          // BOTTOM ACTION BUTTONS
+          //----------------------------------
 
-        onMapCreated: (controller) {
-          _mapController.complete(controller);
-        },
+          Positioned(
+            bottom: 20,
+            left: 12,
+            right: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  vertical: 14, horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 12,
+                  )
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment:
+                MainAxisAlignment.spaceEvenly,
+                children: [
+
+                  _actionButton(
+                    icon: Icons.calendar_month,
+                    label: "Schedule",
+                    color: Colors.green,
+                    onTap: () {},
+                  ),
+
+                  _actionButton(
+                    icon: Icons.delete,
+                    label: "Dump Points",
+                    color: Colors.teal,
+                    onTap: _openDumpPoints,
+                  ),
+
+                  _actionButton(
+                    icon: Icons.warning_amber,
+                    label: "Report",
+                    color: Colors.orange,
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  //--------------------------------------------------
+  // BUTTON WIDGET
+  //--------------------------------------------------
+
+  Widget _actionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color),
+          ),
+
+          const SizedBox(height: 6),
+
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
