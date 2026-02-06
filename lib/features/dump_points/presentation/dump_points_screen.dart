@@ -23,19 +23,38 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
 
   Set<Marker> dumpMarkers = {};
 
-  //--------------------------------------------------
-  // INIT
-  //--------------------------------------------------
+  BitmapDescriptor? activeIcon;
+  BitmapDescriptor? closedIcon;
+
 
   @override
   void initState() {
     super.initState();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    await _loadIcons();   // VERY important
     _listenToDumps();
   }
 
-  //--------------------------------------------------
-  // FIREBASE LISTENER
-  //--------------------------------------------------
+
+  Future<void> _loadIcons() async {
+
+    activeIcon = await BitmapDescriptor.asset(
+      const ImageConfiguration(),
+      "assets/icons/dump_active.png",
+      width: 80,
+      height: 80,
+    );
+
+    closedIcon = await BitmapDescriptor.asset(
+      const ImageConfiguration(),
+      "assets/icons/dump_closed.png",
+      width: 80,
+      height: 80,
+    );
+  }
 
   void _listenToDumps() {
 
@@ -47,10 +66,19 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
           markerId: MarkerId(dump.id),
           position: LatLng(dump.lat, dump.lng),
 
+          icon: dump.status == "active"
+              ? activeIcon ?? BitmapDescriptor.defaultMarker
+              : closedIcon ?? BitmapDescriptor.defaultMarker,
+
           infoWindow: InfoWindow(
             title: dump.name,
             snippet: dump.address,
           ),
+
+          // VERY IMPORTANT (used in next upgrade)
+          onTap: () {
+            _showDumpDetails(dump);
+          },
         );
 
       }).toSet();
@@ -63,9 +91,88 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
     });
   }
 
-  //--------------------------------------------------
-  // UI
-  //--------------------------------------------------
+  void _showDumpDetails(DumpPoint dump) {
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      builder: (_) {
+
+        return Container(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+
+
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+
+              Text(
+                dump.name,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Text(dump.address),
+
+              const SizedBox(height: 10),
+
+              Row(
+                children: [
+
+                  Icon(
+                    dump.status == "active"
+                        ? Icons.check_circle
+                        : Icons.cancel,
+                    color: dump.status == "active"
+                        ? Colors.green
+                        : Colors.red,
+                  ),
+
+                  const SizedBox(width: 6),
+
+                  Text(
+                    dump.status.toUpperCase(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: dump.status == "active"
+                          ? Colors.green
+                          : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+
+              const Spacer(),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Navigation integration comes later
+                  },
+                  child: const Text("Navigate"),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
