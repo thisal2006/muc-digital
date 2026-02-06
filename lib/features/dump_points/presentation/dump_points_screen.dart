@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../data/dump_repository.dart';
 import '../domain/dump_point.dart';
+import 'package:geolocator/geolocator.dart';
 
 class DumpPointsScreen extends StatefulWidget {
   const DumpPointsScreen({super.key});
@@ -15,9 +17,12 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
   final DumpRepository repo = DumpRepository();
 
   GoogleMapController? mapController;
+  StreamSubscription? dumpSubscription;
+
+  Position? userPosition;
 
   static const CameraPosition initialCamera = CameraPosition(
-    target: LatLng(6.8480, 79.9260), // Maharagama
+    target: LatLng(6.8480, 79.9260),
     zoom: 13,
   );
 
@@ -27,6 +32,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
   BitmapDescriptor? closedIcon;
 
 
+
   @override
   void initState() {
     super.initState();
@@ -34,9 +40,15 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
   }
 
   Future<void> _initialize() async {
-    await _loadIcons();   // VERY important
+
+    await _loadIcons();
+
+    // ⭐ DO NOT BLOCK marker loading if GPS fails
+    _getUserLocation();
+
     _listenToDumps();
   }
+
 
 
   Future<void> _loadIcons() async {
@@ -56,42 +68,95 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
     );
   }
 
-  void _listenToDumps() {
 
-    repo.watchDumpPoints().listen((List<DumpPoint> dumps) {
+  Future<void> _getUserLocation() async {
 
-      final markers = dumps.map((dump) {
+    try {
 
-        return Marker(
-          markerId: MarkerId(dump.id),
-          position: LatLng(dump.lat, dump.lng),
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
 
-          icon: dump.status == "active"
-              ? activeIcon ?? BitmapDescriptor.defaultMarker
-              : closedIcon ?? BitmapDescriptor.defaultMarker,
+      LocationPermission permission = await Geolocator.checkPermission();
 
-          infoWindow: InfoWindow(
-            title: dump.name,
-            snippet: dump.address,
-          ),
-
-          // VERY IMPORTANT (used in next upgrade)
-          onTap: () {
-            _showDumpDetails(dump);
-          },
-        );
-
-      }).toSet();
-
-      if (mounted) {
-        setState(() {
-          dumpMarkers = markers;
-        });
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
       }
-    });
+
+      if (permission == LocationPermission.deniedForever) {
+        return;
+      }
+
+      userPosition = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+        ),
+      );
+
+      // SAFE debug print
+      if (userPosition != null) {
+        print("USER LAT: ${userPosition!.latitude}");
+        print("USER LNG: ${userPosition!.longitude}");
+      }
+
+    } catch (e) {
+      print("LOCATION ERROR: $e");
+    }
   }
 
+
+
+  void _listenToDumps() {
+
+    dumpSubscription =
+        repo.watchDumpPoints().listen((List<DumpPoint> dumps) {
+
+          final markers = dumps.map((dump) {
+
+            return Marker(
+              markerId: MarkerId(dump.id),
+              position: LatLng(dump.lat, dump.lng),
+
+              icon: dump.status == "active"
+                  ? activeIcon ?? BitmapDescriptor.defaultMarker
+                  : closedIcon ?? BitmapDescriptor.defaultMarker,
+
+              infoWindow: InfoWindow(
+                title: dump.name,
+                snippet: dump.address,
+              ),
+
+              onTap: () {
+                _showDumpDetails(dump);
+              },
+            );
+
+          }).toSet();
+
+          if (mounted) {
+            setState(() {
+              dumpMarkers = markers;
+            });
+          }
+        });
+  }
+
+
+
   void _showDumpDetails(DumpPoint dump) {
+
+    double distanceKm = 0;
+
+    if (userPosition != null) {
+
+      double meters = Geolocator.distanceBetween(
+        userPosition!.latitude,
+        userPosition!.longitude,
+        dump.lat,
+        dump.lng,
+      );
+
+      distanceKm = meters / 1000;
+    }
 
     showModalBottomSheet(
       context: context,
@@ -104,13 +169,8 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
       builder: (_) {
 
         return Container(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-
+          padding: const EdgeInsets.all(20),
+          height: 260,
 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,7 +188,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
 
               Text(dump.address),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
 
               Row(
                 children: [
@@ -156,14 +216,29 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
                 ],
               ),
 
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+
+                  const Icon(Icons.route, color: Colors.blue),
+                  const SizedBox(width: 6),
+
+                  Text(
+                    "${distanceKm.toStringAsFixed(2)} km away",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+
               const Spacer(),
 
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Navigation integration comes later
-                  },
+                  onPressed: () {},
                   child: const Text("Navigate"),
                 ),
               ),
@@ -173,6 +248,16 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
       },
     );
   }
+
+
+
+  @override
+  void dispose() {
+    dumpSubscription?.cancel();
+    super.dispose();
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
