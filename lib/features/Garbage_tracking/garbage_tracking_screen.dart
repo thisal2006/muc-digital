@@ -11,7 +11,8 @@ class GarbageTrackingScreen extends StatefulWidget {
       _GarbageTrackingScreenState();
 }
 
-class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
+class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
+    with TickerProviderStateMixin {
 
   final DatabaseReference _truckRef =
   FirebaseDatabase.instance.ref('trucks');
@@ -19,16 +20,13 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   final Completer<GoogleMapController> _mapController = Completer();
 
   final Map<String, Marker> _markers = {};
+  final Map<String, LatLng> _truckPositions = {};
 
   BitmapDescriptor? truckIcon;
 
-  // ⭐ Load custom icon
-  Future<void> _loadIcon() async {
-    truckIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48,48)),
-      'assets/icons/truck.png',
-    );
-  }
+  //--------------------------------------------------
+  // INIT
+  //--------------------------------------------------
 
   @override
   void initState() {
@@ -37,17 +35,65 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   }
 
   Future<void> _initialize() async {
-    await _loadIcon();
-    _listenToTrucks();
+    truckIcon = await BitmapDescriptor.asset(
+      const ImageConfiguration(),
+      "assets/icons/truck.png",
+      width: 70,
+      height: 70,
+    );
+
+    _listenToTrucks(); // ⭐ YOU FORGOT THIS
   }
 
-  // ⭐ REALTIME LISTENER
+  //--------------------------------------------------
+  // SMOOTH MOVEMENT (NO CONTROLLERS NEEDED)
+  //--------------------------------------------------
+
+  Future<void> _animateTruck(
+      String truckId,
+      LatLng oldPos,
+      LatLng newPos,
+      ) async {
+
+    const steps = 30; // higher = smoother
+    const delay = Duration(milliseconds: 30);
+
+    double latStep =
+        (newPos.latitude - oldPos.latitude) / steps;
+
+    double lngStep =
+        (newPos.longitude - oldPos.longitude) / steps;
+
+    for (int i = 0; i < steps; i++) {
+
+      final interpolated = LatLng(
+        oldPos.latitude + (latStep * i),
+        oldPos.longitude + (lngStep * i),
+      );
+
+      if (_markers.containsKey(truckId)) {
+        _markers[truckId] = _markers[truckId]!.copyWith(
+          positionParam: interpolated,
+        );
+
+        if (mounted) {
+          setState(() {});
+        }
+      }
+
+      await Future.delayed(delay);
+    }
+  }
+
+  //--------------------------------------------------
+  // FIREBASE LISTENER
+  //--------------------------------------------------
+
   void _listenToTrucks() {
 
-    _truckRef.onValue.listen((event) async {
+    _truckRef.onValue.listen((event) {
 
       final data = event.snapshot.value;
-
       if (data == null) return;
 
       final trucks = Map<String, dynamic>.from(data as Map);
@@ -60,26 +106,49 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
         final lat = (truck['lat'] as num).toDouble();
         final lng = (truck['lng'] as num).toDouble();
 
-        final position = LatLng(lat, lng);
+        final newPosition = LatLng(lat, lng);
 
-        final marker = Marker(
-          markerId: MarkerId(id),
-          position: position,
-          icon: truckIcon ?? BitmapDescriptor.defaultMarker,
-          infoWindow: InfoWindow(
-            title: "Truck $id",
-            snippet: truck['status'] ?? '',
-          ),
-        );
+        //----------------------------------------
+        // FIRST LOAD
+        //----------------------------------------
 
-        _markers[id] = marker;
+        if (!_truckPositions.containsKey(id)) {
+
+          _truckPositions[id] = newPosition;
+
+          _markers[id] = Marker(
+            markerId: MarkerId(id),
+            position: newPosition,
+            icon: truckIcon ?? BitmapDescriptor.defaultMarker,
+            infoWindow: InfoWindow(
+              title: "Truck $id",
+              snippet: truck['status'] ?? '',
+            ),
+          );
+
+        } else {
+
+          //----------------------------------------
+          // SMOOTH MOVE
+          //----------------------------------------
+
+          final oldPosition = _truckPositions[id]!;
+
+          _animateTruck(id, oldPosition, newPosition);
+
+          _truckPositions[id] = newPosition;
+        }
       }
 
-      if (!mounted) return;
-
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     });
   }
+
+  //--------------------------------------------------
+  // UI
+  //--------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
