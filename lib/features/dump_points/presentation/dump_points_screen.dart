@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../data/dump_repository.dart';
+import '../domain/dump_point.dart';
 
 class DumpPointsScreen extends StatefulWidget {
   const DumpPointsScreen({super.key});
@@ -10,6 +12,8 @@ class DumpPointsScreen extends StatefulWidget {
 
 class _DumpPointsScreenState extends State<DumpPointsScreen> {
 
+  final DumpRepository repo = DumpRepository();
+
   GoogleMapController? mapController;
 
   static const CameraPosition initialCamera = CameraPosition(
@@ -17,18 +21,69 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
     zoom: 13,
   );
 
-  final Set<Marker> dumpMarkers = {};
+  Set<Marker> dumpMarkers = {};
+
+  //--------------------------------------------------
+  // INIT
+  //--------------------------------------------------
+
+  @override
+  void initState() {
+    super.initState();
+    _listenToDumps();
+  }
+
+  //--------------------------------------------------
+  // FIREBASE LISTENER
+  //--------------------------------------------------
+
+  void _listenToDumps() {
+
+    repo.watchDumpPoints().listen((List<DumpPoint> dumps) {
+
+      final markers = dumps.map((dump) {
+
+        return Marker(
+          markerId: MarkerId(dump.id),
+          position: LatLng(dump.lat, dump.lng),
+
+          infoWindow: InfoWindow(
+            title: dump.name,
+            snippet: dump.address,
+          ),
+        );
+
+      }).toSet();
+
+      if (mounted) {
+        setState(() {
+          dumpMarkers = markers;
+        });
+      }
+    });
+  }
+
+  //--------------------------------------------------
+  // UI
+  //--------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Dump Points"),
       ),
+
       body: GoogleMap(
         initialCameraPosition: initialCamera,
         markers: dumpMarkers,
         myLocationEnabled: true,
+        myLocationButtonEnabled: true,
+
+        onMapCreated: (controller) {
+          mapController = controller;
+        },
       ),
     );
   }
