@@ -1,7 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- INTERNET is REQUIRED for Google Maps -->
+    <!-- INTERNET for Firebase + Google Maps -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- ⭐ LOCATION PERMISSIONS (REQUIRED FOR DISTANCE ENGINE) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- OPTIONAL BUT RECOMMENDED (future truck tracking) -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
 
     <application
         android:label="muc_digital"
