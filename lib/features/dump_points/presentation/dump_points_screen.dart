@@ -27,6 +27,8 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
       throw 'Could not launch Google Maps';
     }
   }
+  DumpPoint? nearestDump;
+  double nearestDistanceKm = 0;
 
   final DumpRepository repo = DumpRepository();
 
@@ -121,8 +123,11 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
 
   void _listenToDumps() {
 
+
     dumpSubscription =
         repo.watchDumpPoints().listen((List<DumpPoint> dumps) {
+          _calculateNearestDump(dumps);
+
 
           final markers = dumps.map((dump) {
 
@@ -266,7 +271,116 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
     );
   }
 
+  void _calculateNearestDump(List<DumpPoint> dumps) {
 
+    if (userPosition == null) return;
+
+    double minDistance = double.infinity;
+    DumpPoint? closest;
+
+    for (var dump in dumps) {
+
+      double meters = Geolocator.distanceBetween(
+        userPosition!.latitude,
+        userPosition!.longitude,
+        dump.lat,
+        dump.lng,
+      );
+
+      if (meters < minDistance) {
+        minDistance = meters;
+        closest = dump;
+      }
+    }
+
+    if (closest != null) {
+      nearestDump = closest;
+      nearestDistanceKm = minDistance / 1000;
+    }
+  }
+
+  Widget _nearestDumpCard() {
+
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+
+        child: Row(
+          children: [
+
+            //--------------------------------
+            // ICON
+            //--------------------------------
+
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.location_on,
+                color: Colors.green,
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            //--------------------------------
+            // TEXT
+            //--------------------------------
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  const Text(
+                    "Nearest Dump",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey,
+                    ),
+                  ),
+
+                  Text(
+                    nearestDump!.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  Text(
+                    "${nearestDistanceKm.toStringAsFixed(2)} km away",
+                    style: const TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            //--------------------------------
+            // NAV BUTTON
+            //--------------------------------
+
+            ElevatedButton(
+              onPressed: () {
+                _navigateToDump(nearestDump!);
+              },
+              child: const Text("Go"),
+            )
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -284,16 +398,33 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
         title: const Text("Dump Points"),
       ),
 
-      body: GoogleMap(
-        initialCameraPosition: initialCamera,
-        markers: dumpMarkers,
-        myLocationEnabled: true,
-        myLocationButtonEnabled: true,
+      body: Stack(
+        children: [
 
-        onMapCreated: (controller) {
-          mapController = controller;
-        },
+          GoogleMap(
+            initialCameraPosition: initialCamera,
+            markers: dumpMarkers,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: true,
+            onMapCreated: (controller) {
+              mapController = controller;
+            },
+          ),
+
+          //-----------------------------------
+          // NEAREST DUMP CARD
+          //-----------------------------------
+
+          if (nearestDump != null)
+            Positioned(
+              top: 20,
+              left: 16,
+              right: 16,
+              child: _nearestDumpCard(),
+            ),
+        ],
       ),
+
     );
   }
 }
