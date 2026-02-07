@@ -3,7 +3,8 @@ import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 
-import '../widgets/app_drawer.dart'; // adjust path if needed
+import '../widgets/app_drawer.dart';
+import 'announcements_screen.dart'; // adjust path if needed
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -111,7 +112,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 backgroundColor: Colors.red,
                 child: const Icon(Icons.notifications_rounded, color: Color(0xFF1B5E20)),
               ),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AnnouncementsScreen()),
+                );
+              },
             ),
           ),
         ],
