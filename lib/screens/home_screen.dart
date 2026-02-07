@@ -113,8 +113,9 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Garbage Tracker',
       'subtitle': 'Track trucks & schedule pickup',
       'color': const Color(0xFF1B5E20),
-      'route': '/garbage_tracker',
+      'route': '/truck_tracking',
     },
+
     {
       'icon': Icons.apartment_rounded,
       'title': 'Property Booking',

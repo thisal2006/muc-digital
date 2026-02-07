@@ -2,14 +2,16 @@
 import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyScreen extends StatelessWidget {
-  4 EmergencyScreen({super.key});
+  const EmergencyScreen({super.key});
 
-  final List<Map<String, String>> contacts = [
+
+  final List<Map<String, String>> contacts = const [
     {'name': 'Police Emergency', 'number': '119'},
     {'name': 'Ambulance', 'number': '1990'},
     {'name': 'Fire & Rescue', 'number': '110'},
-    {'name': 'MUC Office', 'number': '011285xxxx'},  // replace with real number
+    {'name': 'MUC Office', 'number': '011285xxxx'},
   ];
+
 
   @override
   Widget build(BuildContext context) {

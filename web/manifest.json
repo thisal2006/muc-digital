@@ -1,6 +1,6 @@
 {
-    "name": "muc_digital",
-    "short_name": "muc_digital",
+    "name": "muc_digital_clean",
+    "short_name": "muc_digital_clean",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
