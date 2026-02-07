@@ -4,6 +4,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../data/dump_repository.dart';
 import '../domain/dump_point.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 
 class DumpPointsScreen extends StatefulWidget {
   const DumpPointsScreen({super.key});
@@ -13,6 +15,18 @@ class DumpPointsScreen extends StatefulWidget {
 }
 
 class _DumpPointsScreenState extends State<DumpPointsScreen> {
+  Future<void> _navigateToDump(DumpPoint dump) async {
+
+    final Uri googleMapsUrl = Uri.parse(
+      "google.navigation:q=${dump.lat},${dump.lng}&mode=d",
+    );
+
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl);
+    } else {
+      throw 'Could not launch Google Maps';
+    }
+  }
 
   final DumpRepository repo = DumpRepository();
 
@@ -238,7 +252,10 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    _navigateToDump(dump);
+                  },
+
                   child: const Text("Navigate"),
                 ),
               ),
