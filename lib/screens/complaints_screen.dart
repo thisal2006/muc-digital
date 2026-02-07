@@ -1,41 +1,40 @@
 import 'package:flutter/material.dart';
 
-class ComplaintsScreen extends StatefulWidget {
+class ComplaintsScreen extends StatelessWidget {
   const ComplaintsScreen({super.key});
 
   @override
-  State<ComplaintsScreen> createState() => _ComplaintsScreenState();
-}
-
-class _ComplaintsScreenState extends State<ComplaintsScreen> {
-  int _selectedTab = 0;
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("My Complaints"),
-        backgroundColor: const Color(0xFF2E7D32),
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
-          TabBar(
-            tabs: const [
-              Tab(text: "New Complaint"),
-              Tab(text: "My Complaints"),
-            ],
-            labelColor: const Color(0xFF2E7D32),
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: const Color(0xFF2E7D32),
-            onTap: (index) => setState(() => _selectedTab = index),
+    return DefaultTabController(
+      length: 2, // ← number of tabs
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("My Complaints"),
+          backgroundColor: const Color(0xFF2E7D32),
+          foregroundColor: Colors.white,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Container(
+              color: Colors.white,
+              child: const TabBar(
+                labelColor: Color(0xFF2E7D32),
+                unselectedLabelColor: Colors.grey,
+                indicatorColor: Color(0xFF2E7D32),
+                indicatorWeight: 4,
+                tabs: [
+                  Tab(text: "New Complaint"),
+                  Tab(text: "My Complaints"),
+                ],
+              ),
+            ),
           ),
-          Expanded(
-            child: _selectedTab == 0
-                ? const NewComplaintForm()
-                : const MyComplaintsList(),
-          ),
-        ],
+        ),
+        body: const TabBarView(
+          children: [
+            NewComplaintForm(),
+            MyComplaintsList(),
+          ],
+        ),
       ),
     );
   }
@@ -69,6 +68,8 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SizedBox(height: 16),
+
           DropdownButtonFormField<String>(
             value: _selectedCategory,
             hint: const Text("Select Category"),
@@ -78,24 +79,28 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             onChanged: (value) => setState(() => _selectedCategory = value),
             decoration: _inputDecoration("Category"),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
           TextField(
             controller: _descriptionController,
             maxLines: 5,
             decoration: _inputDecoration("Describe the issue..."),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
           OutlinedButton.icon(
             onPressed: () {
-              // TODO: image picker
+              // TODO: add real image picker (image_picker package)
               setState(() => _imageAttached = true);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Photo attached (demo)")),
+              );
             },
             icon: const Icon(Icons.add_photo_alternate),
-            label: Text(_imageAttached ? "Image Attached" : "Attach Photo"),
+            label: Text(_imageAttached ? "Photo Attached" : "Attach Photo"),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
+              side: const BorderSide(color: Color(0xFF2E7D32)),
             ),
           ),
           const SizedBox(height: 32),
@@ -108,16 +113,23 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
                 );
                 return;
               }
-              // TODO: send to Firebase / backend
+
+              // TODO: send to Firebase / your backend here
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Complaint submitted successfully")),
+                const SnackBar(
+                  content: Text("Complaint submitted successfully"),
+                  backgroundColor: Colors.green,
+                ),
               );
+
+              // Return to previous screen or reset form
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2E7D32),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text("Submit Complaint", style: TextStyle(fontSize: 16)),
           ),
@@ -129,8 +141,21 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      labelStyle: const TextStyle(color: Color(0xFF2E7D32)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.grey),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.grey),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.white,
     );
   }
 
@@ -161,6 +186,12 @@ class MyComplaintsList extends StatelessWidget {
           status: "Resolved",
           statusColor: Colors.green,
         ),
+        _ComplaintCard(
+          title: "Pothole on High Level Road",
+          date: "2025-11-10",
+          status: "Pending",
+          statusColor: Colors.red,
+        ),
       ],
     );
   }
@@ -182,15 +213,22 @@ class _ComplaintCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 2,
       margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: const Icon(Icons.report_problem, color: Colors.red),
-        title: Text(title),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Icon(Icons.report_problem, color: statusColor, size: 32),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
         subtitle: Text(date),
         trailing: Chip(
           label: Text(status),
-          backgroundColor: statusColor.withOpacity(0.2),
-          labelStyle: TextStyle(color: statusColor),
+          backgroundColor: statusColor.withOpacity(0.15),
+          labelStyle: TextStyle(color: statusColor, fontWeight: FontWeight.w600),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
         ),
       ),
     );
