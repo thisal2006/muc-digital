@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../dump_points/presentation/dump_points_screen.dart';
+import '../illegal_dumping/presentation/illegal_dumping_screen.dart';
+
 
 class GarbageTrackingScreen extends StatefulWidget {
   const GarbageTrackingScreen({super.key});
@@ -147,6 +149,15 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
       ),
     );
   }
+  void _openIllegalDumpReport() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const IllegalDumpingScreen(),
+      ),
+    );
+  }
+
 
   //--------------------------------------------------
   // UI
@@ -221,7 +232,8 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
                     icon: Icons.warning_amber,
                     label: "Report",
                     color: Colors.orange,
-                    onTap: () {},
+                    onTap: _openIllegalDumpReport,
+
                   ),
                 ],
               ),
