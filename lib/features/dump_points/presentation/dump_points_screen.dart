@@ -164,6 +164,16 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
   void _showDumpDetails(DumpPoint dump) {
 
     double distanceKm = 0;
+    Color capacityColor = Colors.green;
+
+    double percent = dump.currentLoad / dump.capacityTons;
+
+    if (percent > 0.8) {
+      capacityColor = Colors.red;
+    } else if (percent > 0.5) {
+      capacityColor = Colors.orange;
+    }
+
 
     if (userPosition != null) {
 
@@ -247,6 +257,27 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
                     "${distanceKm.toStringAsFixed(2)} km away",
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+
+                  Icon(
+                    Icons.storage,
+                    color: capacityColor,
+                  ),
+
+                  const SizedBox(width: 6),
+
+                  Text(
+                    "Capacity: ${dump.currentLoad} / ${dump.capacityTons} tons",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: capacityColor,
                     ),
                   ),
                 ],
@@ -427,4 +458,5 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
 
     );
   }
+
 }
