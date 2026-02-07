@@ -1,14 +1,38 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- INTERNET is REQUIRED for Google Maps -->
+    <!-- INTERNET for Firebase + Google Maps -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- LOCATION PERMISSIONS -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- Optional (future live truck tracking / background GPS) -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+
+    <!-- for launching Google Maps navigation on Android 11+ -->
+    <queries>
+
+        <!-- Allow app to check if Google Maps exists -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="google.navigation"/>
+        </intent>
+
+        <!-- Optional fallback (opens browser maps) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+
+    </queries>
 
     <application
         android:label="muc_digital"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
-        <!-- 🔥 GOOGLE MAPS API KEY -->
+        <!-- GOOGLE MAPS API KEY -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyACUjnMs8ntXloajN-wJx9rr4eoTe31pPE"/>
