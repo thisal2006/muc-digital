@@ -2,6 +2,7 @@
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'features/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
 
 import 'screens/splash_screen.dart';
@@ -67,7 +68,12 @@ class MUCdigitalApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/emergency': (context) =>  EmergencyScreen(),
         '/announcements': (context) => const AnnouncementsScreen(),
+        '/garbage_tracker': (context) => const GarbageTrackingScreen(),
+        '/property_booking': (context) => const PlaceholderScreen(title: 'Property Booking'),
+        '/vehicle_booking': (context) => const PlaceholderScreen(title: 'Vehicle Booking'),
+        '/cemetery_booking': (context) => const PlaceholderScreen(title: 'Cemetery Booking'),
       },
     );
   }
 }
+y
