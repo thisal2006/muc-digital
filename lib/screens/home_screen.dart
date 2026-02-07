@@ -196,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisCount: 2,
                   mainAxisSpacing: 20,
                   crossAxisSpacing: 20,
-                  childAspectRatio: 1.05,
+                  childAspectRatio: 1.1,
                   children: _filteredServices.map((service) {
                     return ServiceCard(
                       icon: service['icon'] as IconData,
@@ -291,56 +291,57 @@ class ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FadeInUp(
-      duration: const Duration(milliseconds: 800),
-      child: Material(
-        elevation: 5,
+    return Material(
+      elevation: 5,
+      borderRadius: BorderRadius.circular(20),
+      color: Colors.white,
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        color: Colors.white,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          splashColor: color.withOpacity(0.15),
-          highlightColor: color.withOpacity(0.08),
-          onTap: () {
-            if (route != null) Navigator.pushNamed(context, route!);
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
+        splashColor: color.withOpacity(0.15),
+        highlightColor: color.withOpacity(0.08),
+        onTap: () {
+          if (route != null) {
+            Navigator.pushNamed(context, route!);
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Icon(icon, size: 48, color: color),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1A1A1A),
-                  ),
-                  textAlign: TextAlign.center,
+                child: Icon(icon, size: 48, color: color),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1A1A1A),
                 ),
-                const SizedBox(height: 6),
-                Text(
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: Text(
                   subtitle,
                   style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
