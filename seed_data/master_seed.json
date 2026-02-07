@@ -1,0 +1,64 @@
+{
+  "trucks": {
+    "GT-001": {
+      "lastUpdate": 1717562342,
+      "lat": 6.6271,
+      "lng": 79.8612,
+      "speed": 32,
+      "status": "on_route",
+      "type": "degradable"
+    },
+    "GT-002": {
+      "lastUpdate": 1717562342,
+      "lat": 6.925,
+      "lng": 79.859,
+      "speed": 27,
+      "status": "on_route",
+      "type": "non_degradable"
+    }
+  },
+
+  "dump_points": {
+    "dp_karadiyana": {
+      "name": "Karadiyana Waste Management Facility",
+      "lat": 6.8236,
+      "lng": 79.9021,
+      "address": "Borupana Road, Karadiyana",
+      "status": "active",
+      "capacity_tons": 120,
+      "current_load": 45,
+      "open_time": "06:00",
+      "close_time": "18:00",
+      "supports_recycling": true,
+      "last_updated": 1717562342
+    },
+
+    "dp_nawinna": {
+      "name": "Nawinna Solid Waste Dump Site",
+      "lat": 6.858,
+      "lng": 79.918,
+      "address": "Nawinna, Maharagama",
+      "status": "inactive",
+      "capacity_tons": 0,
+      "current_load": 0,
+      "open_time": "00:00",
+      "close_time": "00:00",
+      "supports_recycling": false,
+      "last_updated": 1717562342
+    },
+
+    "dp_keells_maharagama": {
+      "name": "Keells Plasticcycle Bin - Maharagama",
+      "lat": 6.8489,
+      "lng": 79.9265,
+      "address": "59 Piliyandala Road, Maharagama",
+      "status": "active",
+      "capacity_tons": 1,
+      "current_load": 0.2,
+      "open_time": "08:00",
+      "close_time": "22:00",
+      "supports_recycling": true,
+      "last_updated": 1717562342
+    }
+  }
+}

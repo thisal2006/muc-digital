@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../dump_points/presentation/dump_points_screen.dart';
 
 class GarbageTrackingScreen extends StatefulWidget {
   const GarbageTrackingScreen({super.key});
@@ -11,7 +12,8 @@ class GarbageTrackingScreen extends StatefulWidget {
       _GarbageTrackingScreenState();
 }
 
-class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
+class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
+    with TickerProviderStateMixin {
 
   final DatabaseReference _truckRef =
   FirebaseDatabase.instance.ref('trucks');
@@ -19,16 +21,13 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   final Completer<GoogleMapController> _mapController = Completer();
 
   final Map<String, Marker> _markers = {};
+  final Map<String, LatLng> _truckPositions = {};
 
   BitmapDescriptor? truckIcon;
 
-  // ⭐ Load custom icon
-  Future<void> _loadIcon() async {
-    truckIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(48,48)),
-      'assets/icons/truck.png',
-    );
-  }
+  //--------------------------------------------------
+  // INIT
+  //--------------------------------------------------
 
   @override
   void initState() {
@@ -37,17 +36,63 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   }
 
   Future<void> _initialize() async {
-    await _loadIcon();
+    truckIcon = await BitmapDescriptor.asset(
+      const ImageConfiguration(),
+      "assets/icons/truck.png",
+      width: 70,
+      height: 70,
+    );
+
     _listenToTrucks();
   }
 
-  // ⭐ REALTIME LISTENER
+  //--------------------------------------------------
+  // SMOOTH MOVEMENT
+  //--------------------------------------------------
+
+  Future<void> _animateTruck(
+      String truckId,
+      LatLng oldPos,
+      LatLng newPos,
+      ) async {
+
+    const steps = 30;
+    const delay = Duration(milliseconds: 30);
+
+    double latStep =
+        (newPos.latitude - oldPos.latitude) / steps;
+
+    double lngStep =
+        (newPos.longitude - oldPos.longitude) / steps;
+
+    for (int i = 0; i < steps; i++) {
+
+      final interpolated = LatLng(
+        oldPos.latitude + (latStep * i),
+        oldPos.longitude + (lngStep * i),
+      );
+
+      if (_markers.containsKey(truckId)) {
+        _markers[truckId] = _markers[truckId]!.copyWith(
+          positionParam: interpolated,
+        );
+
+        if (mounted) setState(() {});
+      }
+
+      await Future.delayed(delay);
+    }
+  }
+
+  //--------------------------------------------------
+  // FIREBASE LISTENER
+  //--------------------------------------------------
+
   void _listenToTrucks() {
 
-    _truckRef.onValue.listen((event) async {
+    _truckRef.onValue.listen((event) {
 
       final data = event.snapshot.value;
-
       if (data == null) return;
 
       final trucks = Map<String, dynamic>.from(data as Map);
@@ -60,49 +105,167 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
         final lat = (truck['lat'] as num).toDouble();
         final lng = (truck['lng'] as num).toDouble();
 
-        final position = LatLng(lat, lng);
+        final newPosition = LatLng(lat, lng);
 
-        final marker = Marker(
-          markerId: MarkerId(id),
-          position: position,
-          icon: truckIcon ?? BitmapDescriptor.defaultMarker,
-          infoWindow: InfoWindow(
-            title: "Truck $id",
-            snippet: truck['status'] ?? '',
-          ),
-        );
+        if (!_truckPositions.containsKey(id)) {
 
-        _markers[id] = marker;
+          _truckPositions[id] = newPosition;
+
+          _markers[id] = Marker(
+            markerId: MarkerId(id),
+            position: newPosition,
+            icon: truckIcon ?? BitmapDescriptor.defaultMarker,
+            infoWindow: InfoWindow(
+              title: "Truck $id",
+              snippet: truck['status'] ?? '',
+            ),
+          );
+
+        } else {
+
+          final oldPosition = _truckPositions[id]!;
+
+          _animateTruck(id, oldPosition, newPosition);
+
+          _truckPositions[id] = newPosition;
+        }
       }
 
-      if (!mounted) return;
-
-      setState(() {});
+      if (mounted) setState(() {});
     });
   }
+
+  //--------------------------------------------------
+  // NAVIGATION
+  //--------------------------------------------------
+
+  void _openDumpPoints() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const DumpPointsScreen(),
+      ),
+    );
+  }
+
+  //--------------------------------------------------
+  // UI
+  //--------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
 
     return Scaffold(
+
       appBar: AppBar(
         title: const Text("Live Garbage Truck Tracking"),
       ),
 
-      body: GoogleMap(
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(6.9271, 79.8612),
-          zoom: 13,
-        ),
+      body: Stack(
+        children: [
 
-        markers: _markers.values.toSet(),
+          GoogleMap(
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(6.9271, 79.8612),
+              zoom: 13,
+            ),
+            markers: _markers.values.toSet(),
+            myLocationEnabled: true,
+            myLocationButtonEnabled: true,
+            onMapCreated: (controller) {
+              _mapController.complete(controller);
+            },
+          ),
 
-        myLocationEnabled: true,
-        myLocationButtonEnabled: true,
+          //----------------------------------
+          // BOTTOM ACTION BUTTONS
+          //----------------------------------
 
-        onMapCreated: (controller) {
-          _mapController.complete(controller);
-        },
+          Positioned(
+            bottom: 20,
+            left: 12,
+            right: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  vertical: 14, horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 12,
+                  )
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment:
+                MainAxisAlignment.spaceEvenly,
+                children: [
+
+                  _actionButton(
+                    icon: Icons.calendar_month,
+                    label: "Schedule",
+                    color: Colors.green,
+                    onTap: () {},
+                  ),
+
+                  _actionButton(
+                    icon: Icons.delete,
+                    label: "Dump Points",
+                    color: Colors.teal,
+                    onTap: _openDumpPoints,
+                  ),
+
+                  _actionButton(
+                    icon: Icons.warning_amber,
+                    label: "Report",
+                    color: Colors.orange,
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  //--------------------------------------------------
+  // BUTTON WIDGET
+  //--------------------------------------------------
+
+  Widget _actionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color),
+          ),
+
+          const SizedBox(height: 6),
+
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
