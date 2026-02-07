@@ -1,10 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:animate_do/animate_do.dart';
 
 import '../widgets/app_drawer.dart';
-import 'announcements_screen.dart'; // adjust path if needed
+import 'announcements_screen.dart'; // <--- this import is very important
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +13,104 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+
+  // All pages that bottom nav can switch to
+  final List<Widget> _pages = [
+    const _HomeDashboardContent(),           // Home tab (search + cards)
+    const Center(child: Text('Bookings - Coming soon')), // Bookings tab
+    const AnnouncementsScreen(),             // Updates tab → Announcements
+    const Center(child: Text('Chat - Coming soon')),     // Chat tab
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAFDFC),
+      drawer: const AppDrawer(),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu_rounded, color: Color(0xFF1B5E20), size: 28),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        title: FadeInDown(
+          duration: const Duration(milliseconds: 600),
+          child: Text(
+            'Welcome Back!',
+            style: GoogleFonts.poppins(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1A1A1A),
+            ),
+          ),
+        ),
+        actions: [
+          // Bell icon now opens Announcements screen
+          FadeInRight(
+            duration: const Duration(milliseconds: 700),
+            child: IconButton(
+              icon: Badge(
+                label: const Text('3', style: TextStyle(fontSize: 10)),
+                backgroundColor: Colors.red,
+                child: const Icon(Icons.notifications_rounded, color: Color(0xFF1B5E20)),
+              ),
+              onPressed: () {
+                // This is the fix: open Announcements when tapping bell
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AnnouncementsScreen()),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+
+      // Switch between pages when tapping bottom nav
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        elevation: 16,
+        selectedItemColor: const Color(0xFF1B5E20),
+        unselectedItemColor: Colors.grey[600],
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped, // <--- this makes tabs switch
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_month_rounded), label: 'Bookings'),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications_rounded), label: 'Updates'),
+          BottomNavigationBarItem(icon: Icon(Icons.chat_rounded), label: 'Chat'),
+        ],
+      ),
+    );
+  }
+}
+
+// Home Dashboard content (search + stats + cards)
+class _HomeDashboardContent extends StatefulWidget {
+  const _HomeDashboardContent();
+
+  @override
+  State<_HomeDashboardContent> createState() => _HomeDashboardContentState();
+}
+
+class _HomeDashboardContentState extends State<_HomeDashboardContent> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -23,9 +120,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'title': 'Garbage Tracker',
       'subtitle': 'Track trucks & schedule pickup',
       'color': const Color(0xFF1B5E20),
-      'route': '/truck_tracking',
+      'route': '/garbage_tracker',
     },
-
     {
       'icon': Icons.apartment_rounded,
       'title': 'Property Booking',
@@ -67,8 +163,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_searchQuery.isEmpty) return _services;
     final query = _searchQuery.toLowerCase();
     return _services.where((service) {
-      return service['title'].toLowerCase().contains(query) ||
-          service['subtitle'].toLowerCase().contains(query);
+      return service['title'].toString().toLowerCase().contains(query) ||
+          service['subtitle'].toString().toLowerCase().contains(query);
     }).toList();
   }
 
@@ -80,58 +176,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAFDFC),
-      drawer: const AppDrawer(),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu_rounded, color: Color(0xFF1B5E20), size: 28),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        title: FadeInDown(
-          duration: const Duration(milliseconds: 600),
-          child: Text(
-            'Welcome Back!',
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1A1A1A),
-            ),
-          ),
-        ),
-        actions: [
-          FadeInRight(
-            duration: const Duration(milliseconds: 700),
-            child: IconButton(
-              icon: Badge(
-                label: const Text('3', style: TextStyle(fontSize: 10)),
-                backgroundColor: Colors.red,
-                child: const Icon(Icons.notifications_rounded, color: Color(0xFF1B5E20)),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AnnouncementsScreen()),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          children: [
-            // Search bar with clear button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-              child: FadeInUp(
-                duration: const Duration(milliseconds: 700),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+            child: FadeInUp(
+              duration: const Duration(milliseconds: 700),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4)),
+                  ],
+                ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: (value) => setState(() => _searchQuery = value),
@@ -148,91 +209,66 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     )
                         : null,
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: const BorderSide(color: Colors.grey, width: 0.5),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 2),
-                    ),
+                    border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
               ),
             ),
+          ),
 
-            // Stats row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  FadeInLeft(
-                    duration: const Duration(milliseconds: 800),
-                    child: _StatCard('3', 'Bookings', Icons.book_online, const Color(0xFF1B5E20)),
-                  ),
-                  FadeInUp(
-                    duration: const Duration(milliseconds: 850),
-                    child: _StatCard('1', 'Pending', Icons.hourglass_empty, const Color(0xFFF57C00)),
-                  ),
-                  FadeInRight(
-                    duration: const Duration(milliseconds: 900),
-                    child: _StatCard('2', 'Complaints', Icons.report_problem, const Color(0xFFD32F2F)),
-                  ),
-                ],
-              ),
+          // Stats row
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                FadeInLeft(
+                  duration: const Duration(milliseconds: 800),
+                  child: _StatCard('3', 'Bookings', Icons.book_online, const Color(0xFF1B5E20)),
+                ),
+                FadeInUp(
+                  duration: const Duration(milliseconds: 850),
+                  child: _StatCard('1', 'Pending', Icons.hourglass_empty, const Color(0xFFF57C00)),
+                ),
+                FadeInRight(
+                  duration: const Duration(milliseconds: 900),
+                  child: _StatCard('2', 'Complaints', Icons.report_problem, const Color(0xFFD32F2F)),
+                ),
+              ],
             ),
+          ),
 
-            // Filtered service cards
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: GridView.count(
-                  key: ValueKey<int>(_filteredServices.length),
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 20,
-                  crossAxisSpacing: 20,
-                  childAspectRatio: 1.1,
-                  children: _filteredServices.map((service) {
-                    return ServiceCard(
+          // Service cards
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: GridView.count(
+                key: ValueKey<int>(_filteredServices.length),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: 1.05,
+                children: _filteredServices.map((service) {
+                  return FadeInUp(
+                    duration: const Duration(milliseconds: 800),
+                    child: ServiceCard(
                       icon: service['icon'] as IconData,
                       title: service['title'] as String,
                       subtitle: service['subtitle'] as String,
                       color: service['color'] as Color,
                       route: service['route'] as String?,
-                    );
-                  }).toList(),
-                ),
+                    ),
+                  );
+                }).toList(),
               ),
             ),
+          ),
 
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        elevation: 16,
-        selectedItemColor: const Color(0xFF1B5E20),
-        unselectedItemColor: Colors.grey[600],
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_month_rounded), label: 'Bookings'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_rounded), label: 'Updates'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_rounded), label: 'Chat'),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -242,37 +278,17 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.85)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: LinearGradient(colors: [color, color.withOpacity(0.85)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: color.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 8))],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: Colors.white, size: 28),
           const SizedBox(height: 8),
-          Text(
-            number,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
-          ),
+          Text(number, style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13)),
         ],
       ),
     );
@@ -327,7 +343,7 @@ class ServiceCard extends StatelessWidget {
                 ),
                 child: Icon(icon, size: 48, color: color),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text(
                 title,
                 style: GoogleFonts.poppins(
@@ -337,7 +353,7 @@ class ServiceCard extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Flexible(
                 child: Text(
                   subtitle,
