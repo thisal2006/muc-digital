@@ -2,16 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/property_model.dart';
 
-class PropertyDetailsScreen extends StatelessWidget {
+class PropertyDetailsScreen extends StatefulWidget {
   final Property property;
 
   const PropertyDetailsScreen({super.key, required this.property});
 
+  @override
+  State<PropertyDetailsScreen> createState() => _PropertyDetailsScreenState();
+}
+
+class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
+  // Variable to hold the currently displayed image
+  late String selectedImage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start with the main image
+    selectedImage = widget.property.imageUrl;
+  }
+
   // Function to open Google Maps
   Future<void> _launchMap(String url) async {
     final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $url');
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw Exception('Could not launch $url');
+      }
+    } catch (e) {
+      // If map fails, show a message instead of crashing/black screen
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Could not open map: $e")),
+      );
     }
   }
 
@@ -20,27 +42,38 @@ class PropertyDetailsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(property.name),
-        backgroundColor: const Color(0xFFE67E22), // Orange
+        title: Text(widget.property.name),
+        backgroundColor: const Color(0xFFE67E22),
         foregroundColor: Colors.white,
+        //  BACK BUTTON
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // This sends you back to the list
+          },
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- MAIN IMAGE ---
-            Image.asset(
-              property.imageUrl,
-              width: double.infinity,
-              height: 250,
-              fit: BoxFit.cover,
+            // MAIN HERO IMAGE
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Image.asset(
+                selectedImage, // Uses the variable, not the fixed property image
+                key: ValueKey<String>(selectedImage),
+                width: double.infinity,
+                height: 250,
+                fit: BoxFit.cover,
+              ),
             ),
 
-            // --- GALLERY SECTION ---
+            // --- GALLERY ---
             Padding(
               padding: const EdgeInsets.only(left: 16, top: 16),
               child: const Text(
-                "Gallery",
+                "Gallery (Tap to view)",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
@@ -50,16 +83,27 @@ class PropertyDetailsScreen extends StatelessWidget {
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: property.galleryImages.length,
+                itemCount: widget.property.galleryImages.length,
                 itemBuilder: (context, index) {
-                  return Container(
-                    margin: const EdgeInsets.only(right: 10),
-                    width: 100,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      image: DecorationImage(
-                        image: AssetImage(property.galleryImages[index]),
-                        fit: BoxFit.cover,
+                  return GestureDetector(
+                    onTap: () {
+                      //UPDATES THE MAIN IMAGE
+                      setState(() {
+                        selectedImage = widget.property.galleryImages[index];
+                      });
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 10),
+                      width: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: selectedImage == widget.property.galleryImages[index]
+                            ? Border.all(color: const Color(0xFFE67E22), width: 3) // Orange border if selected
+                            : null,
+                        image: DecorationImage(
+                          image: AssetImage(widget.property.galleryImages[index]),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   );
@@ -67,15 +111,14 @@ class PropertyDetailsScreen extends StatelessWidget {
               ),
             ),
 
-            // --- DETAILS SECTION ---
+            //DETAILS SECTION
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name & Capacity
                   Text(
-                    property.name,
+                    widget.property.name,
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
@@ -84,7 +127,7 @@ class PropertyDetailsScreen extends StatelessWidget {
                       const Icon(Icons.people, color: Colors.grey),
                       const SizedBox(width: 8),
                       Text(
-                        property.capacity,
+                        widget.property.capacity,
                         style: const TextStyle(fontSize: 16, color: Colors.grey),
                       ),
                     ],
@@ -92,13 +135,13 @@ class PropertyDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // --- GOOGLE MAP BUTTON ---
+                  // MAP BUTTON
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        if(property.googleMapsUrl.isNotEmpty) {
-                          _launchMap(property.googleMapsUrl);
+                        if (widget.property.googleMapsUrl.isNotEmpty) {
+                          _launchMap(widget.property.googleMapsUrl);
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text("Location link not available yet."))
@@ -116,13 +159,13 @@ class PropertyDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // Features
+                  // FEATURES
                   const Text("Features", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 10,
                     runSpacing: 10,
-                    children: property.features.map((feature) {
+                    children: widget.property.features.map((feature) {
                       return Chip(
                         label: Text(feature),
                         backgroundColor: const Color(0xFFFFF3E0),
@@ -133,12 +176,37 @@ class PropertyDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // Description
+                  // DESCRIPTION
                   const Text("About Venue", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
                   Text(
-                    property.description,
+                    widget.property.description,
                     style: const TextStyle(color: Colors.black54, height: 1.5),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // CONTACT INFO
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey[300]!)
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.phone, color: Color(0xFFE67E22)),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("For more info contact:", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                            Text(widget.property.contactNumber, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ],
+                        )
+                      ],
+                    ),
                   ),
 
                   const SizedBox(height: 100), // Space for bottom bar
@@ -149,7 +217,7 @@ class PropertyDetailsScreen extends StatelessWidget {
         ),
       ),
 
-      // --- BOTTOM BOOK NOW BAR ---
+      // --- BOTTOM BAR ---
       bottomSheet: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -167,7 +235,7 @@ class PropertyDetailsScreen extends StatelessWidget {
               children: [
                 const Text("Starting from", style: TextStyle(color: Colors.grey)),
                 Text(
-                  property.price,
+                  widget.property.price,
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -197,3 +265,5 @@ class PropertyDetailsScreen extends StatelessWidget {
     );
   }
 }
+
+//Corrected the scrolling prob. ready to push
