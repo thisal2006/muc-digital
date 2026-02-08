@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/property_model.dart';
+import 'booking_form_screen.dart';
+
 
 class PropertyDetailsScreen extends StatefulWidget {
   final Property property;
@@ -247,17 +249,23 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Booking feature coming soon!")),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookingFormScreen(property: widget.property),
+                  ),
                 );
-              },
+              }, // ✅ formatting fixed here
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFE67E22),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: const Text("Book Now", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: const Text(
+                "Book Now",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
