@@ -146,3 +146,5 @@ class PropertyCard extends StatelessWidget {
     );
   }
 }
+
+//Ready to push

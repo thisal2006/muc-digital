@@ -81,3 +81,5 @@ final List<Property> dummyProperties = [
     contactNumber: "077 087 3798",
   ),
 ];
+
+//Added new features : map, contact

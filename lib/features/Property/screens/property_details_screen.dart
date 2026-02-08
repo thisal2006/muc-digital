@@ -265,3 +265,5 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     );
   }
 }
+
+//Corrected the scrolling prob. ready to push
