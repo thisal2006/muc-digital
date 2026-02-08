@@ -34,8 +34,8 @@ final List<Property> dummyProperties = [
     galleryImages: ["assets/images/hall2.png", "assets/images/hall3.png"],
     description: "A spacious community hall perfect for weddings, parties, and small gatherings.",
     // LINK:
-    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Colombo+Community+Center",
-    contactNumber: "071 123 4567",
+    googleMapsUrl: "https://maps.app.goo.gl/C6RXs6NehAu19A787?g_st=ic",
+    contactNumber: "+94 112 849 144",
   ),
 
   Property(
@@ -47,8 +47,8 @@ final List<Property> dummyProperties = [
     galleryImages: ["assets/images/ground1.png", "assets/images/ground2.png", "assets/images/ground3.png"],
     description: "Full-sized sports ground suitable for cricket, football, and outdoor events.",
     //LINK:
-    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Nawinna+Grounds",
-    contactNumber: "077 987 6543",
+    googleMapsUrl: "https://maps.app.goo.gl/ZEM5s8sJfHcjnYeX8?g_st=ic",
+    contactNumber: "0112 850 265",
   ),
 
   Property(
@@ -56,7 +56,7 @@ final List<Property> dummyProperties = [
     price: "LKR 50,000",
     capacity: "Up to 1000 people",
     imageUrl: "assets/images/auditorium.jpg",
-    features: ["Stage", "Sound System", "Lighting", "Parking"],
+    features: ["Stage", "AC", "Sound System", "Lighting", "Parking"],
     galleryImages: [
       "assets/images/auditorium.jpg",
       "assets/images/audi2.jpg",
@@ -64,8 +64,8 @@ final List<Property> dummyProperties = [
     ],
     description: "A massive air conditioned auditorium designed for concerts, large meetings, and public events.",
     // LINK:
-    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Colombo+Auditorium",
-    contactNumber: "011 234 5678",
+    googleMapsUrl: "https://maps.app.goo.gl/NWp2toSUb2XvM3cv5?g_st=ic",
+    contactNumber: "011 247 7840",
   ),
 
   Property(
@@ -77,7 +77,7 @@ final List<Property> dummyProperties = [
     galleryImages: ["assets/images/poo1.png", "assets/images/poo2.png", "assets/images/poo3.png", "assets/images/poo4.png"],
     description: "Quiet and professional meeting space for corporate discussions.",
     // LINK:
-    googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Nawinna+Swimming+Pool",
-    contactNumber: "076 555 0101",
+    googleMapsUrl: "https://maps.app.goo.gl/hjou8tzBf7EVvkfa9?g_st=ic",
+    contactNumber: "077 087 3798",
   ),
 ];
