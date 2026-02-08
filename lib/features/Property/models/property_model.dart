@@ -30,9 +30,9 @@ final List<Property> dummyProperties = [
     price: "LKR 15,000",
     capacity: "Up to 200 people",
     imageUrl: "assets/images/hall.jpg",
-    features: ["AC", "Sound System", "Chairs", "Projector"],
+    features: ["Fans", "Sound System", "Chairs", "Projector"],
     galleryImages: ["assets/images/hall2.png", "assets/images/hall3.png"],
-    description: "A spacious community hall perfect for weddings, parties, and small gatherings.",
+    description: "A spacious community hall perfect for meetings, community work, and small gatherings.",
     // LINK:
     googleMapsUrl: "https://maps.app.goo.gl/C6RXs6NehAu19A787?g_st=ic",
     contactNumber: "+94 112 849 144",
@@ -72,14 +72,13 @@ final List<Property> dummyProperties = [
     name: "Navinna Swimming Complex",
     price: "LKR 15,000",
     capacity: "Up to 350 people",
-    imageUrl: "assets/images/meetingroom.jpg",
+    imageUrl: "assets/images/poo1.png",
     features: ["Swimming pool", "Changing rooms", "Washrooms", "Canteen"],
     galleryImages: ["assets/images/poo1.png", "assets/images/poo2.png", "assets/images/poo3.png", "assets/images/poo4.png"],
-    description: "Quiet and professional meeting space for corporate discussions.",
+    description: "A swimming complex suitable for swimming practices, meets, and etc.",
     // LINK:
     googleMapsUrl: "https://maps.app.goo.gl/hjou8tzBf7EVvkfa9?g_st=ic",
     contactNumber: "077 087 3798",
   ),
 ];
 
-//Added new features : map, contact
