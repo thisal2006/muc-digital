@@ -1,72 +1,59 @@
 import 'package:flutter/material.dart';
-import '../models/property_model.dart'; // Import the data
+import '../models/property_model.dart';
+import 'property_details_screen.dart';
 
-class PropertyBookingScreen extends StatefulWidget {
+class PropertyBookingScreen extends StatelessWidget {
   const PropertyBookingScreen({super.key});
-
-  @override
-  State<PropertyBookingScreen> createState() => _PropertyBookingScreenState();
-}
-
-class _PropertyBookingScreenState extends State<PropertyBookingScreen> {
-  // set index 1 (Bookings) to be active in nav bar
-  int _selectedIndex = 1;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-
-      // 1. TOP APP BAR
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: const Color(0xFFE67E22), // That Orange Color
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
         title: const Text(
           "Property Booking",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
+        backgroundColor: const Color(0xFFE67E22), // Orange
+        centerTitle: true,
       ),
+      body: Column(
+        children: [
+          // -- SEARCH BAR (Visual Only) --
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: "Search venues...",
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
 
-      // 2. THE LIST OF PROPERTIES
-      body: ListView.builder(
-        // Added padding at bottom so the last card isn't hidden by the nav bar
-        padding: const EdgeInsets.only(bottom: 20, top: 10),
-        itemCount: dummyProperties.length,
-        itemBuilder: (context, index) {
-          final property = dummyProperties[index];
-          return PropertyCard(property: property);
-        },
-      ),
-
-      // 3. BOTTOM NAVIGATION BAR
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.green, // Active color (Green)
-        unselectedItemColor: Colors.black54,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: "Bookings"),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Updates"),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: "Chat"),
+          // -- THE LIST OF PROPERTIES --
+          Expanded(
+            child: ListView.builder(
+              itemCount: dummyProperties.length, // Counts the list automatically
+              itemBuilder: (context, index) {
+                final property = dummyProperties[index]; // Get data for this row
+                return PropertyCard(property: property);
+              },
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-// CUSTOM WIDGET: THE CARD UI
+
+// CUSTOM CARD WIDGET
 
 class PropertyCard extends StatelessWidget {
   final Property property;
@@ -75,80 +62,86 @@ class PropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
+    return GestureDetector(
+      onTap: () {
+        // Navigate to the Details Page when tapped
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PropertyDetailsScreen(property: property),
           ),
-        ],
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // IMAGE SECTION
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Image.asset(
-              property.imageUrl,
-              height: 150,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                // Shows a broken image icon if the file isn't found
-                return Container(
-                    height: 150,
-                    color: Colors.grey[300],
-                    child: const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey))
-                );
-              },
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: const Offset(0, 3),
             ),
-          ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // IMAGE
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+              child: Image.asset(
+                property.imageUrl,
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
 
-          // TEXT DETAILS
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  property.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+            // DETAILS
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        property.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        property.price,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFE67E22), // Orange price
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  property.price,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFFE67E22), // Orange Text
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(height: 5),
+                  Row(
+                    children: [
+                      const Icon(Icons.people, size: 16, color: Colors.grey),
+                      const SizedBox(width: 5),
+                      Text(
+                        property.capacity,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.people_outline, size: 16, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(
-                      property.capacity,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

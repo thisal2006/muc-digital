@@ -7,7 +7,6 @@ class PropertyDetailsScreen extends StatelessWidget {
 
   const PropertyDetailsScreen({super.key, required this.property});
 
-  // Function to open Google Maps
   Future<void> _launchMap(String url) async {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
@@ -24,11 +23,12 @@ class PropertyDetailsScreen extends StatelessWidget {
         backgroundColor: const Color(0xFFE67E22), // Orange
         foregroundColor: Colors.white,
       ),
+      //  WRAP WITH SCROLL VIEW
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- MAIN IMAGE ---
+            // MAIN IMAGE ---
             Image.asset(
               property.imageUrl,
               width: double.infinity,
@@ -36,7 +36,7 @@ class PropertyDetailsScreen extends StatelessWidget {
               fit: BoxFit.cover,
             ),
 
-            // --- GALLERY SECTION ---
+            // GALLERY ---
             Padding(
               padding: const EdgeInsets.only(left: 16, top: 16),
               child: const Text(
@@ -67,13 +67,12 @@ class PropertyDetailsScreen extends StatelessWidget {
               ),
             ),
 
-            // --- DETAILS SECTION ---
+            // DETAILS ---
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name & Capacity
                   Text(
                     property.name,
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -92,7 +91,7 @@ class PropertyDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // --- GOOGLE MAP BUTTON ---
+                  // MAP BUTTON
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -116,7 +115,7 @@ class PropertyDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // Features
+                  // FEATURES
                   const Text("Features", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   Wrap(
@@ -133,7 +132,7 @@ class PropertyDetailsScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  // Description
+                  // DESCRIPTION
                   const Text("About Venue", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
                   Text(
@@ -141,7 +140,36 @@ class PropertyDetailsScreen extends StatelessWidget {
                     style: const TextStyle(color: Colors.black54, height: 1.5),
                   ),
 
-                  const SizedBox(height: 100), // Space for bottom bar
+                  const SizedBox(height: 20),
+
+                  // CONTACT INFO SECTION ---
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey[300]!)
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.phone, color: Color(0xFFE67E22)),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("For more info contact:", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                            Text(
+                              property.contactNumber, // Use the real number from the model
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+
+                  // EXTRA SPACE SO CONTENT ISN'T HIDDEN BEHIND BOTTOM BAR
+                  const SizedBox(height: 120),
                 ],
               ),
             ),
@@ -149,7 +177,7 @@ class PropertyDetailsScreen extends StatelessWidget {
         ),
       ),
 
-      // --- BOTTOM BOOK NOW BAR ---
+      // BOTTOM BOOK NOW BAR ---
       bottomSheet: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

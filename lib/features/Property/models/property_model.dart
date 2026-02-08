@@ -6,7 +6,8 @@ class Property {
   final List<String> features;
   final List<String> galleryImages;
   final String description;
-  final String googleMapsUrl; //Link to Google Maps
+  final String googleMapsUrl;
+  final String contactNumber;
 
   Property({
     required this.name,
@@ -17,25 +18,23 @@ class Property {
     required this.galleryImages,
     required this.description,
     required this.googleMapsUrl,
+    required this.contactNumber,
   });
 }
 
-
 // REAL DATA
-
 final List<Property> dummyProperties = [
   Property(
     name: "Suhada Community Center",
     price: "LKR 15,000",
     capacity: "Up to 200 people",
     imageUrl: "assets/images/hall.jpg",
-    features: ["AC", "Sound System", "Chairs", "Projector"],
+    features: ["Fans", "Sound System", "Chairs", "Projector"],
     galleryImages: ["assets/images/hall2.png", "assets/images/hall3.png"],
     description: "A spacious community hall perfect for weddings, parties, and small gatherings.",
-    //GOOGLE MAPS LINK
-    googleMapsUrl: "https://maps.app.goo.gl/pYT2LWJ83Se7g4tBA",
+    googleMapsUrl: "https://maps.app.goo.gl/example1",
+    contactNumber: "+94 112 849 144",
   ),
-
   Property(
     name: "Nawinna Grounds",
     price: "LKR 18,000",
@@ -44,8 +43,8 @@ final List<Property> dummyProperties = [
     features: ["Grass Turf", "Changing Rooms", "Parking"],
     galleryImages: ["assets/images/ground1.png", "assets/images/ground2.png", "assets/images/ground3.png"],
     description: "Full-sized sports ground suitable for cricket, football, and outdoor events.",
-    // GOOGLE MAPS LINK
-    googleMapsUrl: "https://maps.app.goo.gl/LBhEPvWfpniuJkbW8",
+    googleMapsUrl: "https://maps.app.goo.gl/example2",
+    contactNumber: "011 285 0265",
   ),
   Property(
     name: "Auditorium",
@@ -59,18 +58,19 @@ final List<Property> dummyProperties = [
       "assets/images/audi3.jpg"
     ],
     description: "A massive air conditioned auditorium designed for concerts, large meetings, and public events.",
-    // GOOGLE MAPS LINK
-    googleMapsUrl: "https://maps.app.goo.gl/Nx5iwjFaEZ17p2o4A",
+    googleMapsUrl: "https://maps.app.goo.gl/example3",
+    contactNumber: "011 247 7840",
   ),
   Property(
-    name: "Vavinna Swimming Complex",
+    name: "Navinna Swimming Complex",
     price: "LKR 15,000",
     capacity: "Up to 350 people",
-    imageUrl: "assets/images/meeting.jpg",
+    imageUrl: "assets/images/poo1.png",
     features: ["Swimming pool", "Changing rooms", "Washrooms", "Canteen"],
-    galleryImages: ["assets/images/poo1/png", "assets/images/poo2.png", "assets/images/poo3.png", "assets/images/poo4.png"],
+    galleryImages: ["assets/images/poo1.png", "assets/images/poo2.png", "assets/images/poo3.png", "assets/images/poo4.png"],
     description: "Quiet and professional meeting space for corporate discussions.",
-    // GOOGLE MAPS LINK
-    googleMapsUrl: "https://maps.app.goo.gl/PgEQmDu5xnVYdrHR6",
-  ),
+    googleMapsUrl: "https://maps.app.goo.gl/example4",
+    contactNumber: "077 087 3798",
+  )
 ];
+
