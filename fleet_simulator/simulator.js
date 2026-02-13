@@ -1,6 +1,10 @@
 const admin = require("firebase-admin");
-
+const truckRoutes = require("./routes/truck_routes");
 const serviceAccount = require("./serviceAccountKey.json");
+
+//--------------------------------------
+// FIREBASE INIT
+//--------------------------------------
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -8,77 +12,66 @@ admin.initializeApp({
 });
 
 const db = admin.database();
+
 seedDumpPoints();
 
-
 //--------------------------------------
-// ROUTES (REAL ROADS)
+// TRACK ROUTE INDEX
 //--------------------------------------
 
-const routes = {
+// Automatically build index object from routes
+const routeIndexes = {};
 
-  truck1: [
-    { lat: 6.8480, lng: 79.9260 },
-    { lat: 6.8495, lng: 79.9285 },
-    { lat: 6.8520, lng: 79.9302 },
-    { lat: 6.8550, lng: 79.9325 },
-  ],
-
-  truck2: [
-    { lat: 6.8600, lng: 79.9200 },
-    { lat: 6.8620, lng: 79.9225 },
-    { lat: 6.8650, lng: 79.9250 },
-    { lat: 6.8680, lng: 79.9270 },
-  ],
-
-  truck3: [
-    { lat: 6.8400, lng: 79.9300 },
-    { lat: 6.8420, lng: 79.9330 },
-    { lat: 6.8450, lng: 79.9360 },
-    { lat: 6.8480, lng: 79.9390 },
-  ]
-};
-
-
-// Track positions
-let index = {
-  truck1: 0,
-  truck2: 0,
-  truck3: 0,
-};
-
+Object.keys(truckRoutes).forEach(truckId => {
+  routeIndexes[truckId] = 0;
+});
 
 //--------------------------------------
 // SIMULATE MOVEMENT
 //--------------------------------------
 
-setInterval(() => {
+setInterval(async () => {
+  try {
 
-  Object.keys(routes).forEach(truck => {
+    for (const truckId of Object.keys(truckRoutes)) {
 
-    const route = routes[truck];
+      const route = truckRoutes[truckId];
 
-    index[truck] =
-        (index[truck] + 1) % route.length;
+      let index = routeIndexes[truckId];
 
-    const position = route[index[truck]];
+      const position = route[index];
 
-    db.ref(`trucks/${truck}`).set({
+      await db.ref(`trucks/${truckId}`).update({
 
-      lat: position.lat,
-      lng: position.lng,
-      speed: Math.floor(Math.random() * 40) + 10,
-      status: "on_route",
-      lastUpdate: Date.now(),
-      type: "degradable",
+        lat: position.lat,
+        lng: position.lng,
 
-    });
+        speed: Math.floor(Math.random() * 30) + 20, // realistic speed
 
-  });
+        status: "on_route",
+        lastUpdate: Date.now(),
 
-  console.log("🚛 Trucks moved");
+        // randomize waste type for realism
+        type: Math.random() > 0.5
+            ? "degradable"
+            : "non_degradable",
+      });
 
-}, 5000);
+      // move to next point
+      routeIndexes[truckId] =
+          (index + 1) % route.length;
+    }
+
+    console.log("🚛 Trucks moved successfully");
+
+  } catch (err) {
+
+    console.error("Simulator Error:", err);
+  }
+
+}, 4000); // slightly faster → looks more real
+
+
 //--------------------------------------
 // SEED DUMP POINTS (RUNS ONCE)
 //--------------------------------------
@@ -89,8 +82,7 @@ async function seedDumpPoints() {
 
   const snapshot = await dumpRef.get();
 
-  // Prevent reseeding every run
-  if(snapshot.exists()){
+  if (snapshot.exists()) {
     console.log("Dump points already exist ✅");
     return;
   }
