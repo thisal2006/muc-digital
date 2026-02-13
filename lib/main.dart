@@ -26,9 +26,9 @@ void main() async {
     );
     debugPrint('Firebase initialized successfully');
 
-    // Initialize App Check
     await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.playIntegrity,
+      androidProvider: AndroidProvider.debug, // CHANGE THIS
+      appleProvider: AppleProvider.debug,
     );
     debugPrint('App Check initialized successfully');
 
