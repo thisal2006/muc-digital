@@ -2,9 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:geolocator/geolocator.dart';
+
 import '../dump_points/presentation/dump_points_screen.dart';
 import '../illegal_dumping/presentation/illegal_dumping_screen.dart';
-
 
 class GarbageTrackingScreen extends StatefulWidget {
   const GarbageTrackingScreen({super.key});
@@ -14,18 +15,38 @@ class GarbageTrackingScreen extends StatefulWidget {
       _GarbageTrackingScreenState();
 }
 
-class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
-    with TickerProviderStateMixin {
+class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
+
+  //--------------------------------------------------
+  // FIREBASE
+  //--------------------------------------------------
 
   final DatabaseReference _truckRef =
   FirebaseDatabase.instance.ref('trucks');
 
-  final Completer<GoogleMapController> _mapController = Completer();
+  StreamSubscription? _truckSubscription;
+
+  //--------------------------------------------------
+  // MAP
+  //--------------------------------------------------
+
+  final Completer<GoogleMapController> _mapController =
+  Completer();
 
   final Map<String, Marker> _markers = {};
   final Map<String, LatLng> _truckPositions = {};
 
+  /// Prevent animation stacking
+  final Map<String, bool> _isAnimating = {};
+
   BitmapDescriptor? truckIcon;
+
+  //--------------------------------------------------
+  // USER LOCATION
+  //--------------------------------------------------
+
+  Position? _userPosition;
+  bool _nearbyAlertShown = false;
 
   //--------------------------------------------------
   // INIT
@@ -38,18 +59,52 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
   }
 
   Future<void> _initialize() async {
+
     truckIcon = await BitmapDescriptor.asset(
-      const ImageConfiguration(),
+      const ImageConfiguration(
+        size: Size(32, 32),
+      ),
       "assets/icons/truck.png",
-      width: 70,
-      height: 70,
     );
+
+
+    await _getUserLocation();
 
     _listenToTrucks();
   }
 
   //--------------------------------------------------
-  // SMOOTH MOVEMENT
+  // LOCATION
+  //--------------------------------------------------
+
+  Future<void> _getUserLocation() async {
+
+    bool serviceEnabled =
+    await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) return;
+
+    LocationPermission permission =
+    await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission =
+      await Geolocator.requestPermission();
+    }
+
+    if (permission ==
+        LocationPermission.deniedForever) return;
+
+    _userPosition =
+    await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+      ),
+    );
+  }
+
+  //--------------------------------------------------
+  // SMOOTH MOVEMENT (LOCKED)
   //--------------------------------------------------
 
   Future<void> _animateTruck(
@@ -58,8 +113,12 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
       LatLng newPos,
       ) async {
 
-    const steps = 30;
-    const delay = Duration(milliseconds: 30);
+    if (_isAnimating[truckId] == true) return;
+
+    _isAnimating[truckId] = true;
+
+    const steps = 25;
+    const delay = Duration(milliseconds: 35);
 
     double latStep =
         (newPos.latitude - oldPos.latitude) / steps;
@@ -74,15 +133,61 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
         oldPos.longitude + (lngStep * i),
       );
 
-      if (_markers.containsKey(truckId)) {
-        _markers[truckId] = _markers[truckId]!.copyWith(
-          positionParam: interpolated,
-        );
+      /// ⭐ REMOVE OLD MARKER
+      _markers.remove(truckId);
 
-        if (mounted) setState(() {});
+      /// ⭐ CREATE NEW MARKER (FORCES REDRAW)
+      _markers[truckId] = Marker(
+        markerId: MarkerId(truckId),
+        position: interpolated,
+        icon: truckIcon ?? BitmapDescriptor.defaultMarker,
+        infoWindow: InfoWindow(
+          title: "Truck $truckId",
+        ),
+      );
+
+      if (mounted) {
+        setState(() {});
       }
 
       await Future.delayed(delay);
+    }
+
+    _isAnimating[truckId] = false;
+  }
+
+
+  //--------------------------------------------------
+  // NEARBY ALERT
+  //--------------------------------------------------
+
+  void _checkNearbyTruck(LatLng truckPosition) {
+
+    if (_userPosition == null) return;
+
+    double distance =
+    Geolocator.distanceBetween(
+      _userPosition!.latitude,
+      _userPosition!.longitude,
+      truckPosition.latitude,
+      truckPosition.longitude,
+    );
+
+    if (distance < 500 && !_nearbyAlertShown) {
+
+      _nearbyAlertShown = true;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+          Text("🚛 Garbage truck is nearby!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+
+    if (distance > 700) {
+      _nearbyAlertShown = false;
     }
   }
 
@@ -92,49 +197,66 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
 
   void _listenToTrucks() {
 
-    _truckRef.onValue.listen((event) {
+    _truckSubscription =
+        _truckRef.onValue.listen((event) {
 
-      final data = event.snapshot.value;
-      if (data == null) return;
+          final data = event.snapshot.value;
+          if (data == null) return;
 
-      final trucks = Map<String, dynamic>.from(data as Map);
+          final trucks =
+          Map<String, dynamic>.from(data as Map);
 
-      for (var entry in trucks.entries) {
+          for (var entry in trucks.entries) {
 
-        final id = entry.key;
-        final truck = Map<String, dynamic>.from(entry.value);
+            final id = entry.key;
+            final truck =
+            Map<String, dynamic>.from(entry.value);
 
-        final lat = (truck['lat'] as num).toDouble();
-        final lng = (truck['lng'] as num).toDouble();
+            final lat =
+            (truck['lat'] as num).toDouble();
+            final lng =
+            (truck['lng'] as num).toDouble();
 
-        final newPosition = LatLng(lat, lng);
+            final newPosition =
+            LatLng(lat, lng);
 
-        if (!_truckPositions.containsKey(id)) {
+            //----------------------------------
+            // FIRST LOAD
+            //----------------------------------
 
-          _truckPositions[id] = newPosition;
+            if (!_truckPositions.containsKey(id)) {
 
-          _markers[id] = Marker(
-            markerId: MarkerId(id),
-            position: newPosition,
-            icon: truckIcon ?? BitmapDescriptor.defaultMarker,
-            infoWindow: InfoWindow(
-              title: "Truck $id",
-              snippet: truck['status'] ?? '',
-            ),
-          );
+              _truckPositions[id] = newPosition;
 
-        } else {
+              _markers[id] = Marker(
+                markerId: MarkerId(id),
+                position: newPosition,
+                icon: truckIcon ??
+                    BitmapDescriptor.defaultMarker,
+                infoWindow: InfoWindow(
+                  title: "Truck $id",
+                  snippet: truck['status'] ?? '',
+                ),
+              );
 
-          final oldPosition = _truckPositions[id]!;
+            } else {
 
-          _animateTruck(id, oldPosition, newPosition);
+              final oldPosition =
+              _truckPositions[id]!;
 
-          _truckPositions[id] = newPosition;
-        }
-      }
+              _animateTruck(
+                  id,
+                  oldPosition,
+                  newPosition);
 
-      if (mounted) setState(() {});
-    });
+              _truckPositions[id] = newPosition;
+            }
+
+            _checkNearbyTruck(newPosition);
+          }
+
+          if (mounted) setState(() {});
+        });
   }
 
   //--------------------------------------------------
@@ -145,19 +267,31 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const DumpPointsScreen(),
-      ),
-    );
-  }
-  void _openIllegalDumpReport() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const IllegalDumpingScreen(),
+        builder: (_) =>
+        const DumpPointsScreen(),
       ),
     );
   }
 
+  void _openIllegalDumpReport() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+        const IllegalDumpingScreen(),
+      ),
+    );
+  }
+
+  //--------------------------------------------------
+  // DISPOSE
+  //--------------------------------------------------
+
+  @override
+  void dispose() {
+    _truckSubscription?.cancel();
+    super.dispose();
+  }
 
   //--------------------------------------------------
   // UI
@@ -169,27 +303,31 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
     return Scaffold(
 
       appBar: AppBar(
-        title: const Text("Live Garbage Truck Tracking"),
+        title: const Text(
+            "Live Garbage Truck Tracking"),
       ),
 
       body: Stack(
         children: [
 
           GoogleMap(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(6.9271, 79.8612),
+            initialCameraPosition:
+            const CameraPosition(
+              target:
+              LatLng(6.9271, 79.8612),
               zoom: 13,
             ),
             markers: _markers.values.toSet(),
             myLocationEnabled: true,
             myLocationButtonEnabled: true,
             onMapCreated: (controller) {
-              _mapController.complete(controller);
+              _mapController.complete(
+                  controller);
             },
           ),
 
           //----------------------------------
-          // BOTTOM ACTION BUTTONS
+          // BOTTOM BUTTONS
           //----------------------------------
 
           Positioned(
@@ -197,14 +335,18 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
             left: 12,
             right: 12,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                  vertical: 14, horizontal: 10),
+              padding:
+              const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius:
+                BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black
+                        .withOpacity(0.1),
                     blurRadius: 12,
                   )
                 ],
@@ -232,8 +374,8 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
                     icon: Icons.warning_amber,
                     label: "Report",
                     color: Colors.orange,
-                    onTap: _openIllegalDumpReport,
-
+                    onTap:
+                    _openIllegalDumpReport,
                   ),
                 ],
               ),
@@ -245,7 +387,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
   }
 
   //--------------------------------------------------
-  // BUTTON WIDGET
+  // BUTTON
   //--------------------------------------------------
 
   Widget _actionButton({
@@ -257,24 +399,31 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen>
     return GestureDetector(
       onTap: onTap,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize:
+        MainAxisSize.min,
         children: [
 
           Container(
-            padding: const EdgeInsets.all(12),
+            padding:
+            const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
+              color:
+              color.withOpacity(0.15),
+              borderRadius:
+              BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color),
+            child:
+            Icon(icon, color: color),
           ),
 
           const SizedBox(height: 6),
 
           Text(
             label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
+            style:
+            const TextStyle(
+              fontWeight:
+              FontWeight.w600,
             ),
           ),
         ],
