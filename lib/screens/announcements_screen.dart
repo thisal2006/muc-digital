@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; // this fixes DateFormat
+import 'package:intl/intl.dart';
 
 class AnnouncementsScreen extends StatelessWidget {
   const AnnouncementsScreen({super.key});
@@ -25,10 +25,7 @@ class AnnouncementsScreen extends StatelessWidget {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text(
-                'Error loading announcements: ${snapshot.error}',
-                style: const TextStyle(color: Colors.red, fontSize: 16),
-              ),
+              child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)),
             );
           }
 
@@ -56,9 +53,8 @@ class AnnouncementsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final doc = announcements[index];
               final data = doc.data() as Map<String, dynamic>;
-
-              final title = data['title'] as String? ?? 'No Title';
-              final description = data['description'] as String? ?? '';
+              final title = data['title'] ?? 'No Title';
+              final description = data['description'] ?? '';
               final timestamp = data['timestamp'] as Timestamp?;
               final date = timestamp != null
                   ? DateFormat('MMM dd, yyyy • hh:mm a').format(timestamp.toDate())
@@ -119,12 +115,89 @@ class AnnouncementsScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Add announcement - coming soon (admin only)')),
-          );
+          _showAddAnnouncementDialog(context);
         },
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  void _showAddAnnouncementDialog(BuildContext context) {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add New Announcement'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLength: 100,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                  maxLines: 5,
+                  maxLength: 500,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20)),
+              onPressed: () async {
+                final title = titleController.text.trim();
+                final description = descriptionController.text.trim();
+
+                if (title.isEmpty || description.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Title and description are required')),
+                  );
+                  return;
+                }
+
+                try {
+                  await FirebaseFirestore.instance.collection('announcements').add({
+                    'title': title,
+                    'description': description,
+                    'timestamp': FieldValue.serverTimestamp(),
+                  });
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Announcement added successfully')),
+                  );
+
+                  Navigator.pop(context);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error adding announcement: $e')),
+                  );
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
