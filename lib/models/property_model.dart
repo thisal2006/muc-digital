@@ -6,7 +6,8 @@ class Property {
   final List<String> features;
   final List<String> galleryImages;
   final String description;
-  final String googleMapsUrl; //Link to Google Maps
+  final String googleMapsUrl;
+  final String contactNumber;
 
   Property({
     required this.name,
@@ -17,9 +18,9 @@ class Property {
     required this.galleryImages,
     required this.description,
     required this.googleMapsUrl,
+    required this.contactNumber,
   });
 }
-
 
 // REAL DATA
 
@@ -29,11 +30,12 @@ final List<Property> dummyProperties = [
     price: "LKR 15,000",
     capacity: "Up to 200 people",
     imageUrl: "assets/images/hall.jpg",
-    features: ["AC", "Sound System", "Chairs", "Projector"],
+    features: ["Fans", "Sound System", "Chairs", "Projector"],
     galleryImages: ["assets/images/hall2.png", "assets/images/hall3.png"],
-    description: "A spacious community hall perfect for weddings, parties, and small gatherings.",
-    //GOOGLE MAPS LINK
-    googleMapsUrl: "https://maps.app.goo.gl/pYT2LWJ83Se7g4tBA",
+    description: "A spacious community hall perfect for meetings, community work, and small gatherings.",
+    // LINK:
+    googleMapsUrl: "https://maps.app.goo.gl/C6RXs6NehAu19A787?g_st=ic",
+    contactNumber: "+94 112 849 144",
   ),
 
   Property(
@@ -44,33 +46,39 @@ final List<Property> dummyProperties = [
     features: ["Grass Turf", "Changing Rooms", "Parking"],
     galleryImages: ["assets/images/ground1.png", "assets/images/ground2.png", "assets/images/ground3.png"],
     description: "Full-sized sports ground suitable for cricket, football, and outdoor events.",
-    // GOOGLE MAPS LINK
-    googleMapsUrl: "https://maps.app.goo.gl/LBhEPvWfpniuJkbW8",
+    //LINK:
+    googleMapsUrl: "https://maps.app.goo.gl/ZEM5s8sJfHcjnYeX8?g_st=ic",
+    contactNumber: "0112 850 265",
   ),
+
   Property(
     name: "Auditorium",
     price: "LKR 50,000",
     capacity: "Up to 1000 people",
     imageUrl: "assets/images/auditorium.jpg",
-    features: ["Stage", "Sound System", "Lighting", "Parking"],
+    features: ["Stage", "AC", "Sound System", "Lighting", "Parking"],
     galleryImages: [
       "assets/images/auditorium.jpg",
       "assets/images/audi2.jpg",
       "assets/images/audi3.jpg"
     ],
     description: "A massive air conditioned auditorium designed for concerts, large meetings, and public events.",
-    // GOOGLE MAPS LINK
-    googleMapsUrl: "https://maps.app.goo.gl/Nx5iwjFaEZ17p2o4A",
+    // LINK:
+    googleMapsUrl: "https://maps.app.goo.gl/NWp2toSUb2XvM3cv5?g_st=ic",
+    contactNumber: "011 247 7840",
   ),
+
   Property(
-    name: "Vavinna Swimming Complex",
+    name: "Navinna Swimming Complex",
     price: "LKR 15,000",
     capacity: "Up to 350 people",
-    imageUrl: "assets/images/meeting.jpg",
+    imageUrl: "assets/images/poo1.png",
     features: ["Swimming pool", "Changing rooms", "Washrooms", "Canteen"],
-    galleryImages: ["assets/images/poo1/png", "assets/images/poo2.png", "assets/images/poo3.png", "assets/images/poo4.png"],
-    description: "Quiet and professional meeting space for corporate discussions.",
-    // GOOGLE MAPS LINK
-    googleMapsUrl: "https://maps.app.goo.gl/PgEQmDu5xnVYdrHR6",
+    galleryImages: ["assets/images/poo1.png", "assets/images/poo2.png", "assets/images/poo3.png", "assets/images/poo4.png"],
+    description: "A swimming complex suitable for swimming practices, meets, and etc.",
+    // LINK:
+    googleMapsUrl: "https://maps.app.goo.gl/hjou8tzBf7EVvkfa9?g_st=ic",
+    contactNumber: "077 087 3798",
   ),
 ];
+
