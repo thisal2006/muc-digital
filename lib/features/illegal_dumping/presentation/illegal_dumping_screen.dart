@@ -17,8 +17,12 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
   final TextEditingController descriptionController =
   TextEditingController();
 
+  final ImagePicker picker = ImagePicker();
+
   File? imageFile;
+
   bool isUploading = false;
+  double uploadProgress = 0;
 
   //--------------------------------------------------
   // PICK IMAGE
@@ -26,28 +30,55 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
 
   Future<void> pickImage() async {
 
-    final picked = await ImagePicker()
-        .pickImage(source: ImageSource.camera);
+    try {
 
-    if (picked != null) {
-      setState(() {
-        imageFile = File(picked.path);
-      });
+      final picked = await picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 70,
+      );
+
+      if (picked != null) {
+        setState(() {
+          imageFile = File(picked.path);
+        });
+      }
+
+    } catch (e) {
+      _showError("Camera error: $e");
     }
   }
 
   //--------------------------------------------------
-  // GET LOCATION
+  // LOCATION
   //--------------------------------------------------
 
   Future<Position> _getLocation() async {
 
+    bool serviceEnabled =
+    await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) {
+      throw Exception("Location services disabled.");
+    }
+
     LocationPermission permission =
-    await Geolocator.requestPermission();
+    await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission =
+      await Geolocator.requestPermission();
+    }
+
+    if (permission ==
+        LocationPermission.deniedForever) {
+      throw Exception(
+          "Location permission permanently denied.");
+    }
 
     return await Geolocator.getCurrentPosition(
-      locationSettings:
-      const LocationSettings(accuracy: LocationAccuracy.best),
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+      ),
     );
   }
 
@@ -57,29 +88,29 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
 
   Future<void> submitReport() async {
 
-    if (imageFile == null ||
-        descriptionController.text.trim().isEmpty) {
+    final description =
+    descriptionController.text.trim();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Photo and description required"),
-        ),
-      );
+    if (imageFile == null || description.isEmpty) {
+      _showError("Photo and description required");
       return;
     }
 
-    setState(() => isUploading = true);
+    setState(() {
+      isUploading = true;
+      uploadProgress = 0;
+    });
 
     try {
 
       //----------------------------------
-      // LOCATION
+      // GET LOCATION
       //----------------------------------
 
       final position = await _getLocation();
 
       //----------------------------------
-      // UPLOAD IMAGE
+      // STORAGE UPLOAD (TRACKED)
       //----------------------------------
 
       final fileName =
@@ -89,34 +120,70 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
           .ref()
           .child("illegal_dumps/$fileName");
 
-      await ref.putFile(imageFile!);
+      UploadTask uploadTask =
+      ref.putFile(imageFile!);
 
-      final imageUrl = await ref.getDownloadURL();
+      /// 🔥 TRACK PROGRESS
+      uploadTask.snapshotEvents.listen((event) {
+
+        final progress =
+            event.bytesTransferred /
+                event.totalBytes;
+
+        setState(() {
+          uploadProgress = progress;
+        });
+      });
+
+      /// 🔥 FORCE TIMEOUT (NO MORE INFINITE SPINNER)
+      TaskSnapshot snapshot =
+      await uploadTask.timeout(
+        const Duration(seconds: 30),
+      );
+
+      final imageUrl =
+      await snapshot.ref.getDownloadURL();
 
       //----------------------------------
-      // SAVE TO FIRESTORE
+      // FIRESTORE WRITE
       //----------------------------------
 
       await FirebaseFirestore.instance
           .collection("illegal_dumps")
           .add({
-        "description": descriptionController.text,
+
+        "description": description,
         "imageUrl": imageUrl,
-        "lat": position.latitude,
-        "lng": position.longitude,
+
+        // ⭐ USE GEOPPOINT (VERY IMPORTANT FOR FUTURE MAP QUERIES)
+        "location": GeoPoint(
+          position.latitude,
+          position.longitude,
+        ),
+
         "status": "pending",
-        "createdAt": Timestamp.now(),
+        "priority": "normal",
+        "reportedBy": "citizen",
+
+        "createdAt":
+        FieldValue.serverTimestamp(),
       });
 
       //----------------------------------
       // SUCCESS
       //----------------------------------
 
-      setState(() => isUploading = false);
+      if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      setState(() {
+        isUploading = false;
+      });
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
         const SnackBar(
-          content: Text("Report submitted successfully"),
+          content:
+          Text("Report submitted successfully"),
           backgroundColor: Colors.green,
         ),
       );
@@ -125,12 +192,23 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
 
     } catch (e) {
 
-      setState(() => isUploading = false);
+      setState(() {
+        isUploading = false;
+      });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      _showError("Upload failed: $e");
     }
+  }
+
+  //--------------------------------------------------
+  // ERROR HELPER
+  //--------------------------------------------------
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   //--------------------------------------------------
@@ -142,34 +220,49 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Report Illegal Dumping"),
+        title:
+        const Text("Report Illegal Dumping"),
       ),
 
       body: Padding(
         padding: const EdgeInsets.all(16),
-
         child: Column(
           children: [
 
             //----------------------------------
-            // IMAGE PREVIEW
+            // IMAGE
             //----------------------------------
 
             GestureDetector(
-              onTap: pickImage,
+              onTap:
+              isUploading ? null : pickImage,
               child: Container(
                 height: 180,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius:
+                  BorderRadius.circular(12),
                   color: Colors.grey[200],
                 ),
                 child: imageFile == null
-                    ? const Icon(Icons.camera_alt, size: 50)
+                    ? const Column(
+                  mainAxisAlignment:
+                  MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.camera_alt,
+                        size: 50),
+                    SizedBox(height: 8),
+                    Text(
+                        "Tap to capture photo"),
+                  ],
+                )
                     : ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(imageFile!,
-                      fit: BoxFit.cover),
+                  borderRadius:
+                  BorderRadius.circular(12),
+                  child: Image.file(
+                    imageFile!,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -181,13 +274,28 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
             //----------------------------------
 
             TextField(
-              controller: descriptionController,
+              controller:
+              descriptionController,
               maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: "Describe the issue",
-                border: OutlineInputBorder(),
+              decoration:
+              const InputDecoration(
+                labelText:
+                "Describe the issue",
+                border:
+                OutlineInputBorder(),
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            //----------------------------------
+            // PROGRESS BAR
+            //----------------------------------
+
+            if (isUploading)
+              LinearProgressIndicator(
+                value: uploadProgress,
+              ),
 
             const SizedBox(height: 20),
 
@@ -197,19 +305,32 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
 
             SizedBox(
               width: double.infinity,
+              height: 50,
               child: ElevatedButton(
                 onPressed:
-                isUploading ? null : submitReport,
+                isUploading
+                    ? null
+                    : submitReport,
                 child: isUploading
-                    ? const CircularProgressIndicator(
-                  color: Colors.white,
+                    ? Text(
+                  "${(uploadProgress * 100).toStringAsFixed(0)}%",
                 )
-                    : const Text("Submit Report"),
+                    : const Text(
+                  "Submit Report",
+                  style:
+                  TextStyle(fontSize: 16),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    descriptionController.dispose();
+    super.dispose();
   }
 }
