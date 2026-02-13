@@ -13,30 +13,27 @@ import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
-import 'screens/phone_login_screen.dart';
 import 'screens/otp_verification_screen.dart';
-
-import 'widgets/app_drawer.dart';  // Make sure this file exists
-
-bool _firebaseInitialized = false;  // Global flag to prevent duplicate calls
+import 'package:firebase_app_check/firebase_app_check.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (!_firebaseInitialized) {
-    if (Firebase.apps.isEmpty) {
-      try {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-        debugPrint('Firebase initialized successfully');
-      } catch (e) {
-        debugPrint('Firebase init failed: $e');
-      }
-      _firebaseInitialized = true;
-    } else {
-      debugPrint('Firebase already initialized - skipping');
-    }
+  try {
+    // Initialize Firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    debugPrint('Firebase initialized successfully');
+
+    // Initialize App Check
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.playIntegrity,
+    );
+    debugPrint('App Check initialized successfully');
+
+  } catch (e) {
+    debugPrint('Firebase/App Check initialization failed: $e');
   }
 
   runApp(const MUCdigitalApp());
@@ -67,16 +64,17 @@ class MUCdigitalApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/onboarding': (context) =>  OnboardingScreen(),
+        '/onboarding': (context) => const OnboardingScreen(),
         '/user_agreement': (context) => const UserAgreementScreen(),
         '/home': (context) => const HomeScreen(),
-        '/emergency': (context) =>  EmergencyScreen(),
+        '/emergency': (context) => const EmergencyScreen(),
         '/announcements': (context) => const AnnouncementsScreen(),
         '/garbage_tracker': (context) => const GarbageTrackingScreen(),
         '/property_booking': (context) => const PlaceholderScreen(title: 'Property Booking'),
         '/vehicle_booking': (context) => const PlaceholderScreen(title: 'Vehicle Booking'),
         '/cemetery_booking': (context) => const PlaceholderScreen(title: 'Cemetery Booking'),
         '/phone_login': (context) => const PhoneLoginScreen(),
+        '/otp_verification': (context) => const OTPVerificationScreen(verificationId: '', phoneNumber: '',),
       },
     );
   }
