@@ -14,7 +14,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   String _phoneNumber = '';
   bool _isLoading = false;
-  String _initialCountryCode = 'LK';
+  String _initialCountryCode = 'LK'; // Sri Lanka
 
   Future<void> _sendOTP() async {
     if (!_formKey.currentState!.validate()) return;
@@ -51,7 +51,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Error sending OTP: $e')),
       );
     }
   }
@@ -84,7 +84,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'We will send you an OTP to verify',
+                  'We will send you a one-time password (OTP)',
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
@@ -98,7 +98,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                     setSelectorButtonAsPrefixIcon: true,
                   ),
                   countries: const ['LK', 'IN', 'US'], // add more if needed
-                  initialValueSelector: PhoneNumber(isoCode: _initialCountryCode),
+                  initialValue: PhoneNumber(isoCode: _initialCountryCode), // corrected parameter
                   inputDecoration: const InputDecoration(
                     labelText: 'Phone Number',
                     border: OutlineInputBorder(),
@@ -119,7 +119,11 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                  )
                       : const Text(
                     'Send OTP',
                     style: TextStyle(fontSize: 18, color: Colors.white),
