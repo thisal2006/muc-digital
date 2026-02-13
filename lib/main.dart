@@ -2,6 +2,7 @@
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:muc_digital/screens/phone_login_screen.dart';
 import 'package:muc_digital/screens/placeholder_screen.dart';
 import 'features/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
@@ -12,6 +13,8 @@ import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
+import 'screens/phone_login_screen.dart';
+import 'screens/otp_verification_screen.dart';
 
 import 'widgets/app_drawer.dart';  // Make sure this file exists
 
@@ -73,6 +76,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/property_booking': (context) => const PlaceholderScreen(title: 'Property Booking'),
         '/vehicle_booking': (context) => const PlaceholderScreen(title: 'Vehicle Booking'),
         '/cemetery_booking': (context) => const PlaceholderScreen(title: 'Cemetery Booking'),
+        '/phone_login': (context) => const PhoneLoginScreen(),
       },
     );
   }
