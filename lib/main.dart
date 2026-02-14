@@ -13,7 +13,7 @@ import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
 import 'features/Property/screens/property_booking_screen.dart';
 
-import 'widgets/app_drawer.dart';
+//import 'widgets/app_drawer.dart';
 
 bool _firebaseInitialized = false;  // Global flag to prevent duplicate calls
 
@@ -80,3 +80,4 @@ class MUCdigitalApp extends StatelessWidget {
 }
 
 //Added the routes for property booking
+//go
