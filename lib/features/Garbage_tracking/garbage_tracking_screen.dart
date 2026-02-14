@@ -62,7 +62,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
 
     truckIcon = await BitmapDescriptor.asset(
       const ImageConfiguration(
-        size: Size(32, 32),
+        size: Size(48,48),
       ),
       "assets/icons/truck.png",
     );
