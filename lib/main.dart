@@ -11,8 +11,9 @@ import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
+import 'features/Property/screens/property_booking_screen.dart';
 
-import 'widgets/app_drawer.dart';  // Make sure this file exists
+import 'widgets/app_drawer.dart';
 
 bool _firebaseInitialized = false;  // Global flag to prevent duplicate calls
 
@@ -69,11 +70,13 @@ class MUCdigitalApp extends StatelessWidget {
         '/emergency': (context) =>  EmergencyScreen(),
         '/announcements': (context) => const AnnouncementsScreen(),
         '/garbage_tracker': (context) => const GarbageTrackingScreen(),
-        '/property_booking': (context) => const PlaceholderScreen(title: 'Property Booking'),
-        '/vehicle_booking': (context) => const PlaceholderScreen(title: 'Vehicle Booking'),
-        '/cemetery_booking': (context) => const PlaceholderScreen(title: 'Cemetery Booking'),
+
+        '/property_booking': (context) => const PropertyBookingScreen(),
+        //'/vehicle_booking': (context) => PlaceholderScreen(title: 'Vehicle Booking'),
+        //'/cemetery_booking': (context) => PlaceholderScreen(title: 'Cemetery Booking'),
       },
     );
   }
 }
-y
+
+//Added the routes for property booking
