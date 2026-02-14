@@ -94,3 +94,4 @@ class StripeService {
     return (priceInt * 100).toString();
   }
 }
+//in making
