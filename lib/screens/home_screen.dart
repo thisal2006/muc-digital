@@ -17,10 +17,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // All pages that bottom nav can switch to
   final List<Widget> _pages = [
-    const _HomeDashboardContent(),           // Home tab (search + cards)
+    const _HomeDashboardContent(), // Home tab (search + cards)
     const Center(child: Text('Bookings - Coming soon')), // Bookings tab
-    const AnnouncementsScreen(),             // Updates tab → Announcements
-    const Center(child: Text('Chat - Coming soon')),     // Chat tab
+    const AnnouncementsScreen(), // Updates tab → Announcements
+    const Center(child: Text('Chat - Coming soon')), // Chat tab
   ];
 
   void _onItemTapped(int index) {
@@ -39,7 +39,11 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu_rounded, color: Color(0xFF1B5E20), size: 28),
+            icon: const Icon(
+              Icons.menu_rounded,
+              color: Color(0xFF1B5E20),
+              size: 28,
+            ),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
@@ -62,13 +66,18 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Badge(
                 label: const Text('3', style: TextStyle(fontSize: 10)),
                 backgroundColor: Colors.red,
-                child: const Icon(Icons.notifications_rounded, color: Color(0xFF1B5E20)),
+                child: const Icon(
+                  Icons.notifications_rounded,
+                  color: Color(0xFF1B5E20),
+                ),
               ),
               onPressed: () {
                 // This is the fix: open Announcements when tapping bell
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AnnouncementsScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const AnnouncementsScreen(),
+                  ),
                 );
               },
             ),
@@ -77,10 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       // Switch between pages when tapping bottom nav
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _pages),
 
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -92,10 +98,22 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped, // <--- this makes tabs switch
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_month_rounded), label: 'Bookings'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_rounded), label: 'Updates'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_rounded), label: 'Chat'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month_rounded),
+            label: 'Bookings',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_rounded),
+            label: 'Updates',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_rounded),
+            label: 'Chat',
+          ),
         ],
       ),
     );
@@ -134,7 +152,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Vehicle Booking',
       'subtitle': 'Reserve municipal vehicles',
       'color': const Color(0xFF1976D2),
-      'route': null,
+      'route': '/vehicle_booking',
     },
     {
       'icon': Icons.location_on_rounded,
@@ -190,7 +208,11 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha:0.06), blurRadius: 12, offset: const Offset(0, 4)),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
                   ], //updated
                 ),
                 child: TextField(
@@ -199,15 +221,18 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                   decoration: InputDecoration(
                     hintText: 'Search services...',
                     hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1B5E20)),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: Color(0xFF1B5E20),
+                    ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.grey),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                    )
+                            icon: const Icon(Icons.clear, color: Colors.grey),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
                         : null,
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -225,15 +250,30 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
               children: [
                 FadeInLeft(
                   duration: const Duration(milliseconds: 800),
-                  child: _StatCard('3', 'Bookings', Icons.book_online, const Color(0xFF1B5E20)),
+                  child: _StatCard(
+                    '3',
+                    'Bookings',
+                    Icons.book_online,
+                    const Color(0xFF1B5E20),
+                  ),
                 ),
                 FadeInUp(
                   duration: const Duration(milliseconds: 850),
-                  child: _StatCard('1', 'Pending', Icons.hourglass_empty, const Color(0xFFF57C00)),
+                  child: _StatCard(
+                    '1',
+                    'Pending',
+                    Icons.hourglass_empty,
+                    const Color(0xFFF57C00),
+                  ),
                 ),
                 FadeInRight(
                   duration: const Duration(milliseconds: 900),
-                  child: _StatCard('2', 'Complaints', Icons.report_problem, const Color(0xFFD32F2F)),
+                  child: _StatCard(
+                    '2',
+                    'Complaints',
+                    Icons.report_problem,
+                    const Color(0xFFD32F2F),
+                  ),
                 ),
               ],
             ),
@@ -278,17 +318,37 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.85)], begin: Alignment.topLeft, end: Alignment.bottomRight), //removed warning
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.85)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ), //removed warning
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 8))], //removed warning
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ], //removed warning
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: Colors.white, size: 28),
           const SizedBox(height: 8),
-          Text(number, style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
-          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          Text(
+            number,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 26,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
+          ),
         ],
       ),
     );
@@ -339,14 +399,18 @@ class ServiceCard extends StatelessWidget {
                     gradient: LinearGradient(
                       colors: [
                         color.withValues(alpha: 0.15), // Updated
-                        color.withValues(alpha: 0.05)  // Updated
+                        color.withValues(alpha: 0.05), // Updated
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(icon, size: 40, color: color), // Reduced icon size from 48 to 40
+                  child: Icon(
+                    icon,
+                    size: 40,
+                    color: color,
+                  ), // Reduced icon size from 48 to 40
                 ),
               ),
               const SizedBox(height: 8), // Reduced gap
@@ -364,7 +428,10 @@ class ServiceCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 11, color: Colors.grey[700]), // Reduced from 13 to 11
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[700],
+                ), // Reduced from 13 to 11
                 textAlign: TextAlign.center,
                 maxLines: 1, // Restrict to 1 line to save space
                 overflow: TextOverflow.ellipsis,

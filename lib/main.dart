@@ -12,10 +12,11 @@ import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
 import 'features/Property/screens/property_booking_screen.dart';
+import 'vehicleBooking/vehicle_type_screen.dart';
 
 //import 'widgets/app_drawer.dart';
 
-bool _firebaseInitialized = false;  // Global flag to prevent duplicate calls
+bool _firebaseInitialized = false; // Global flag to prevent duplicate calls
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,15 +65,15 @@ class MUCdigitalApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/onboarding': (context) =>  OnboardingScreen(),
+        '/onboarding': (context) => OnboardingScreen(),
         '/user_agreement': (context) => const UserAgreementScreen(),
         '/home': (context) => const HomeScreen(),
-        '/emergency': (context) =>  EmergencyScreen(),
+        '/emergency': (context) => EmergencyScreen(),
         '/announcements': (context) => const AnnouncementsScreen(),
         '/garbage_tracker': (context) => const GarbageTrackingScreen(),
 
         '/property_booking': (context) => const PropertyBookingScreen(),
-        //'/vehicle_booking': (context) => PlaceholderScreen(title: 'Vehicle Booking'),
+        '/vehicle_booking': (context) => const VehicleTypeScreen(),
         //'/cemetery_booking': (context) => PlaceholderScreen(title: 'Cemetery Booking'),
       },
     );

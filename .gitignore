@@ -60,3 +60,5 @@ linux/build/
 macos/build/
 windows/build/
 fleet_simulator/serviceAccountKey.json
+vehicle_book_BE/.env
+vehicle_book_BE/.env
