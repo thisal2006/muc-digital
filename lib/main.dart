@@ -2,38 +2,38 @@
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:muc_digital/screens/phone_login_screen.dart';
-import 'package:muc_digital/screens/placeholder_screen.dart';
 import 'features/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
-import 'package:muc_digital/screens/property_booking_screen.dart';
+
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
-import 'screens/otp_verification_screen.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
+import 'features/Property/screens/property_booking_screen.dart';
+
+//import 'widgets/app_drawer.dart';
+
+bool _firebaseInitialized = false;  // Global flag to prevent duplicate calls
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    // Initialize Firebase
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    debugPrint('Firebase initialized successfully');
-
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.debug, // CHANGE THIS
-      appleProvider: AppleProvider.debug,
-    );
-    debugPrint('App Check initialized successfully');
-
-  } catch (e) {
-    debugPrint('Firebase/App Check initialization failed: $e');
+  if (!_firebaseInitialized) {
+    if (Firebase.apps.isEmpty) {
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        debugPrint('Firebase initialized successfully');
+      } catch (e) {
+        debugPrint('Firebase init failed: $e');
+      }
+      _firebaseInitialized = true;
+    } else {
+      debugPrint('Firebase already initialized - skipping');
+    }
   }
 
   runApp(const MUCdigitalApp());
@@ -64,18 +64,20 @@ class MUCdigitalApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/onboarding': (context) => const OnboardingScreen(),
+        '/onboarding': (context) =>  OnboardingScreen(),
         '/user_agreement': (context) => const UserAgreementScreen(),
         '/home': (context) => const HomeScreen(),
-        '/emergency': (context) => const EmergencyScreen(),
+        '/emergency': (context) =>  EmergencyScreen(),
         '/announcements': (context) => const AnnouncementsScreen(),
         '/garbage_tracker': (context) => const GarbageTrackingScreen(),
-        '/property_booking': (context) => const PlaceholderScreen(title: 'Property Booking'),
-        '/vehicle_booking': (context) => const PlaceholderScreen(title: 'Vehicle Booking'),
-        '/cemetery_booking': (context) => const PlaceholderScreen(title: 'Cemetery Booking'),
-        '/phone_login': (context) => const PhoneLoginScreen(),
-        '/otp_verification': (context) => const OTPVerificationScreen(verificationId: '', phoneNumber: '',),
+
+        '/property_booking': (context) => const PropertyBookingScreen(),
+        //'/vehicle_booking': (context) => PlaceholderScreen(title: 'Vehicle Booking'),
+        //'/cemetery_booking': (context) => PlaceholderScreen(title: 'Cemetery Booking'),
       },
     );
   }
 }
+
+//Added the routes for property booking
+//go
