@@ -65,7 +65,6 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   }
 
   Future<void> _initialize() async {
-
     truckIcon = await BitmapDescriptor.asset(
       const ImageConfiguration(size: Size(40, 40)),
       "assets/icons/truck.png",
@@ -80,7 +79,6 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   //--------------------------------------------------
 
   Future<void> _getUserLocation() async {
-
     bool serviceEnabled =
     await Geolocator.isLocationServiceEnabled();
 
@@ -104,14 +102,12 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
       ),
     );
   }
+
 //--------------------------------------------------
 // GOOGLE DIRECTIONS POLYLINE (CORRECT v2 SYNTAX)
 //--------------------------------------------------
-  Future<List<LatLng>> _getPolylineRoute(
-      LatLng origin,
-      LatLng destination,
-      ) async {
-
+  Future<List<LatLng>> _getPolylineRoute(LatLng origin,
+      LatLng destination,) async {
     final polylinePoints = PolylinePoints();
 
     final request = PolylineRequest(
@@ -134,6 +130,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
         );
       }
     }
+    print("Polyline points count: ${result.points.length}");
 
     return routeCoords;
   }
@@ -142,12 +139,9 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   // MOVE TRUCK ON ROAD
   //--------------------------------------------------
 
-  Future<void> _moveTruckOnRoad(
-      String truckId,
+  Future<void> _moveTruckOnRoad(String truckId,
       LatLng start,
-      LatLng end,
-      ) async {
-
+      LatLng end,) async {
     if (_isAnimating[truckId] == true) return;
     _isAnimating[truckId] = true;
 
@@ -155,7 +149,6 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
     await _getPolylineRoute(start, end);
 
     for (LatLng pos in route) {
-
       _markers[truckId] = Marker(
         markerId: MarkerId(truckId),
         position: pos,
@@ -171,11 +164,12 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
       if (mounted) setState(() {});
 
       await Future.delayed(
-          const Duration(milliseconds: 350));
+          const Duration(milliseconds: 80));
     }
 
     _isAnimating[truckId] = false;
   }
+
 
   //--------------------------------------------------
   // NEARBY ALERT
