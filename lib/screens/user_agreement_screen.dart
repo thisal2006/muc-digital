@@ -112,6 +112,7 @@ class UserAgreementScreen extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () {
+                      // Navigate to phone login screen when user agrees
                       Navigator.pushReplacementNamed(context, '/home');
                     },
                     style: ElevatedButton.styleFrom(

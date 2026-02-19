@@ -245,13 +245,12 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: GridView.count(
-                key: ValueKey<int>(_filteredServices.length),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
-                childAspectRatio: 1.05,
+                childAspectRatio: 1.1,  // taller cards = more space for subtitle
                 children: _filteredServices.map((service) {
                   return FadeInUp(
                     duration: const Duration(milliseconds: 800),
@@ -322,9 +321,7 @@ class ServiceCard extends StatelessWidget {
         splashColor: color.withOpacity(0.15),
         highlightColor: color.withOpacity(0.08),
         onTap: () {
-          if (route != null) {
-            Navigator.pushNamed(context, route!);
-          }
+          if (route != null) Navigator.pushNamed(context, route!);
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -343,7 +340,7 @@ class ServiceCard extends StatelessWidget {
                 ),
                 child: Icon(icon, size: 48, color: color),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Text(
                 title,
                 style: GoogleFonts.poppins(
@@ -353,7 +350,7 @@ class ServiceCard extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Flexible(
                 child: Text(
                   subtitle,

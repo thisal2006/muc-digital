@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/property_model.dart'; // Import the data
+import '../features/Property/models/property_model.dart'; // Import the data
 
 class PropertyBookingScreen extends StatefulWidget {
   const PropertyBookingScreen({super.key});
