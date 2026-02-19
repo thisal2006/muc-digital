@@ -59,3 +59,4 @@ ios/Pods/
 linux/build/
 macos/build/
 windows/build/
+fleet_simulator/serviceAccountKey.json
