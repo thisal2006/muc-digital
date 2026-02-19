@@ -30,29 +30,41 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  table_calendar: ^3.2.0
-  animate_do: ^3.3.4
-  google_fonts: ^6.1.0
-  firebase_core: ^2.24.0
-  firebase_database: ^10.4.0
-  google_maps_flutter: ^2.5.0
-  smooth_page_indicator: ^1.1.0
-  url_launcher: ^6.3.2
-  intl: ^0.20.2  # Change from ^0.19.0 to ^0.20.2
 
-  http: ^1.2.0 # To talk to the payment server
-  flutter_stripe: ^10.1.0
-
-
-
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+
+  # Firebase Core
+  firebase_core: ^4.4.0
+
+  # Firebase Auth
+  firebase_auth: ^6.1.4
+
+  # Firebase App Check - USE THIS VERSION
+  firebase_app_check: 0.4.1+4  # Not ^1.0.0
+
+  # Firebase Messaging
+  firebase_messaging: ^16.1.1
+
+  # Other Firebase services
+  cloud_firestore: ^6.1.2
+  firebase_storage: ^13.0.6
+  firebase_database: ^12.1.3
+
+  # Your other dependencies
+  google_maps_flutter: ^2.14.0
+  http: ^1.6.0
+  provider: ^6.1.5+1
+  smooth_page_indicator: ^2.0.1
+  animate_do: ^4.2.0
+  flutter_animate: ^4.5.0
+  google_fonts: ^8.0.2
+  pin_code_fields: ^9.0.0
+  intl: ^0.20.2
   geolocator: ^14.0.2
+  url_launcher: ^6.2.4
+  intl_phone_number_input: ^0.7.5
+  flutter_stripe: ^12.3.0
   image_picker: ^1.2.1
-  firebase_storage: ^11.6.5
-  cloud_firestore: ^4.17.5
 
 
 dev_dependencies:

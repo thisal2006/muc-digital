@@ -127,7 +127,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Property Booking',
       'subtitle': 'Book halls & grounds',
       'color': const Color(0xFFF57C00),
-      'route': '/property_booking',
+      'route': null,
     },
     {
       'icon': Icons.directions_car_rounded,
@@ -190,8 +190,8 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha:0.06), blurRadius: 12, offset: const Offset(0, 4)),
-                  ], //updated
+                    BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4)),
+                  ],
                 ),
                 child: TextField(
                   controller: _searchController,
@@ -245,13 +245,12 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: GridView.count(
-                key: ValueKey<int>(_filteredServices.length),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
-                childAspectRatio: 0.9, // Changed this from 1.05 to 0.9
+                childAspectRatio: 1.1,  // taller cards = more space for subtitle
                 children: _filteredServices.map((service) {
                   return FadeInUp(
                     duration: const Duration(milliseconds: 800),
@@ -278,9 +277,9 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.85)], begin: Alignment.topLeft, end: Alignment.bottomRight), //removed warning
+        gradient: LinearGradient(colors: [color, color.withOpacity(0.85)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 8))], //removed warning
+        boxShadow: [BoxShadow(color: color.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 8))],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -319,55 +318,47 @@ class ServiceCard extends StatelessWidget {
       color: Colors.white,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
+        splashColor: color.withOpacity(0.15),
+        highlightColor: color.withOpacity(0.08),
         onTap: () {
-          debugPrint("Navigating to: $route");
-          if (route != null) {
-            Navigator.pushNamed(context, route!);
-          }
+          if (route != null) Navigator.pushNamed(context, route!);
         },
         child: Padding(
-          padding: const EdgeInsets.all(12), // Reduced padding slightly
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min, // Added min size
             children: [
-              // Wrap the icon in Expanded so it shrinks if the text is too long
-              Expanded(
-                child: Container(
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        color.withValues(alpha: 0.15), // Updated
-                        color.withValues(alpha: 0.05)  // Updated
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Icon(icon, size: 40, color: color), // Reduced icon size from 48 to 40
+                  borderRadius: BorderRadius.circular(16),
                 ),
+                child: Icon(icon, size: 48, color: color),
               ),
-              const SizedBox(height: 8), // Reduced gap
+              const SizedBox(height: 12),
               Text(
                 title,
                 style: GoogleFonts.poppins(
-                  fontSize: 14, // Reduced font size slightly from 16 to 14
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF1A1A1A),
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(fontSize: 11, color: Colors.grey[700]), // Reduced from 13 to 11
-                textAlign: TextAlign.center,
-                maxLines: 1, // Restrict to 1 line to save space
-                overflow: TextOverflow.ellipsis,
+              const SizedBox(height: 8),
+              Flexible(
+                child: Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -376,5 +367,3 @@ class ServiceCard extends StatelessWidget {
     );
   }
 }
-
-//added the property booking route and fixed overflow conflict occured when rendering the deets page
