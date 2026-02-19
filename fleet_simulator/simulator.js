@@ -141,3 +141,4 @@ async function seedDumpPoints() {
 
   console.log("Dump points seeded ✅");
 }
+
