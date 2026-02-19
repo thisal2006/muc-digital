@@ -19,7 +19,6 @@ seedDumpPoints();
 // TRACK ROUTE INDEX
 //--------------------------------------
 
-// Automatically build index object from routes
 const routeIndexes = {};
 
 Object.keys(truckRoutes).forEach(truckId => {
@@ -46,18 +45,16 @@ setInterval(async () => {
         lat: position.lat,
         lng: position.lng,
 
-        speed: Math.floor(Math.random() * 30) + 20, // realistic speed
+        speed: Math.floor(Math.random() * 30) + 20,
 
         status: "on_route",
         lastUpdate: Date.now(),
 
-        // randomize waste type for realism
         type: Math.random() > 0.5
             ? "degradable"
             : "non_degradable",
       });
 
-      // move to next point
       routeIndexes[truckId] =
           (index + 1) % route.length;
     }
@@ -65,15 +62,14 @@ setInterval(async () => {
     console.log("🚛 Trucks moved successfully");
 
   } catch (err) {
-
     console.error("Simulator Error:", err);
   }
 
-}, 4000); // slightly faster → looks more real
+}, 15000); // IMPORTANT: longer delay for road animation
 
 
 //--------------------------------------
-// SEED DUMP POINTS (RUNS ONCE)
+// SEED DUMP POINTS
 //--------------------------------------
 
 async function seedDumpPoints() {
