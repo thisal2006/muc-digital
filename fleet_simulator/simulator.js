@@ -13,6 +13,7 @@ admin.initializeApp({
 
 const db = admin.database();
 
+// Seed dump points once
 seedDumpPoints();
 
 //--------------------------------------
@@ -26,10 +27,11 @@ Object.keys(truckRoutes).forEach(truckId => {
 });
 
 //--------------------------------------
-// SIMULATE MOVEMENT
+// SIMULATE CONTINUOUS MOVEMENT
 //--------------------------------------
 
-setInterval(async () => {
+async function moveTrucks() {
+
   try {
 
     for (const truckId of Object.keys(truckRoutes)) {
@@ -45,27 +47,33 @@ setInterval(async () => {
         lat: position.lat,
         lng: position.lng,
 
-        speed: Math.floor(Math.random() * 30) + 20,
+        speed: Math.floor(Math.random() * 20) + 25, // 25–45 realistic
 
         status: "on_route",
         lastUpdate: Date.now(),
 
         type: Math.random() > 0.5
-            ? "degradable"
-            : "non_degradable",
+          ? "degradable"
+          : "non_degradable",
       });
 
+      // Move to next coordinate
       routeIndexes[truckId] =
-          (index + 1) % route.length;
+        (index + 1) % route.length;
     }
 
-    console.log("🚛 Trucks moved successfully");
+    console.log("🚛 Trucks moved");
 
   } catch (err) {
     console.error("Simulator Error:", err);
   }
+}
 
-}, 15000); // IMPORTANT: longer delay for road animation
+//--------------------------------------
+// RUN EVERY 3 SECONDS (SMOOTH)
+//--------------------------------------
+
+setInterval(moveTrucks, 3000);
 
 
 //--------------------------------------
@@ -133,3 +141,4 @@ async function seedDumpPoints() {
 
   console.log("Dump points seeded ✅");
 }
+
