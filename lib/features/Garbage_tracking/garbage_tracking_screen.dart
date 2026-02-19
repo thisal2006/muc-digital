@@ -4,7 +4,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-
 import '../dump_points/presentation/dump_points_screen.dart';
 import '../illegal_dumping/presentation/illegal_dumping_screen.dart';
 
