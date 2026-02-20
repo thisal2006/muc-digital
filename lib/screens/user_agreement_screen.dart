@@ -20,7 +20,7 @@ class UserAgreementScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF1B5E20), Color(0xFFF57C00)],
+            colors: [Color(0xFF2E7D32), Color(0xFFFF7043)],
           ),
         ),
         child: SafeArea(
@@ -43,56 +43,61 @@ class UserAgreementScreen extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(28),
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(32, 32, 32, 40),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'User Agreement & Consent',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1B5E20),
+                      child: Scrollbar(
+                        thumbVisibility: true,
+                        radius: const Radius.circular(10),
+                        thickness: 6,
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(32, 32, 32, 40),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'User Agreement & Consent',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2E7D32),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 24),
+                              const SizedBox(height: 24),
 
-                            const Text(
-                              'By creating an account or using the MUC Digital mobile application, you agree to the following:',
-                              style: TextStyle(fontSize: 16, height: 1.5, color: Colors.black87),
-                            ),
-                            const SizedBox(height: 24),
+                              const Text(
+                                'By creating an account or using the MUC Digital mobile application, you agree to the following:',
+                                style: TextStyle(fontSize: 16, height: 1.5, color: Colors.black87),
+                              ),
+                              const SizedBox(height: 24),
 
-                            const BulletPoint(
-                              text: 'You are a resident or authorized user of services provided by the Maharagama Urban Council (MUC).',
-                            ),
-                            const BulletPoint(
-                              text: 'You consent to the collection, processing, and use of your personal information (name, contact details, location for garbage tracking, booking history) strictly for providing municipal services.',
-                            ),
-                            const BulletPoint(
-                              text: 'You agree to receive notifications, announcements, and service-related updates from the Maharagama Urban Council through the app.',
-                            ),
-                            const BulletPoint(
-                              text: 'You will use the application responsibly and only for lawful purposes.',
-                            ),
-                            const BulletPoint(
-                              text: 'The app is provided "as is" for demonstration and academic purposes as part of the Software Development Group Project (5COSC021C) by Group CS-33, Informatics Institute of Technology / University of Westminster.',
-                            ),
+                              const BulletPoint(
+                                text: 'You are a resident or authorized user of services provided by the Maharagama Urban Council (MUC).',
+                              ),
+                              const BulletPoint(
+                                text: 'You consent to the collection, processing, and use of your personal information (name, contact details, location for garbage tracking, booking history) strictly for providing municipal services.',
+                              ),
+                              const BulletPoint(
+                                text: 'You agree to receive notifications, announcements, and service-related updates from the Maharagama Urban Council through the app.',
+                              ),
+                              const BulletPoint(
+                                text: 'You will use the application responsibly and only for lawful purposes.',
+                              ),
+                              const BulletPoint(
+                                text: 'The app is provided "as is" for demonstration and academic purposes as part of the Software Development Group Project (5COSC021C) by Group CS-33, Informatics Institute of Technology / University of Westminster.',
+                              ),
 
-                            const SizedBox(height: 40),
+                              const SizedBox(height: 40),
 
-                            const Text(
-                              'By tapping "I Agree" or "Accept", you confirm that you have read, understood, and accept these terms.',
-                              style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic, color: Colors.black87),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Last updated: January 2026',
-                              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                            ),
-                          ],
+                              const Text(
+                                'By tapping "I Agree" or "Accept", you confirm that you have read, understood, and accept these terms.',
+                                style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic, color: Colors.black87),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Last updated: January 2026',
+                                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -104,13 +109,14 @@ class UserAgreementScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
                 child: SizedBox(
                   width: double.infinity,
-                  height: 60,
+                  height: 56,
                   child: ElevatedButton(
                     onPressed: () {
+                      // Navigate to phone login screen when user agrees
                       Navigator.pushReplacementNamed(context, '/home');
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1B5E20),
+                      backgroundColor: const Color(0xFF2E7D32),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                       elevation: 6,
@@ -144,7 +150,7 @@ class BulletPoint extends StatelessWidget {
         children: [
           const Text(
             '• ',
-            style: TextStyle(fontSize: 22, color: Color(0xFF1B5E20), fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 22, color: Color(0xFF2E7D32), fontWeight: FontWeight.bold),
           ),
           Expanded(
             child: Text(

@@ -1,17 +1,21 @@
+// Updated main.dart - fixed const constructors, imports, routing, theme
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'features/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
-import 'features/garbage_tracking/garbage_tracking_screen.dart';
+
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
-import 'screens/profile_screen.dart'; // Add this import
+import 'screens/announcements_screen.dart';
+import 'features/Property/screens/property_booking_screen.dart';
 
-import 'widgets/app_drawer.dart';
+//import 'widgets/app_drawer.dart';
 
-bool _firebaseInitialized = false; // Global flag to prevent duplicate calls
+bool _firebaseInitialized = false;  // Global flag to prevent duplicate calls
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,13 +64,20 @@ class MUCdigitalApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/onboarding': (context) => OnboardingScreen(),
+        '/onboarding': (context) =>  OnboardingScreen(),
         '/user_agreement': (context) => const UserAgreementScreen(),
         '/home': (context) => const HomeScreen(),
-        '/profile': (context) => const ProfileScreen(), // Add this route
-        '/emergency': (context) => EmergencyScreen(),
-        '/truck_tracking': (context) => const GarbageTrackingScreen(),
+        '/emergency': (context) =>  EmergencyScreen(),
+        '/announcements': (context) => const AnnouncementsScreen(),
+        '/garbage_tracker': (context) => const GarbageTrackingScreen(),
+
+        '/property_booking': (context) => const PropertyBookingScreen(),
+        //'/vehicle_booking': (context) => PlaceholderScreen(title: 'Vehicle Booking'),
+        //'/cemetery_booking': (context) => PlaceholderScreen(title: 'Cemetery Booking'),
       },
     );
   }
 }
+
+//Added the routes for property booking
+//go
