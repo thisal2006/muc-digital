@@ -1,6 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:muc_digital/widgets/app_drawer.dart'; // Add this import for drawer
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,237 +10,175 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _formKey = GlobalKey<FormState>();
   bool _isEditing = false;
 
   final _nameController = TextEditingController(text: "Praveen Silva");
   final _emailController = TextEditingController(text: "praveen@example.com");
   final _phoneController = TextEditingController(text: "+94 77 123 4567");
-  final _addressController = TextEditingController(text: "No. 45, Negombo Road, Maharagama");
+  final _addressController =
+  TextEditingController(text: "No. 45, Negombo Road, Maharagama");
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-        title: Text(
-          "My Profile",
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: const Color(0xFF2E7D32),
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: Icon(_isEditing ? Icons.save : Icons.edit),
-            onPressed: () {
-              if (_isEditing) {
-                if (_formKey.currentState!.validate()) {
-                  setState(() => _isEditing = false);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Profile Updated Successfully"),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } else {
-                setState(() => _isEditing = true);
-              }
-            },
-          )
-        ],
-      ),
-      drawer: const AppDrawer(), // Add drawer to profile screen
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
 
-              // Profile Image
-              Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.white,
-                    child: const Icon(
-                      Icons.person,
-                      size: 70,
-                      color: Color(0xFF2E7D32),
-                    ),
-                  ),
-                  if (_isEditing)
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: const Color(0xFF2E7D32),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.camera_alt,
-                            size: 18, color: Colors.white),
-                        onPressed: () {
-                          // TODO: Add image picker
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Image picker coming soon!'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                ],
-              ),
+  // ✅ Pick Image Function
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? pickedFile =
+    await _picker.pickImage(source: source, imageQuality: 70);
 
-              const SizedBox(height: 30),
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
 
-              _buildTextField(
-                label: "Full Name",
-                controller: _nameController,
-                validator: (value) =>
-                value!.isEmpty ? "Name cannot be empty" : null,
-              ),
-
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                label: "Email",
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) =>
-                !value!.contains("@") ? "Enter valid email" : null,
-              ),
-
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                label: "Phone Number",
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                validator: (value) =>
-                value!.length < 10 ? "Enter valid phone number" : null,
-              ),
-
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                label: "Address",
-                controller: _addressController,
-                validator: (value) =>
-                value!.isEmpty ? "Address cannot be empty" : null,
-              ),
-
-              const SizedBox(height: 30),
-
-              const Divider(),
-
-              const SizedBox(height: 10),
-
-              // Booking History
-              ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                tileColor: Colors.white,
-                leading: const Icon(Icons.history,
-                    color: Color(0xFF2E7D32)),
-                title: const Text("Booking History"),
-                trailing:
-                const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const BookingHistoryScreen(),
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 10),
-
-              // Logout
-              ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                tileColor: Colors.white,
-                leading:
-                const Icon(Icons.logout, color: Colors.red),
-                title: const Text(
-                  "Log Out",
-                  style: TextStyle(color: Colors.red),
-                ),
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text("Confirm Logout"),
-                      content: const Text(
-                          "Are you sure you want to logout?"),
-                      actions: [
-                        TextButton(
-                          onPressed: () =>
-                              Navigator.pop(context),
-                          child: const Text("Cancel"),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            // Navigate to splash screen or login
-                            Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                '/',
-                                    (route) => false
-                            );
-                            // TODO: Firebase sign out
-                          },
-                          child: const Text(
-                            "Logout",
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
+  // ✅ Bottom Sheet for Camera / Gallery
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text("Choose from Gallery"),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text("Take a Photo"),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    required String? Function(String?) validator,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return TextFormField(
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Profile"),
+        backgroundColor: const Color(0xFF2E7D32),
+        foregroundColor: Colors.white,
+        actions: [
+          if (!_isEditing)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => setState(() => _isEditing = true),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: () {
+                setState(() => _isEditing = false);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Profile updated")),
+                );
+              },
+            ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+
+            // ✅ Profile Picture
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 60,
+                  backgroundColor: Colors.grey[200],
+                  backgroundImage:
+                  _profileImage != null ? FileImage(_profileImage!) : null,
+                  child: _profileImage == null
+                      ? const Icon(Icons.person,
+                      size: 70, color: Color(0xFF2E7D32))
+                      : null,
+                ),
+                if (_isEditing)
+                  Positioned(
+                    bottom: 4,
+                    right: 4,
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: const Color(0xFF2E7D32),
+                      child: IconButton(
+                        icon: const Icon(Icons.camera_alt,
+                            size: 18, color: Colors.white),
+                        onPressed: _showImagePickerOptions,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            _buildField("Full Name", _nameController),
+            const SizedBox(height: 16),
+
+            _buildField("Email", _emailController),
+            const SizedBox(height: 16),
+
+            _buildField("Phone Number", _phoneController),
+            const SizedBox(height: 16),
+
+            _buildField("Address", _addressController),
+
+            const SizedBox(height: 32),
+
+            ListTile(
+              leading:
+              const Icon(Icons.history, color: Color(0xFF2E7D32)),
+              title: const Text("Booking History"),
+              trailing: const Icon(Icons.arrow_forward_ios),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const BookingHistoryScreen()),
+                );
+              },
+            ),
+
+            const Divider(),
+
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title:
+              const Text("Log Out", style: TextStyle(color: Colors.red)),
+              onTap: () {
+                // TODO: Firebase sign out
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller) {
+    return TextField(
       controller: controller,
       enabled: _isEditing,
-      keyboardType: keyboardType,
-      validator: validator,
       decoration: InputDecoration(
         labelText: label,
-        filled: true,
-        fillColor: _isEditing ? Colors.white : Colors.grey[200],
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+        filled: true,
+        fillColor: _isEditing ? Colors.white : Colors.grey[100],
       ),
     );
   }
@@ -262,7 +200,6 @@ class BookingHistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text("Booking History"),
         backgroundColor: const Color(0xFF2E7D32),
@@ -271,26 +208,17 @@ class BookingHistoryScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: const [
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.local_shipping),
-              title: Text("Garbage Pickup - 2025-11-26"),
-              subtitle: Text("Both | 8:00 AM - 12:00 PM"),
-              trailing: Chip(
-                label: Text("Completed"),
-              ),
-            ),
+          ListTile(
+            leading: Icon(Icons.local_shipping),
+            title: Text("Garbage Pickup - 2025-11-26"),
+            subtitle: Text("Both | 8:00 AM - 12:00 PM"),
+            trailing: Chip(label: Text("Completed")),
           ),
-          SizedBox(height: 10),
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.apartment),
-              title: Text("Property Booking - Community Hall"),
-              subtitle: Text("2025-12-05 | 2:00 PM - 5:00 PM"),
-              trailing: Chip(
-                label: Text("Upcoming"),
-              ),
-            ),
+          ListTile(
+            leading: Icon(Icons.apartment),
+            title: Text("Property Booking - Community Hall"),
+            subtitle: Text("2025-12-05 | 2:00 PM - 5:00 PM"),
+            trailing: Chip(label: Text("Upcoming")),
           ),
         ],
       ),
