@@ -1,9 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../widgets/app_drawer.dart';
-import 'announcements_screen.dart'; // <--- this import is very important
+import 'announcements_screen.dart';
+import 'complaints_screen.dart'; // 👈 Complaints screen import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,10 +17,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // All pages that bottom nav can switch to
   final List<Widget> _pages = [
-    const _HomeDashboardContent(),           // Home tab (search + cards)
-    const Center(child: Text('Bookings - Coming soon')), // Bookings tab
-    const AnnouncementsScreen(),             // Updates tab → Announcements
-    const Center(child: Text('Chat - Coming soon')),     // Chat tab
+    const _HomeDashboardContent(),
+    const Center(child: Text('Bookings - Coming soon')),
+    const AnnouncementsScreen(),
+    const Center(child: Text('Chat - Coming soon')),
   ];
 
   void _onItemTapped(int index) {
@@ -55,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          // Bell icon now opens Announcements screen
           FadeInRight(
             duration: const Duration(milliseconds: 700),
             child: IconButton(
@@ -65,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Icon(Icons.notifications_rounded, color: Color(0xFF1B5E20)),
               ),
               onPressed: () {
-                // This is the fix: open Announcements when tapping bell
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const AnnouncementsScreen()),
@@ -76,7 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      // Switch between pages when tapping bottom nav
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,
@@ -90,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.grey[600],
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped, // <--- this makes tabs switch
+        onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.calendar_month_rounded), label: 'Bookings'),
@@ -127,7 +124,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Property Booking',
       'subtitle': 'Book halls & grounds',
       'color': const Color(0xFFF57C00),
-      'route': null,
+      'route': '/property_booking',
     },
     {
       'icon': Icons.directions_car_rounded,
@@ -155,7 +152,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Complaints',
       'subtitle': 'File & track complaints',
       'color': const Color(0xFF795548),
-      'route': null,
+      'route': 'complaints',
     },
   ];
 
@@ -250,7 +247,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                 crossAxisCount: 2,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
-                childAspectRatio: 1.1,  // taller cards = more space for subtitle
+                childAspectRatio: 1.1,
                 children: _filteredServices.map((service) {
                   return FadeInUp(
                     duration: const Duration(milliseconds: 800),
@@ -321,7 +318,14 @@ class ServiceCard extends StatelessWidget {
         splashColor: color.withOpacity(0.15),
         highlightColor: color.withOpacity(0.08),
         onTap: () {
-          if (route != null) Navigator.pushNamed(context, route!);
+          if (title == 'Complaints') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ComplaintsScreen()),
+            );
+          } else if (route != null) {
+            Navigator.pushNamed(context, route!);
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(16),
