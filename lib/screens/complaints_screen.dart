@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ComplaintsScreen extends StatelessWidget {
   const ComplaintsScreen({super.key});
@@ -6,27 +8,21 @@ class ComplaintsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2, // ← number of tabs
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: const Text("My Complaints"),
           backgroundColor: const Color(0xFF2E7D32),
           foregroundColor: Colors.white,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(48),
-            child: Container(
-              color: Colors.white,
-              child: const TabBar(
-                labelColor: Color(0xFF2E7D32),
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: Color(0xFF2E7D32),
-                indicatorWeight: 4,
-                tabs: [
-                  Tab(text: "New Complaint"),
-                  Tab(text: "My Complaints"),
-                ],
-              ),
-            ),
+          bottom: const TabBar(
+            labelColor: Color(0xFF2E7D32),
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: Color(0xFF2E7D32),
+            indicatorWeight: 4,
+            tabs: [
+              Tab(text: "New Complaint"),
+              Tab(text: "My Complaints"),
+            ],
           ),
         ),
         body: const TabBarView(
@@ -50,7 +46,9 @@ class NewComplaintForm extends StatefulWidget {
 class _NewComplaintFormState extends State<NewComplaintForm> {
   String? _selectedCategory;
   final _descriptionController = TextEditingController();
-  bool _imageAttached = false;
+  File? _attachedImage;
+
+  final _picker = ImagePicker();
 
   final categories = [
     "Illegal Dumping",
@@ -61,6 +59,19 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     "Other"
   ];
 
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _attachedImage = File(pickedFile.path);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -68,8 +79,6 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 16),
-
           DropdownButtonFormField<String>(
             value: _selectedCategory,
             hint: const Text("Select Category"),
@@ -80,41 +89,41 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             decoration: _inputDecoration("Category"),
           ),
           const SizedBox(height: 24),
-
           TextField(
             controller: _descriptionController,
             maxLines: 5,
             decoration: _inputDecoration("Describe the issue..."),
           ),
           const SizedBox(height: 24),
-
           OutlinedButton.icon(
-            onPressed: () {
-              // TODO: add real image picker (image_picker package)
-              setState(() => _imageAttached = true);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Photo attached (demo)")),
-              );
-            },
+            onPressed: _pickImage,
             icon: const Icon(Icons.add_photo_alternate),
-            label: Text(_imageAttached ? "Photo Attached" : "Attach Photo"),
+            label: Text(
+                _attachedImage != null ? "Photo Attached" : "Attach Photo"),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               side: const BorderSide(color: Color(0xFF2E7D32)),
             ),
           ),
+          if (_attachedImage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Image.file(_attachedImage!, height: 150),
+            ),
           const SizedBox(height: 32),
-
           ElevatedButton(
             onPressed: () {
-              if (_selectedCategory == null || _descriptionController.text.trim().isEmpty) {
+              if (_selectedCategory == null ||
+                  _descriptionController.text.trim().isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Please fill all required fields")),
+                  const SnackBar(
+                      content: Text("Please fill all required fields")),
                 );
                 return;
               }
 
-              // TODO: send to Firebase / your backend here
+              // TODO: Upload complaint and image to Firebase / backend
+
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text("Complaint submitted successfully"),
@@ -122,14 +131,18 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
                 ),
               );
 
-              // Return to previous screen or reset form
-              Navigator.pop(context);
+              setState(() {
+                _selectedCategory = null;
+                _descriptionController.clear();
+                _attachedImage = null;
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2E7D32),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text("Submit Complaint", style: TextStyle(fontSize: 16)),
           ),
@@ -227,7 +240,8 @@ class _ComplaintCard extends StatelessWidget {
         trailing: Chip(
           label: Text(status),
           backgroundColor: statusColor.withOpacity(0.15),
-          labelStyle: TextStyle(color: statusColor, fontWeight: FontWeight.w600),
+          labelStyle:
+          TextStyle(color: statusColor, fontWeight: FontWeight.w600),
           padding: const EdgeInsets.symmetric(horizontal: 12),
         ),
       ),
