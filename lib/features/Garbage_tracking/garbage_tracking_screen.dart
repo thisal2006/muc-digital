@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 import '../dump_points/presentation/dump_points_screen.dart';
 import '../illegal_dumping/presentation/illegal_dumping_screen.dart';
@@ -17,13 +16,6 @@ class GarbageTrackingScreen extends StatefulWidget {
 }
 
 class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
-
-  //--------------------------------------------------
-  // GOOGLE API KEY
-  //--------------------------------------------------
-
-  final String googleAPIKey =
-      "AIzaSyACUjnMs8ntXloajN-wJx9rr4eoTe31pPE";
 
   //--------------------------------------------------
   // FIREBASE
@@ -79,6 +71,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   //--------------------------------------------------
 
   Future<void> _getUserLocation() async {
+
     bool serviceEnabled =
     await Geolocator.isLocationServiceEnabled();
 
@@ -92,8 +85,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
       await Geolocator.requestPermission();
     }
 
-    if (permission ==
-        LocationPermission.deniedForever) return;
+    if (permission == LocationPermission.deniedForever) return;
 
     _userPosition =
     await Geolocator.getCurrentPosition(
@@ -103,80 +95,57 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
     );
   }
 
-//--------------------------------------------------
-// GOOGLE DIRECTIONS POLYLINE (CORRECT v2 SYNTAX)
-//--------------------------------------------------
-  Future<List<LatLng>> _getPolylineRoute(LatLng origin,
-      LatLng destination,) async {
-    final polylinePoints = PolylinePoints();
-
-    final request = PolylineRequest(
-      origin: PointLatLng(origin.latitude, origin.longitude),
-      destination: PointLatLng(destination.latitude, destination.longitude),
-      mode: TravelMode.driving,
-    );
-
-    final result = await polylinePoints.getRouteBetweenCoordinates(
-      googleApiKey: googleAPIKey,
-      request: request,
-    );
-
-    List<LatLng> routeCoords = [];
-
-    if (result.points.isNotEmpty) {
-      for (final point in result.points) {
-        routeCoords.add(
-          LatLng(point.latitude, point.longitude),
-        );
-      }
-    }
-    print("Polyline points count: ${result.points.length}");
-
-    return routeCoords;
-  }
-
   //--------------------------------------------------
-  // MOVE TRUCK ON ROAD
+  // SMOOTH ANIMATION
   //--------------------------------------------------
 
-  Future<void> _moveTruckOnRoad(String truckId,
-      LatLng start,
-      LatLng end,) async {
+  Future<void> _animateTruck(
+      String truckId,
+      LatLng oldPos,
+      LatLng newPos,
+      ) async {
+
     if (_isAnimating[truckId] == true) return;
     _isAnimating[truckId] = true;
 
-    List<LatLng> route =
-    await _getPolylineRoute(start, end);
+    const steps = 20;
+    const delay = Duration(milliseconds: 50);
 
-    for (LatLng pos in route) {
-      _markers[truckId] = Marker(
-        markerId: MarkerId(truckId),
-        position: pos,
-        icon: truckIcon ??
-            BitmapDescriptor.defaultMarker,
-        infoWindow: InfoWindow(
-          title: "Truck $truckId",
-        ),
+    double latStep =
+        (newPos.latitude - oldPos.latitude) / steps;
+
+    double lngStep =
+        (newPos.longitude - oldPos.longitude) / steps;
+
+    for (int i = 0; i < steps; i++) {
+
+      final interpolated = LatLng(
+        oldPos.latitude + (latStep * i),
+        oldPos.longitude + (lngStep * i),
       );
 
-      _truckPositions[truckId] = pos;
+      _markers[truckId] = Marker(
+        markerId: MarkerId(truckId),
+        position: interpolated,
+        icon: truckIcon ?? BitmapDescriptor.defaultMarker,
+        infoWindow: InfoWindow(title: "Truck $truckId"),
+      );
 
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
 
-      await Future.delayed(
-          const Duration(milliseconds: 80));
+      await Future.delayed(delay);
     }
 
     _isAnimating[truckId] = false;
   }
 
-
   //--------------------------------------------------
   // NEARBY ALERT
   //--------------------------------------------------
 
-  void _checkNearbyTruck(
-      LatLng truckPosition) {
+  void _checkNearbyTruck(LatLng truckPosition) {
 
     if (_userPosition == null) return;
 
@@ -188,16 +157,15 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
       truckPosition.longitude,
     );
 
-    if (distance < 500 &&
-        !_nearbyAlertShown) {
+    if (distance < 500 && !_nearbyAlertShown) {
 
       _nearbyAlertShown = true;
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
         const SnackBar(
-          content: Text(
-              "🚛 Garbage truck is nearby!"),
+          content:
+          Text("🚛 Garbage truck is nearby!"),
           backgroundColor: Colors.green,
         ),
       );
@@ -217,16 +185,14 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
     _truckSubscription =
         _truckRef.onValue.listen((event) {
 
-          final data =
-              event.snapshot.value;
+          final data = event.snapshot.value;
           if (data == null) return;
 
           final trucks =
           Map<String, dynamic>.from(
               data as Map);
 
-          for (var entry
-          in trucks.entries) {
+          for (var entry in trucks.entries) {
 
             final id = entry.key;
             final truck =
@@ -250,18 +216,12 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
                   newPosition;
 
               _markers[id] = Marker(
-                markerId:
-                MarkerId(id),
-                position:
-                newPosition,
+                markerId: MarkerId(id),
+                position: newPosition,
                 icon: truckIcon ??
-                    BitmapDescriptor
-                        .defaultMarker,
+                    BitmapDescriptor.defaultMarker,
                 infoWindow:
-                InfoWindow(
-                  title:
-                  "Truck $id",
-                ),
+                InfoWindow(title: "Truck $id"),
               );
 
             } else {
@@ -269,18 +229,20 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
               final oldPosition =
               _truckPositions[id]!;
 
-              _moveTruckOnRoad(
+              _animateTruck(
                   id,
                   oldPosition,
                   newPosition);
             }
 
-            _checkNearbyTruck(
-                newPosition);
+            _truckPositions[id] = newPosition;
+
+            _checkNearbyTruck(newPosition);
           }
 
-          if (mounted)
+          if (mounted) {
             setState(() {});
+          }
         });
   }
 
@@ -337,19 +299,16 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
             initialCameraPosition:
             const CameraPosition(
               target:
-              LatLng(6.8480,
-                  79.9260),
-              zoom: 13,
+              LatLng(6.8480, 79.9260),
+              zoom: 14,
             ),
             markers:
             _markers.values.toSet(),
             myLocationEnabled: true,
             myLocationButtonEnabled:
             true,
-            onMapCreated:
-                (controller) {
-              _mapController
-                  .complete(
+            onMapCreated: (controller) {
+              _mapController.complete(
                   controller);
             },
           ),
@@ -363,12 +322,10 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
               const EdgeInsets.symmetric(
                   vertical: 14,
                   horizontal: 10),
-              decoration:
-              BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius:
-                BorderRadius
-                    .circular(18),
+                BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black
@@ -379,36 +336,29 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
               ),
               child: Row(
                 mainAxisAlignment:
-                MainAxisAlignment
-                    .spaceEvenly,
+                MainAxisAlignment.spaceEvenly,
                 children: [
 
                   _actionButton(
-                    icon: Icons
-                        .calendar_month,
+                    icon:
+                    Icons.calendar_month,
                     label: "Schedule",
-                    color:
-                    Colors.green,
+                    color: Colors.green,
                     onTap: () {},
                   ),
 
                   _actionButton(
-                    icon:
-                    Icons.delete,
-                    label:
-                    "Dump Points",
-                    color:
-                    Colors.teal,
+                    icon: Icons.delete,
+                    label: "Dump Points",
+                    color: Colors.teal,
                     onTap:
                     _openDumpPoints,
                   ),
 
                   _actionButton(
-                    icon: Icons
-                        .warning_amber,
+                    icon: Icons.warning_amber,
                     label: "Report",
-                    color:
-                    Colors.orange,
+                    color: Colors.orange,
                     onTap:
                     _openIllegalDumpReport,
                   ),
@@ -435,26 +385,22 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
         children: [
           Container(
             padding:
-            const EdgeInsets.all(
-                12),
+            const EdgeInsets.all(12),
             decoration:
             BoxDecoration(
-              color: color
-                  .withOpacity(
-                  0.15),
+              color:
+              color.withOpacity(0.15),
               borderRadius:
-              BorderRadius
-                  .circular(12),
+              BorderRadius.circular(
+                  12),
             ),
-            child: Icon(icon,
-                color: color),
+            child:
+            Icon(icon, color: color),
           ),
-          const SizedBox(
-              height: 6),
+          const SizedBox(height: 6),
           Text(
             label,
-            style:
-            const TextStyle(
+            style: const TextStyle(
               fontWeight:
               FontWeight.w600,
             ),
