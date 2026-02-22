@@ -251,9 +251,24 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   void _openDumpPoints() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) =>
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) =>
         const DumpPointsScreen(),
+        transitionsBuilder:
+            (_, animation, __, child) {
+
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+
+          var tween = Tween(begin: begin, end: end)
+              .chain(CurveTween(curve: curve));
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
       ),
     );
   }
