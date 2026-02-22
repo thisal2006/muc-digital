@@ -37,7 +37,6 @@ async function moveTrucks() {
     for (const truckId of Object.keys(truckRoutes)) {
 
       const route = truckRoutes[truckId];
-
       let index = routeIndexes[truckId];
 
       const position = route[index];
@@ -47,7 +46,7 @@ async function moveTrucks() {
         lat: position.lat,
         lng: position.lng,
 
-        speed: Math.floor(Math.random() * 20) + 25, // 25–45 realistic
+        speed: Math.floor(Math.random() * 20) + 25,
 
         status: "on_route",
         lastUpdate: Date.now(),
@@ -59,7 +58,8 @@ async function moveTrucks() {
 
       // Move to next coordinate
       routeIndexes[truckId] =
-        (index + 2) % route.length;
+        (index + 1) % route.length;
+    }
 
     console.log("🚛 Trucks moved");
 
@@ -69,11 +69,10 @@ async function moveTrucks() {
 }
 
 //--------------------------------------
-// RUN EVERY 3 SECONDS (SMOOTH)
+// RUN EVERY 1 SECOND
 //--------------------------------------
 
 setInterval(moveTrucks, 1000);
-
 
 //--------------------------------------
 // SEED DUMP POINTS
@@ -82,7 +81,6 @@ setInterval(moveTrucks, 1000);
 async function seedDumpPoints() {
 
   const dumpRef = db.ref("dump_points");
-
   const snapshot = await dumpRef.get();
 
   if (snapshot.exists()) {
@@ -140,4 +138,3 @@ async function seedDumpPoints() {
 
   console.log("Dump points seeded ✅");
 }
-
