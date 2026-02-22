@@ -34,8 +34,8 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   Completer();
 
   final Map<String, Marker> _markers = {};
-  final Map<String, LatLng> _truckPositions = {};
-  final Map<String, bool> _isAnimating = {};
+  final Map<String, LatLng> _targetPositions = {};
+  final Map<String, Timer> _movementTimers = {};
 
   BitmapDescriptor? truckIcon;
 
@@ -57,6 +57,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   }
 
   Future<void> _initialize() async {
+
     truckIcon = await BitmapDescriptor.asset(
       const ImageConfiguration(size: Size(40, 40)),
       "assets/icons/truck.png",
@@ -67,7 +68,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   }
 
   //--------------------------------------------------
-  // GET USER LOCATION
+  // USER LOCATION
   //--------------------------------------------------
 
   Future<void> _getUserLocation() async {
@@ -96,51 +97,57 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   }
 
   //--------------------------------------------------
-  // SMOOTH ANIMATION
+  // UBER-STYLE SMOOTH MOVEMENT ENGINE
   //--------------------------------------------------
 
-  Future<void> _animateTruck(
-      String truckId,
-      LatLng newPos,
-      ) async {
+  void _startSmoothMovement(String truckId) {
 
-    const steps = 20;
-    const delay = Duration(milliseconds: 40);
+    _movementTimers[truckId]?.cancel();
 
-    LatLng startPos;
+    _movementTimers[truckId] =
+        Timer.periodic(const Duration(milliseconds: 40), (timer) {
 
-    // ⭐ ALWAYS take current marker position
-    if (_markers.containsKey(truckId)) {
-      startPos = _markers[truckId]!.position;
-    } else {
-      startPos = newPos;
-    }
+          if (!_markers.containsKey(truckId) ||
+              !_targetPositions.containsKey(truckId)) {
+            timer.cancel();
+            return;
+          }
 
-    double latStep =
-        (newPos.latitude - startPos.latitude) / steps;
+          LatLng current = _markers[truckId]!.position;
+          LatLng target = _targetPositions[truckId]!;
 
-    double lngStep =
-        (newPos.longitude - startPos.longitude) / steps;
+          double latDiff = target.latitude - current.latitude;
+          double lngDiff = target.longitude - current.longitude;
 
-    for (int i = 0; i < steps; i++) {
+          double distance =
+          (latDiff.abs() + lngDiff.abs());
 
-      final interpolated = LatLng(
-        startPos.latitude + (latStep * i),
-        startPos.longitude + (lngStep * i),
-      );
+          // If very close → stop micro jitter
+          if (distance < 0.00001) {
+            return;
+          }
 
-      _markers[truckId] = Marker(
-        markerId: MarkerId(truckId),
-        position: interpolated,
-        icon: truckIcon ?? BitmapDescriptor.defaultMarker,
-        infoWindow: InfoWindow(title: "Truck $truckId"),
-      );
+          // Smooth factor (adjust for speed)
+          double stepFactor = 0.08;
 
-      if (mounted) setState(() {});
+          LatLng newPos = LatLng(
+            current.latitude + (latDiff * stepFactor),
+            current.longitude + (lngDiff * stepFactor),
+          );
 
-      await Future.delayed(delay);
-    }
+          _markers[truckId] = Marker(
+            markerId: MarkerId(truckId),
+            position: newPos,
+            icon: truckIcon ??
+                BitmapDescriptor.defaultMarker,
+            infoWindow:
+            InfoWindow(title: "Truck $truckId"),
+          );
+
+          if (mounted) setState(() {});
+        });
   }
+
   //--------------------------------------------------
   // NEARBY ALERT
   //--------------------------------------------------
@@ -157,15 +164,16 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
       truckPosition.longitude,
     );
 
-    if (distance < 500 && !_nearbyAlertShown) {
+    if (distance < 500 &&
+        !_nearbyAlertShown) {
 
       _nearbyAlertShown = true;
 
       ScaffoldMessenger.of(context)
           .showSnackBar(
         const SnackBar(
-          content:
-          Text("🚛 Garbage truck is nearby!"),
+          content: Text(
+              "🚛 Garbage truck is nearby!"),
           backgroundColor: Colors.green,
         ),
       );
@@ -189,31 +197,24 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
           if (data == null) return;
 
           final trucks =
-          Map<String, dynamic>.from(
-              data as Map);
+          Map<String, dynamic>.from(data as Map);
 
           for (var entry in trucks.entries) {
 
             final id = entry.key;
             final truck =
-            Map<String, dynamic>.from(
-                entry.value);
+            Map<String, dynamic>.from(entry.value);
 
             final lat =
-            (truck['lat'] as num)
-                .toDouble();
+            (truck['lat'] as num).toDouble();
             final lng =
-            (truck['lng'] as num)
-                .toDouble();
+            (truck['lng'] as num).toDouble();
 
             final newPosition =
             LatLng(lat, lng);
 
-            if (!_truckPositions
-                .containsKey(id)) {
-
-              _truckPositions[id] =
-                  newPosition;
+            // First appearance
+            if (!_markers.containsKey(id)) {
 
               _markers[id] = Marker(
                 markerId: MarkerId(id),
@@ -224,24 +225,22 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
                 InfoWindow(title: "Truck $id"),
               );
 
+              _targetPositions[id] =
+                  newPosition;
+
+              _startSmoothMovement(id);
+
             } else {
 
-              final oldPosition =
-              _truckPositions[id]!;
-
-              _animateTruck(
-                  id,
-                  newPosition);
+              // Update target only
+              _targetPositions[id] =
+                  newPosition;
             }
-
-            _truckPositions[id] = newPosition;
 
             _checkNearbyTruck(newPosition);
           }
 
-          if (mounted) {
-            setState(() {});
-          }
+          if (mounted) setState(() {});
         });
   }
 
@@ -275,7 +274,13 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
 
   @override
   void dispose() {
+
     _truckSubscription?.cancel();
+
+    for (var timer in _movementTimers.values) {
+      timer.cancel();
+    }
+
     super.dispose();
   }
 
@@ -306,9 +311,10 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
             myLocationEnabled: true,
             myLocationButtonEnabled:
             true,
-            onMapCreated: (controller) {
-              _mapController.complete(
-                  controller);
+            onMapCreated:
+                (controller) {
+              _mapController
+                  .complete(controller);
             },
           ),
 
@@ -355,7 +361,8 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
                   ),
 
                   _actionButton(
-                    icon: Icons.warning_amber,
+                    icon:
+                    Icons.warning_amber,
                     label: "Report",
                     color: Colors.orange,
                     onTap:
@@ -387,11 +394,9 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
             const EdgeInsets.all(12),
             decoration:
             BoxDecoration(
-              color:
-              color.withOpacity(0.15),
+              color: color.withOpacity(0.15),
               borderRadius:
-              BorderRadius.circular(
-                  12),
+              BorderRadius.circular(12),
             ),
             child:
             Icon(icon, color: color),
