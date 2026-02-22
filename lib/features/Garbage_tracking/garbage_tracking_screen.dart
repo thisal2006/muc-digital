@@ -108,8 +108,8 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
     if (_isAnimating[truckId] == true) return;
     _isAnimating[truckId] = true;
 
-    const steps = 20;
-    const delay = Duration(milliseconds: 50);
+    const steps = 15; // smaller steps
+    const delay = Duration(milliseconds: 40); // smoother
 
     double latStep =
         (newPos.latitude - oldPos.latitude) / steps;
