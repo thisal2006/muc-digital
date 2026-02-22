@@ -59,8 +59,7 @@ async function moveTrucks() {
 
       // Move to next coordinate
       routeIndexes[truckId] =
-        (index + 1) % route.length;
-    }
+        (index + 2) % route.length;
 
     console.log("🚛 Trucks moved");
 
