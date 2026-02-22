@@ -34,17 +34,17 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   bool _nearbyAlertShown = false;
 
   //--------------------------------------------------
-  // NEW: CALENDAR VARIABLES
+  // CALENDAR VARIABLES
   //--------------------------------------------------
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  Map<DateTime, List<String>> _collectionDays = {}; // will be filled from Firestore
+  Map<DateTime, List<String>> _collectionDays = {}; // filled from Firestore
 
   @override
   void initState() {
     super.initState();
     _initialize();
-    _loadScheduleFromFirestore();
+    _loadGarbageScheduleFromFirestore();
   }
 
   Future<void> _initialize() async {
@@ -60,7 +60,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   //--------------------------------------------------
   // LOAD REAL SCHEDULE FROM FIRESTORE
   //--------------------------------------------------
-  Future<void> _loadScheduleFromFirestore() async {
+  Future<void> _loadGarbageScheduleFromFirestore() async {
     try {
       final snapshot = await FirebaseFirestore.instance.collection('garbage_schedule').get();
 
@@ -68,25 +68,34 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
 
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        final dateStr = data['date'] as String?; // format: "2026-02-05"
+        final dateStr = data['date'] as String?; // e.g. "2026-02-05"
         final types = List<String>.from(data['types'] ?? []);
 
-        if (dateStr != null) {
-          final date = DateFormat('yyyy-MM-dd').parse(dateStr);
-          loadedData[date] = types;
+        if (dateStr != null && types.isNotEmpty) {
+          try {
+            final date = DateFormat('yyyy-MM-dd').parse(dateStr);
+            loadedData[date] = types;
+          } catch (e) {
+            debugPrint('Invalid date format in Firestore: $dateStr');
+          }
         }
       }
 
-      setState(() {
-        _collectionDays = loadedData;
-      });
+      if (mounted) {
+        setState(() {
+          _collectionDays = loadedData;
+        });
+      }
     } catch (e) {
-      debugPrint('Error loading schedule: $e');
+      debugPrint('Error loading garbage schedule from Firestore: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load schedule: $e')),
+      );
     }
   }
 
   //--------------------------------------------------
-  // EXISTING METHODS (KEEP ALL YOUR WORKING CODE)
+  // EXISTING METHODS (unchanged – your truck tracking logic)
   //--------------------------------------------------
   Future<void> _getUserLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -99,9 +108,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
     if (permission == LocationPermission.deniedForever) return;
 
     _userPosition = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.best,
-      ),
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.best),
     );
   }
 
@@ -227,7 +234,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   }
 
   //--------------------------------------------------
-  // NEW: SHOW CALENDAR BOTTOM SHEET
+  // CALENDAR BOTTOM SHEET – REAL FIRESTORE DATA
   //--------------------------------------------------
   void _showScheduleBottomSheet() {
     showModalBottomSheet(
@@ -266,7 +273,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
               const SizedBox(height: 8),
               const Divider(),
 
-              // Calendar + selected day info
+              // Calendar + details
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
@@ -415,7 +422,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
                     icon: Icons.calendar_month,
                     label: "Schedule",
                     color: Colors.green,
-                    onTap: _showScheduleBottomSheet,  // opens calendar
+                    onTap: _showScheduleBottomSheet,
                   ),
                   _actionButton(
                     icon: Icons.delete,
