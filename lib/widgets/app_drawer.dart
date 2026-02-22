@@ -94,7 +94,7 @@ class AppDrawer extends StatelessWidget {
                   leading: const Icon(Icons.person_outline, color: Color(0xFF2E7D32)),
                   title: const Text('Profile'),
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.pop(context); // Close drawer first
                     Navigator.pushNamed(context, '/profile');
                   },
                 ),
@@ -103,7 +103,14 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Booking History'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Navigator.pushNamed(context, '/booking-history'); // add route later
+                    // Navigate to profile screen with tab or open booking history directly
+                    // Option 1: Navigate to profile with booking history tab
+                    Navigator.pushNamed(context, '/profile').then((_) {
+                      // You can add logic here if needed
+                    });
+
+                    // Option 2: If you want a separate booking history screen (uncomment below)
+                    // Navigator.pushNamed(context, '/booking-history');
                   },
                 ),
                 ListTile(
@@ -142,7 +149,13 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Settings'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Navigator.pushNamed(context, '/settings'); // add route later
+                    // Navigator.pushNamed(context, '/settings');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Settings screen coming soon!'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
                   },
                 ),
 

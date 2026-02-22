@@ -21,6 +21,9 @@ class GarbageTrackingScreen extends StatefulWidget {
 class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   //--------------------------------------------------
   // EXISTING VARIABLES (map/truck tracking)
+
+  //--------------------------------------------------
+  // FIREBASE
   //--------------------------------------------------
   final String googleAPIKey = "AIzaSyACUjnMs8ntXloajN-wJx9rr4eoTe31pPE";
   final DatabaseReference _truckRef = FirebaseDatabase.instance.ref('trucks');
@@ -29,6 +32,9 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   final Map<String, Marker> _markers = {};
   final Map<String, LatLng> _truckPositions = {};
   final Map<String, bool> _isAnimating = {};
+  final Map<String, LatLng> _targetPositions = {};
+  final Map<String, Timer> _movementTimers = {};
+
   BitmapDescriptor? truckIcon;
   Position? _userPosition;
   bool _nearbyAlertShown = false;
@@ -48,6 +54,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   }
 
   Future<void> _initialize() async {
+
     truckIcon = await BitmapDescriptor.asset(
       const ImageConfiguration(size: Size(40, 40)),
       "assets/icons/truck.png",
@@ -59,12 +66,17 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
 
   //--------------------------------------------------
   // LOAD REAL SCHEDULE FROM FIRESTORE
+  // USER LOCATION
   //--------------------------------------------------
   Future<void> _loadGarbageScheduleFromFirestore() async {
     try {
       final snapshot = await FirebaseFirestore.instance.collection('garbage_schedule').get();
 
       final Map<DateTime, List<String>> loadedData = {};
+  Future<void> _getUserLocation() async {
+
+    bool serviceEnabled =
+    await Geolocator.isLocationServiceEnabled();
 
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -120,13 +132,13 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
       destination: PointLatLng(destination.latitude, destination.longitude),
       mode: TravelMode.driving,
     );
+  //--------------------------------------------------
+  // UBER-STYLE SMOOTH MOVEMENT ENGINE
+  //--------------------------------------------------
 
-    final result = await polylinePoints.getRouteBetweenCoordinates(
-      googleApiKey: googleAPIKey,
-      request: request,
-    );
+  void _startSmoothMovement(String truckId) {
 
-    List<LatLng> routeCoords = [];
+    _movementTimers[truckId]?.cancel();
 
     if (result.points.isNotEmpty) {
       for (final point in result.points) {
@@ -149,17 +161,60 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
         icon: truckIcon ?? BitmapDescriptor.defaultMarker,
         infoWindow: InfoWindow(title: "Truck $truckId"),
       );
+    _movementTimers[truckId] =
+        Timer.periodic(const Duration(milliseconds: 40), (timer) {
 
-      _truckPositions[truckId] = pos;
+          if (!_markers.containsKey(truckId) ||
+              !_targetPositions.containsKey(truckId)) {
+            timer.cancel();
+            return;
+          }
+
+          LatLng current = _markers[truckId]!.position;
+          LatLng target = _targetPositions[truckId]!;
+
+          double latDiff = target.latitude - current.latitude;
+          double lngDiff = target.longitude - current.longitude;
+
+          double distance =
+          (latDiff.abs() + lngDiff.abs());
 
       if (mounted) setState(() {});
       await Future.delayed(const Duration(milliseconds: 80));
     }
+          // If very close → stop micro jitter
+          if (distance < 0.00001) {
+            return;
+          }
 
-    _isAnimating[truckId] = false;
-  }
+          // Smooth factor (adjust for speed)
+          double stepFactor = 0.08;
+
+          LatLng newPos = LatLng(
+            current.latitude + (latDiff * stepFactor),
+            current.longitude + (lngDiff * stepFactor),
+          );
+
+          _markers[truckId] = Marker(
+            markerId: MarkerId(truckId),
+            position: newPos,
+            icon: truckIcon ??
+                BitmapDescriptor.defaultMarker,
+            infoWindow:
+            InfoWindow(title: "Truck $truckId"),
+          );
 
   void _checkNearbyTruck(LatLng truckPosition) {
+          if (mounted) setState(() {});
+        });
+  }
+
+  //--------------------------------------------------
+  // NEARBY ALERT
+  //--------------------------------------------------
+
+  void _checkNearbyTruck(LatLng truckPosition) {
+
     if (_userPosition == null) return;
 
     double distance = Geolocator.distanceBetween(
@@ -217,6 +272,58 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
 
       if (mounted) setState(() {});
     });
+    _truckSubscription =
+        _truckRef.onValue.listen((event) {
+
+          final data = event.snapshot.value;
+          if (data == null) return;
+
+          final trucks =
+          Map<String, dynamic>.from(data as Map);
+
+          for (var entry in trucks.entries) {
+
+            final id = entry.key;
+            final truck =
+            Map<String, dynamic>.from(entry.value);
+
+            final lat =
+            (truck['lat'] as num).toDouble();
+            final lng =
+            (truck['lng'] as num).toDouble();
+
+            final newPosition =
+            LatLng(lat, lng);
+
+            // First appearance
+            if (!_markers.containsKey(id)) {
+
+              _markers[id] = Marker(
+                markerId: MarkerId(id),
+                position: newPosition,
+                icon: truckIcon ??
+                    BitmapDescriptor.defaultMarker,
+                infoWindow:
+                InfoWindow(title: "Truck $id"),
+              );
+
+              _targetPositions[id] =
+                  newPosition;
+
+              _startSmoothMovement(id);
+
+            } else {
+
+              // Update target only
+              _targetPositions[id] =
+                  newPosition;
+            }
+
+            _checkNearbyTruck(newPosition);
+          }
+
+          if (mounted) setState(() {});
+        });
   }
 
   void _openDumpPoints() {
@@ -371,7 +478,13 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
 
   @override
   void dispose() {
+
     _truckSubscription?.cancel();
+
+    for (var timer in _movementTimers.values) {
+      timer.cancel();
+    }
+
     super.dispose();
   }
 
@@ -389,12 +502,23 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
             initialCameraPosition: const CameraPosition(
               target: LatLng(6.8480, 79.9260),
               zoom: 13,
+            initialCameraPosition:
+            const CameraPosition(
+              target:
+              LatLng(6.8480, 79.9260),
+              zoom: 14,
             ),
             markers: _markers.values.toSet(),
             myLocationEnabled: true,
             myLocationButtonEnabled: true,
             onMapCreated: (controller) {
               _mapController.complete(controller);
+            myLocationButtonEnabled:
+            true,
+            onMapCreated:
+                (controller) {
+              _mapController
+                  .complete(controller);
             },
           ),
 
@@ -408,6 +532,14 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
+              padding:
+              const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius:
+                BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
@@ -417,24 +549,43 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment:
+                MainAxisAlignment.spaceEvenly,
                 children: [
                   _actionButton(
                     icon: Icons.calendar_month,
                     label: "Schedule",
                     color: Colors.green,
+<<<<<<< HEAD
                     onTap: _showScheduleBottomSheet,
+=======
+                    onTap: _showScheduleBottomSheet,  // opens calendar
+                    icon:
+                    Icons.calendar_month,
+                    label: "Schedule",
+                    color: Colors.green,
+                    onTap: () {},
+>>>>>>> f8e9d2d8d10188c33b8fbf424f98526d9f9fe998
                   ),
                   _actionButton(
                     icon: Icons.delete,
                     label: "Dump Points",
                     color: Colors.teal,
                     onTap: _openDumpPoints,
+                    onTap:
+                    _openDumpPoints,
                   ),
                   _actionButton(
                     icon: Icons.warning_amber,
                     label: "Report",
                     color: Colors.orange,
                     onTap: _openIllegalDumpReport,
+                    icon:
+                    Icons.warning_amber,
+                    label: "Report",
+                    color: Colors.orange,
+                    onTap:
+                    _openIllegalDumpReport,
                   ),
                 ],
               ),
@@ -463,11 +614,25 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color),
+            padding:
+            const EdgeInsets.all(12),
+            decoration:
+            BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius:
+              BorderRadius.circular(12),
+            ),
+            child:
+            Icon(icon, color: color),
           ),
           const SizedBox(height: 6),
           Text(
             label,
             style: const TextStyle(fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              fontWeight:
+              FontWeight.w600,
+            ),
           ),
         ],
       ),

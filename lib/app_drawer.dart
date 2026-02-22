@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/profile_screen.dart';   // 👈 Import profile screen
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -84,14 +85,18 @@ class AppDrawer extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
+
                 ListTile(
                   leading: const Icon(Icons.person, color: Color(0xFF2E7D32)),
                   title: const Text('Profile'),
                   onTap: () {
-                    Navigator.pop(context);
-                    // TODO: Navigate to profile
+                    Navigator.pop(context); // close drawer
+                    Navigator.pushNamed(context, '/profile');
+
+
                   },
                 ),
+
                 ListTile(
                   leading: const Icon(Icons.history, color: Color(0xFF2E7D32)),
                   title: const Text('Booking History'),
@@ -99,6 +104,7 @@ class AppDrawer extends StatelessWidget {
                     Navigator.pop(context);
                   },
                 ),
+
                 ListTile(
                   leading: const Icon(Icons.report, color: Color(0xFF2E7D32)),
                   title: const Text('My Complaints'),
@@ -117,6 +123,7 @@ class AppDrawer extends StatelessWidget {
                     Navigator.pop(context);
                   },
                 ),
+
                 ListTile(
                   leading: const Icon(Icons.emergency_share, color: Color(0xFF2E7D32)),
                   title: const Text('Emergency'),
@@ -125,6 +132,7 @@ class AppDrawer extends StatelessWidget {
                     Navigator.pushNamed(context, '/emergency');
                   },
                 ),
+
                 ListTile(
                   leading: const Icon(Icons.settings, color: Color(0xFF2E7D32)),
                   title: const Text('Settings'),
