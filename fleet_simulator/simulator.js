@@ -73,7 +73,7 @@ async function moveTrucks() {
 // RUN EVERY 3 SECONDS (SMOOTH)
 //--------------------------------------
 
-setInterval(moveTrucks, 3000);
+setInterval(moveTrucks, 1000);
 
 
 //--------------------------------------
