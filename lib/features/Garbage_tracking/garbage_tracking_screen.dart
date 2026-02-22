@@ -101,27 +101,32 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
 
   Future<void> _animateTruck(
       String truckId,
-      LatLng oldPos,
       LatLng newPos,
       ) async {
 
-    if (_isAnimating[truckId] == true) return;
-    _isAnimating[truckId] = true;
+    const steps = 20;
+    const delay = Duration(milliseconds: 40);
 
-    const steps = 15; // smaller steps
-    const delay = Duration(milliseconds: 40); // smoother
+    LatLng startPos;
+
+    // ⭐ ALWAYS take current marker position
+    if (_markers.containsKey(truckId)) {
+      startPos = _markers[truckId]!.position;
+    } else {
+      startPos = newPos;
+    }
 
     double latStep =
-        (newPos.latitude - oldPos.latitude) / steps;
+        (newPos.latitude - startPos.latitude) / steps;
 
     double lngStep =
-        (newPos.longitude - oldPos.longitude) / steps;
+        (newPos.longitude - startPos.longitude) / steps;
 
     for (int i = 0; i < steps; i++) {
 
       final interpolated = LatLng(
-        oldPos.latitude + (latStep * i),
-        oldPos.longitude + (lngStep * i),
+        startPos.latitude + (latStep * i),
+        startPos.longitude + (lngStep * i),
       );
 
       _markers[truckId] = Marker(
@@ -131,16 +136,11 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
         infoWindow: InfoWindow(title: "Truck $truckId"),
       );
 
-      if (mounted) {
-        setState(() {});
-      }
+      if (mounted) setState(() {});
 
       await Future.delayed(delay);
     }
-
-    _isAnimating[truckId] = false;
   }
-
   //--------------------------------------------------
   // NEARBY ALERT
   //--------------------------------------------------
@@ -231,7 +231,6 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
 
               _animateTruck(
                   id,
-                  oldPosition,
                   newPosition);
             }
 
