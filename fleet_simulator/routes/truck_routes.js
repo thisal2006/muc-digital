@@ -1,35 +1,35 @@
-// Realistic truck routes around Maharagama / Nawinna / Pannipitiya
-// These follow actual road directions — not random jumping.
+// Smooth curved road-like routes around Maharagama
 
 const truckRoutes = {
 
-  //Truck 1 — High Level Road loop (VERY realistic)
-  "GT-001": [
-    { lat: 6.8480, lng: 79.9265 }, // Maharagama town
-    { lat: 6.8505, lng: 79.9288 },
-    { lat: 6.8532, lng: 79.9315 },
-    { lat: 6.8556, lng: 79.9339 },
-    { lat: 6.8525, lng: 79.9300 },
-    { lat: 6.8495, lng: 79.9275 },
-  ],
+  "GT-001": generateRoute(6.8480, 79.9260, 0.010, 0.008),
 
-  // Truck 2 — Nawinna residential collection route
-  "GT-002": [
-    { lat: 6.8578, lng: 79.9183 },
-    { lat: 6.8602, lng: 79.9205 },
-    { lat: 6.8628, lng: 79.9232 },
-    { lat: 6.8605, lng: 79.9210 },
-    { lat: 6.8585, lng: 79.9195 },
-  ],
+  "GT-002": generateRoute(6.8580, 79.9180, 0.008, -0.010),
 
-  //Truck 3 — Pannipitiya side streets
-  "GT-003": [
-    { lat: 6.8408, lng: 79.9352 },
-    { lat: 6.8435, lng: 79.9378 },
-    { lat: 6.8462, lng: 79.9405 },
-    { lat: 6.8485, lng: 79.9380 },
-    { lat: 6.8450, lng: 79.9362 },
-  ],
+  "GT-003": generateRoute(6.8400, 79.9300, -0.009, 0.007),
 };
+
+
+//--------------------------------------
+// FUNCTION TO GENERATE CURVED ROUTES
+//--------------------------------------
+
+function generateRoute(startLat, startLng, latAmplitude, lngAmplitude) {
+
+  const points = [];
+  const steps = 120; // More points = smoother road
+
+  for (let i = 0; i < steps; i++) {
+
+    const angle = (i / steps) * 2 * Math.PI;
+
+    const lat = startLat + Math.sin(angle) * latAmplitude;
+    const lng = startLng + Math.cos(angle) * lngAmplitude;
+
+    points.push({ lat, lng });
+  }
+
+  return points;
+}
 
 module.exports = truckRoutes;
