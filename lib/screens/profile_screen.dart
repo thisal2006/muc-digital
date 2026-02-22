@@ -1,5 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -14,7 +15,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _nameController = TextEditingController(text: "Praveen Silva");
   final _emailController = TextEditingController(text: "praveen@example.com");
   final _phoneController = TextEditingController(text: "+94 77 123 4567");
-  final _addressController = TextEditingController(text: "No. 45, Negombo Road, Maharagama");
+  final _addressController =
+  TextEditingController(text: "No. 45, Negombo Road, Maharagama");
+
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+
+  // ✅ Pick Image Function
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? pickedFile =
+    await _picker.pickImage(source: source, imageQuality: 70);
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  // ✅ Bottom Sheet for Camera / Gallery
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text("Choose from Gallery"),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text("Take a Photo"),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +79,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             IconButton(
               icon: const Icon(Icons.save),
               onPressed: () {
-                // TODO: save to Firebase / backend
                 setState(() => _isEditing = false);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Profile updated")),
@@ -45,17 +90,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 20),
 
-            // Profile Picture
+            // ✅ Profile Picture
             Stack(
               children: [
                 CircleAvatar(
                   radius: 60,
                   backgroundColor: Colors.grey[200],
-                  child: const Icon(Icons.person, size: 70, color: Color(0xFF2E7D32)),
+                  backgroundImage:
+                  _profileImage != null ? FileImage(_profileImage!) : null,
+                  child: _profileImage == null
+                      ? const Icon(Icons.person,
+                      size: 70, color: Color(0xFF2E7D32))
+                      : null,
                 ),
                 if (_isEditing)
                   Positioned(
@@ -65,10 +114,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       radius: 18,
                       backgroundColor: const Color(0xFF2E7D32),
                       child: IconButton(
-                        icon: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
-                        onPressed: () {
-                          // TODO: image picker
-                        },
+                        icon: const Icon(Icons.camera_alt,
+                            size: 18, color: Colors.white),
+                        onPressed: _showImagePickerOptions,
                       ),
                     ),
                   ),
@@ -77,45 +125,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 24),
 
-            // Name
-            _buildField("Full Name", _nameController, _isEditing),
-
+            _buildField("Full Name", _nameController),
             const SizedBox(height: 16),
 
-            // Email
-            _buildField("Email", _emailController, _isEditing),
-
+            _buildField("Email", _emailController),
             const SizedBox(height: 16),
 
-            // Phone
-            _buildField("Phone Number", _phoneController, _isEditing),
-
+            _buildField("Phone Number", _phoneController),
             const SizedBox(height: 16),
 
-            // Address
-            _buildField("Address", _addressController, _isEditing),
+            _buildField("Address", _addressController),
 
             const SizedBox(height: 32),
 
-            // Booking History Button
             ListTile(
-              leading: const Icon(Icons.history, color: Color(0xFF2E7D32)),
+              leading:
+              const Icon(Icons.history, color: Color(0xFF2E7D32)),
               title: const Text("Booking History"),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const BookingHistoryScreen()),
+                  MaterialPageRoute(
+                      builder: (_) => const BookingHistoryScreen()),
                 );
               },
             ),
 
             const Divider(),
 
-            // Logout
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text("Log Out", style: TextStyle(color: Colors.red)),
+              title:
+              const Text("Log Out", style: TextStyle(color: Colors.red)),
               onTap: () {
                 // TODO: Firebase sign out
               },
@@ -126,17 +168,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller, bool editable) {
+  Widget _buildField(String label, TextEditingController controller) {
     return TextField(
       controller: controller,
-      enabled: editable,
+      enabled: _isEditing,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         filled: true,
-        fillColor: editable ? Colors.white : Colors.grey[100],
+        fillColor: _isEditing ? Colors.white : Colors.grey[100],
       ),
     );
   }
@@ -151,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// Simple Booking History Screen (placeholder)
+// Booking History Screen
 class BookingHistoryScreen extends StatelessWidget {
   const BookingHistoryScreen({super.key});
 
@@ -178,7 +220,6 @@ class BookingHistoryScreen extends StatelessWidget {
             subtitle: Text("2025-12-05 | 2:00 PM - 5:00 PM"),
             trailing: Chip(label: Text("Upcoming")),
           ),
-          // Add more...
         ],
       ),
     );
