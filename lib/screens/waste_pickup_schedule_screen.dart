@@ -23,7 +23,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -39,7 +38,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
               ),
             ),
 
-            // Calendar (no Expanded anymore)
             TableCalendar(
               firstDay: DateTime.utc(2023, 1, 1),
               lastDay: DateTime.utc(2030, 12, 31),
@@ -61,7 +59,22 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
               ),
               calendarBuilders: CalendarBuilders(
                 defaultBuilder: (context, day, focusedDay) {
-                  if (day.weekday == DateTime.wednesday) {
+                  if (isSameDay(day, _selectedDay)) {
+                    // Selected day priority - blue
+                    return Container(
+                      margin: const EdgeInsets.all(4.0),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.blue[700],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '${day.day}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  } else if (day.weekday == DateTime.wednesday) {
+                    // Wednesday pickup example - green
                     return Container(
                       margin: const EdgeInsets.all(4.0),
                       alignment: Alignment.center,
@@ -80,7 +93,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
               ),
             ),
 
-            // Selected date text
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
@@ -95,9 +107,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                 textAlign: TextAlign.center,
               ),
             ),
-
-            // Extra space at bottom (helps scrolling feel natural)
-            const SizedBox(height: 40),
           ],
         ),
       ),
