@@ -59,6 +59,26 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                 formatButtonVisible: false,
                 titleCentered: true,
               ),
+              // ← NEW: Highlight Wednesdays as example pickup days (Commit 9)
+              calendarBuilders: CalendarBuilders(
+                defaultBuilder: (context, day, focusedDay) {
+                  if (day.weekday == DateTime.wednesday) {
+                    return Container(
+                      margin: const EdgeInsets.all(4.0),
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '${day.day}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }
+                  return null;
+                },
+              ),
             ),
           ),
           Padding(
