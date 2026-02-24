@@ -16,11 +16,21 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
         backgroundColor: const Color(0xFF1B5E20), // match app theme
         foregroundColor: Colors.white,
       ),
-      body: const Center(
-        child: Text(
-          'Waste Pickup Schedule\n(Work in progress)',
+      body: Column(
+        children: [
+        // Placeholder header for calendar section
+        Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        color: Colors.green[50],
+        child: const Text(
+          'Select a date for pickup schedule',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1B5E20),
+          ),
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
       ),
     );
