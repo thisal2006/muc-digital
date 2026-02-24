@@ -20,27 +20,27 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          // Header from previous commit
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            color: Colors.green[50],
-            child: const Text(
-              'Select a date for pickup schedule',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1B5E20),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              color: Colors.green[50],
+              child: const Text(
+                'Select a date for pickup schedule',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1B5E20),
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
 
-          // The calendar
-          Expanded(
-            child: TableCalendar(
+            // Calendar (no Expanded anymore)
+            TableCalendar(
               firstDay: DateTime.utc(2023, 1, 1),
               lastDay: DateTime.utc(2030, 12, 31),
               focusedDay: _focusedDay,
@@ -59,7 +59,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                 formatButtonVisible: false,
                 titleCentered: true,
               ),
-              // ← NEW: Highlight Wednesdays as example pickup days (Commit 9)
               calendarBuilders: CalendarBuilders(
                 defaultBuilder: (context, day, focusedDay) {
                   if (day.weekday == DateTime.wednesday) {
@@ -80,28 +79,32 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                 },
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              _selectedDay == null
-                  ? 'No date selected'
-                  : 'Selected pickup date: ${_selectedDay!.toString().split(' ')[0]}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF1B5E20),
+
+            // Selected date text
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                _selectedDay == null
+                    ? 'No date selected'
+                    : 'Selected pickup date: ${_selectedDay!.toString().split(' ')[0]}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1B5E20),
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
-        ],
+
+            // Extra space at bottom (helps scrolling feel natural)
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
 }
 
-// Helper function at the bottom of the file
 bool isSameDay(DateTime? a, DateTime? b) {
   if (a == null || b == null) {
     return false;
