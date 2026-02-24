@@ -61,6 +61,20 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              _selectedDay == null
+                  ? 'No date selected'
+                  : 'Selected pickup date: ${_selectedDay!.toString().split(' ')[0]}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF1B5E20),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
         ],
       ),
     );
