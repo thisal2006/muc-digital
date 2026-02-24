@@ -23,18 +23,28 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // ← NEW beautiful header with icon (Commit 12)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              color: Colors.green[50],
-              child: const Text(
-                'Select a date for pickup schedule',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1B5E20),
-                ),
-                textAlign: TextAlign.center,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                border: Border(bottom: BorderSide(color: Colors.green[200]!, width: 1)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.calendar_today_rounded, color: const Color(0xFF1B5E20), size: 28),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Select Pickup Date',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1B5E20),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -60,7 +70,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
               calendarBuilders: CalendarBuilders(
                 defaultBuilder: (context, day, focusedDay) {
                   if (isSameDay(day, _selectedDay)) {
-                    // Selected day priority - blue
                     return Container(
                       margin: const EdgeInsets.all(4.0),
                       alignment: Alignment.center,
@@ -74,7 +83,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                       ),
                     );
                   } else if (day.weekday == DateTime.wednesday) {
-                    // Wednesday pickup example - green
                     return Container(
                       margin: const EdgeInsets.all(4.0),
                       alignment: Alignment.center,
