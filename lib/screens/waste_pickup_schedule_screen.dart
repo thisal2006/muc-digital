@@ -23,7 +23,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ← NEW beautiful header with icon (Commit 12)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -115,6 +114,33 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                 textAlign: TextAlign.center,
               ),
             ),
+
+            // ← NEW: Confirm button + spacing (Commit 13)
+            const SizedBox(height: 30),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: ElevatedButton(
+                onPressed: _selectedDay == null
+                    ? null
+                    : () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Pickup scheduled for ${_selectedDay!.toString().split(' ')[0]}',
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1B5E20),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Confirm Pickup Date'),
+              ),
+            ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
