@@ -1,5 +1,3 @@
-// Updated main.dart - fixed const constructors, imports, routing, theme
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'features/Garbage_tracking/garbage_tracking_screen.dart';
@@ -12,6 +10,12 @@ import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
 import 'screens/profile_screen.dart';
 import 'features/Property/screens/property_booking_screen.dart';
+
+// Add these new imports (adjust paths if your files are in different folders)
+import 'screens/waste_pickup_schedule_screen.dart';           // your new screen
+import 'screens/vehicle_booking_screen.dart';               // create this file later
+import 'screens/cemetery_booking_screen.dart';              // create this file later
+import 'screens/complaints_screen.dart';                    // already exists
 
 bool _firebaseInitialized = false;
 
@@ -64,14 +68,21 @@ class MUCdigitalApp extends StatelessWidget {
 
       routes: {
         '/': (context) => const SplashScreen(),
-        '/onboarding': (context) => OnboardingScreen(),
+        '/onboarding': (context) => const OnboardingScreen(),
         '/user_agreement': (context) => const UserAgreementScreen(),
         '/home': (context) => const HomeScreen(),
-        '/emergency': (context) => EmergencyScreen(),
+        '/emergency': (context) => const EmergencyScreen(),
         '/announcements': (context) => const AnnouncementsScreen(),
-        '/garbage_tracker': (context) => const GarbageTrackingScreen(),
-        '/property_booking': (context) => const PropertyBookingScreen(),
         '/profile': (context) => const ProfileScreen(),
+
+        // Your services (cleaned, no duplicates)
+        '/garbage_tracker': (context) => const WastePickupScheduleScreen(),  // ← your main screen
+        '/property_booking': (context) => const PropertyBookingScreen(),
+        '/vehicle_booking': (context) => const VehicleBookingScreen(),
+        '/cemetery_booking': (context) => const CemeteryBookingScreen(),
+
+        // Make complaints consistent with slash
+        '/complaints': (context) => const ComplaintsScreen(),
       },
     );
   }
