@@ -13,6 +13,19 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
+  // ← NEW: Dummy truck marker set (Commit 18)
+  final Set<Marker> _markers = {
+    const Marker(
+      markerId: MarkerId('truck1'),
+      position: LatLng(6.8480, 79.9265),
+      infoWindow: InfoWindow(
+        title: 'Garbage Truck 1',
+        snippet: 'Current location - Heading to Zone A',
+      ),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+    ),
+  };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -142,7 +155,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
             ),
             const SizedBox(height: 40),
 
-            // ← NEW: Real GoogleMap (Commit 17)
             const SizedBox(height: 20),
             Container(
               height: 300,
@@ -155,12 +167,24 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                 borderRadius: BorderRadius.circular(16),
                 child: GoogleMap(
                   initialCameraPosition: const CameraPosition(
-                    target: LatLng(6.8480, 79.9265), // Approx Maharagama coords
+                    target: LatLng(6.8480, 79.9265), // Approx Maharagama
                     zoom: 14,
                   ),
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
                   mapType: MapType.normal,
+                  // ← NEW: Markers added (Commit 18)
+                  markers: const {
+                    Marker(
+                      markerId: MarkerId('truck1'),
+                      position: LatLng(6.8480, 79.9265),
+                      infoWindow: InfoWindow(
+                        title: 'Garbage Truck 1',
+                        snippet: 'Current location - Heading to Zone A',
+                      ),
+                      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+                    ),
+                  },
                 ),
               ),
             ),
