@@ -15,7 +15,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
   DateTime? _selectedDay;
 
   final Set<Marker> _markers = {
-    const Marker(
+    Marker(
       markerId: MarkerId('truck1'),
       position: LatLng(6.8480, 79.9265),
       infoWindow: InfoWindow(
@@ -24,7 +24,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
     ),
-    const Marker(
+    Marker(
       markerId: MarkerId('truck2'),
       position: LatLng(6.8550, 79.9200),
       infoWindow: InfoWindow(
@@ -33,7 +33,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
     ),
-    const Marker(
+    Marker(
       markerId: MarkerId('truck3'),
       position: LatLng(6.8400, 79.9350),
       infoWindow: InfoWindow(
@@ -44,7 +44,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
     ),
   };
 
-  Completer<GoogleMapController> _mapController = Completer();
+  final Completer<GoogleMapController> _mapController = Completer();
 
   @override
   Widget build(BuildContext context) {
