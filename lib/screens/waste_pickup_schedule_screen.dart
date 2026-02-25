@@ -15,7 +15,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
 
   // ← NEW: Dummy truck marker set (Commit 18)
   final Set<Marker> _markers = {
-    const Marker(
+    Marker(   // no const here
       markerId: MarkerId('truck1'),
       position: LatLng(6.8480, 79.9265),
       infoWindow: InfoWindow(
@@ -167,14 +167,13 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                 borderRadius: BorderRadius.circular(16),
                 child: GoogleMap(
                   initialCameraPosition: const CameraPosition(
-                    target: LatLng(6.8480, 79.9265), // Approx Maharagama
+                    target: LatLng(6.8480, 79.9265),
                     zoom: 14,
                   ),
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
                   mapType: MapType.normal,
-                  // ← NEW: Markers added (Commit 18)
-                  markers: const {
+                  markers: {
                     Marker(
                       markerId: MarkerId('truck1'),
                       position: LatLng(6.8480, 79.9265),
