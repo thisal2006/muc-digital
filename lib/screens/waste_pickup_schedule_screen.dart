@@ -238,9 +238,10 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
     }
   }
 
-bool isSameDay(DateTime? a, DateTime? b) {
-  if (a == null || b == null) {
-    return false;
+  bool isSameDay(DateTime? a, DateTime? b) {
+    if (a == null || b == null) {
+      return false;
+    }
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
-  return a.year == b.year && a.month == b.month && a.day == b.day;
-}
+  }
