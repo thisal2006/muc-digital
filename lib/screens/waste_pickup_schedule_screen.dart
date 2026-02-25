@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class WastePickupScheduleScreen extends StatefulWidget {
   const WastePickupScheduleScreen({super.key});
@@ -15,7 +16,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
   DateTime? _selectedDay;
 
   final Set<Marker> _markers = {
-    Marker(
+    const Marker(
       markerId: MarkerId('truck1'),
       position: LatLng(6.8480, 79.9265),
       infoWindow: InfoWindow(
@@ -24,7 +25,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
     ),
-    Marker(
+    const Marker(
       markerId: MarkerId('truck2'),
       position: LatLng(6.8550, 79.9200),
       infoWindow: InfoWindow(
@@ -33,7 +34,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
     ),
-    Marker(
+    const Marker(
       markerId: MarkerId('truck3'),
       position: LatLng(6.8400, 79.9350),
       infoWindow: InfoWindow(
@@ -181,19 +182,37 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
             ),
 
             const SizedBox(height: 30),
+
+            // Confirm button with Firestore save (Commit 21)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: ElevatedButton(
                 onPressed: _selectedDay == null
                     ? null
-                    : () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Pickup scheduled for ${_selectedDay!.toString().split(' ')[0]}',
+                    : () async {
+                  try {
+                    await FirebaseFirestore.instance.collection('pickups').add({
+                      'userId': 'dummy_user_123',
+                      'pickupDate': Timestamp.fromDate(_selectedDay!),
+                      'createdAt': FieldValue.serverTimestamp(),
+                      'status': 'pending',
+                      'notes': 'Scheduled via app',
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Pickup date successfully scheduled!'),
+                        backgroundColor: Colors.green,
                       ),
-                    ),
-                  );
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error saving schedule: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1B5E20),
@@ -204,6 +223,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                 child: const Text('Confirm Pickup Date'),
               ),
             ),
+
             const SizedBox(height: 40),
           ],
         ),
