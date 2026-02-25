@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:async';
 
 class WastePickupScheduleScreen extends StatefulWidget {
   const WastePickupScheduleScreen({super.key});
@@ -13,9 +14,8 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  // ← NEW: Dummy truck marker set (Commit 18)
   final Set<Marker> _markers = {
-    Marker(   // no const here
+    const Marker(
       markerId: MarkerId('truck1'),
       position: LatLng(6.8480, 79.9265),
       infoWindow: InfoWindow(
@@ -25,6 +25,8 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
     ),
   };
+
+  Completer<GoogleMapController> _mapController = Completer();
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +131,37 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
               ),
             ),
 
+            const SizedBox(height: 20),
+
+            Container(
+              height: 300,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.green[300]!, width: 1),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: GoogleMap(
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(6.8480, 79.9265),
+                    zoom: 14,
+                  ),
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: true,
+                  mapType: MapType.normal,
+                  markers: _markers,
+                  onMapCreated: (GoogleMapController controller) {
+                    _mapController.complete(controller);
+                  },
+                  zoomControlsEnabled: true,
+                  zoomGesturesEnabled: true,
+                  rotateGesturesEnabled: false,
+                  scrollGesturesEnabled: true,
+                ),
+              ),
+            ),
+
             const SizedBox(height: 30),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -153,41 +186,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                 child: const Text('Confirm Pickup Date'),
               ),
             ),
-            const SizedBox(height: 40),
-
-            const SizedBox(height: 20),
-            Container(
-              height: 300,
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green[300]!, width: 1),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: GoogleMap(
-                  initialCameraPosition: const CameraPosition(
-                    target: LatLng(6.8480, 79.9265),
-                    zoom: 14,
-                  ),
-                  myLocationEnabled: true,
-                  myLocationButtonEnabled: true,
-                  mapType: MapType.normal,
-                  markers: {
-                    Marker(
-                      markerId: MarkerId('truck1'),
-                      position: LatLng(6.8480, 79.9265),
-                      infoWindow: InfoWindow(
-                        title: 'Garbage Truck 1',
-                        snippet: 'Current location - Heading to Zone A',
-                      ),
-                      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-                    ),
-                  },
-                ),
-              ),
-            ),
-
             const SizedBox(height: 40),
           ],
         ),
