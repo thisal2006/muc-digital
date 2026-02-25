@@ -115,7 +115,6 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
               ),
             ),
 
-            // ← NEW: Confirm button + spacing (Commit 13)
             const SizedBox(height: 30),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -140,6 +139,29 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                 child: const Text('Confirm Pickup Date'),
               ),
             ),
+            const SizedBox(height: 40),
+
+            // ← NEW: Map placeholder (Commit 16)
+            const SizedBox(height: 20),
+            Container(
+              height: 300,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.green[300]!, width: 1),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: const Center(
+                  child: Text(
+                    'Google Map will be here\n(Truck locations)',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ),
+              ),
+            ),
+
             const SizedBox(height: 40),
           ],
         ),
