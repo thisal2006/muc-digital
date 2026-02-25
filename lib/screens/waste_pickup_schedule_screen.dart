@@ -20,9 +20,27 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       position: LatLng(6.8480, 79.9265),
       infoWindow: InfoWindow(
         title: 'Garbage Truck 1',
-        snippet: 'Current location - Heading to Zone A',
+        snippet: 'Current location - Zone A',
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+    ),
+    const Marker(
+      markerId: MarkerId('truck2'),
+      position: LatLng(6.8550, 79.9200),
+      infoWindow: InfoWindow(
+        title: 'Garbage Truck 2',
+        snippet: 'Heading to Zone B',
+      ),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+    ),
+    const Marker(
+      markerId: MarkerId('truck3'),
+      position: LatLng(6.8400, 79.9350),
+      infoWindow: InfoWindow(
+        title: 'Garbage Truck 3',
+        snippet: 'Completed route - Zone C',
+      ),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
     ),
   };
 
