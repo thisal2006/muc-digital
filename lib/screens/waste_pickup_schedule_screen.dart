@@ -256,21 +256,17 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                           final formattedDate = DateFormat('MMM dd, yyyy').format(date);
 
                           return ListTile(
-                            leading: const Icon(Icons.calendar_today, color: Color(0xFF1B5E20)),
-                            title: Text('Pickup on $formattedDate'),
-                            subtitle: Text('Status: ${data['status']}'),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
-                              onPressed: () async {
-                                await FirebaseFirestore.instance
-                                    .collection('pickups')
-                                    .doc(docs[index].id)
-                                    .delete();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Pickup cancelled')),
-                                );
-                              },
-                            ),
+                              leading: const Icon(Icons.calendar_today, color: Color(0xFF1B5E20)),
+                              title: Text('Pickup on $formattedDate'),
+                              subtitle: Text('Status: ${data['status']}'),
+                              trailing: IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                  onPressed: () {
+                                    _deletePickup(context, docs[index].id);
+                                  },
+                              ),
+
+
                           );
                         },
                       );
@@ -315,11 +311,29 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       );
     }
   }
+Future<void> _deletePickup(BuildContext context, String docId) async {
+  final messenger = ScaffoldMessenger.of(context);
+
+  try {
+    await FirebaseFirestore.instance
+        .collection('pickups')
+        .doc(docId)
+        .delete();
+
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Pickup cancelled')),
+    );
+  } catch (e) {
+    messenger.showSnackBar(
+      SnackBar(content: Text('Error cancelling: $e')),
+    );
+  }
+}
+}
 
   bool isSameDay(DateTime? a, DateTime? b) {
     if (a == null || b == null) {
       return false;
     }
     return a.year == b.year && a.month == b.month && a.day == b.day;
-  }
   }
