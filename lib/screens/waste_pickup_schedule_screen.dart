@@ -16,7 +16,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
   DateTime? _selectedDay;
 
   final Set<Marker> _markers = {
-    const Marker(
+    Marker(
       markerId: MarkerId('truck1'),
       position: LatLng(6.8480, 79.9265),
       infoWindow: InfoWindow(
@@ -25,7 +25,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
     ),
-    const Marker(
+    Marker(
       markerId: MarkerId('truck2'),
       position: LatLng(6.8550, 79.9200),
       infoWindow: InfoWindow(
@@ -34,7 +34,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
     ),
-    const Marker(
+    Marker(
       markerId: MarkerId('truck3'),
       position: LatLng(6.8400, 79.9350),
       infoWindow: InfoWindow(
@@ -183,36 +183,14 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
 
             const SizedBox(height: 30),
 
-            // Confirm button with Firestore save (Commit 21)
+            // Confirm button – calls _confirmPickup (fixed lint error)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: ElevatedButton(
                 onPressed: _selectedDay == null
                     ? null
-                    : () async {
-                  try {
-                    await FirebaseFirestore.instance.collection('pickups').add({
-                      'userId': 'dummy_user_123',
-                      'pickupDate': Timestamp.fromDate(_selectedDay!),
-                      'createdAt': FieldValue.serverTimestamp(),
-                      'status': 'pending',
-                      'notes': 'Scheduled via app',
-                    });
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Pickup date successfully scheduled!'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error saving schedule: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
+                    : () {
+                  _confirmPickup(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1B5E20),
@@ -230,7 +208,35 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
       ),
     );
   }
-}
+
+  // New method added in Commit 21 fix – async Firestore save
+  Future<void> _confirmPickup(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);  // ← store it BEFORE await
+
+    try {
+      await FirebaseFirestore.instance.collection('pickups').add({
+        'userId': 'dummy_user_123',
+        'pickupDate': Timestamp.fromDate(_selectedDay!),
+        'createdAt': FieldValue.serverTimestamp(),
+        'status': 'pending',
+        'notes': 'Scheduled via app',
+      });
+
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Pickup date successfully scheduled!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Error saving schedule: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
 bool isSameDay(DateTime? a, DateTime? b) {
   if (a == null || b == null) {
