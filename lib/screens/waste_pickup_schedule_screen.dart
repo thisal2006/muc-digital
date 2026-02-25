@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class WastePickupScheduleScreen extends StatefulWidget {
   const WastePickupScheduleScreen({super.key});
@@ -141,7 +142,7 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
             ),
             const SizedBox(height: 40),
 
-            // ← NEW: Map placeholder (Commit 16)
+            // ← NEW: Real GoogleMap (Commit 17)
             const SizedBox(height: 20),
             Container(
               height: 300,
@@ -152,12 +153,14 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: const Center(
-                  child: Text(
-                    'Google Map will be here\n(Truck locations)',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                child: GoogleMap(
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(6.8480, 79.9265), // Approx Maharagama coords
+                    zoom: 14,
                   ),
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: true,
+                  mapType: MapType.normal,
                 ),
               ),
             ),
