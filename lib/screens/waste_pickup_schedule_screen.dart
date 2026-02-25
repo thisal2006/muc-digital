@@ -3,6 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class WastePickupScheduleScreen extends StatefulWidget {
   const WastePickupScheduleScreen({super.key});
@@ -199,6 +200,83 @@ class _WastePickupScheduleScreenState extends State<WastePickupScheduleScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: const Text('Confirm Pickup Date'),
+              ),
+            ),
+
+            const SizedBox(height: 40),
+
+            // ← NEW: Scheduled Pickups List (real-time from Firestore) - Commit 22
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Your Scheduled Pickups',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1B5E20),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('pickups')
+                        .where('userId', isEqualTo: 'dummy_user_123')
+                        .orderBy('pickupDate')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      }
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      final docs = snapshot.data?.docs ?? [];
+
+                      if (docs.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            'No scheduled pickups yet.',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: docs.length,
+                        itemBuilder: (context, index) {
+                          final data = docs[index].data() as Map<String, dynamic>;
+                          final date = (data['pickupDate'] as Timestamp).toDate();
+                          final formattedDate = DateFormat('MMM dd, yyyy').format(date);
+
+                          return ListTile(
+                            leading: const Icon(Icons.calendar_today, color: Color(0xFF1B5E20)),
+                            title: Text('Pickup on $formattedDate'),
+                            subtitle: Text('Status: ${data['status']}'),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              onPressed: () async {
+                                await FirebaseFirestore.instance
+                                    .collection('pickups')
+                                    .doc(docs[index].id)
+                                    .delete();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Pickup cancelled')),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
 
