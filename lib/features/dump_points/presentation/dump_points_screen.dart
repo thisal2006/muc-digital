@@ -6,7 +6,6 @@ import '../domain/dump_point.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-
 class DumpPointsScreen extends StatefulWidget {
   const DumpPointsScreen({super.key});
 
@@ -14,21 +13,8 @@ class DumpPointsScreen extends StatefulWidget {
   State<DumpPointsScreen> createState() => _DumpPointsScreenState();
 }
 
-class _DumpPointsScreenState extends State<DumpPointsScreen> {
-  Future<void> _navigateToDump(DumpPoint dump) async {
-
-    final Uri googleMapsUrl = Uri.parse(
-      "google.navigation:q=${dump.lat},${dump.lng}&mode=d",
-    );
-
-    if (await canLaunchUrl(googleMapsUrl)) {
-      await launchUrl(googleMapsUrl);
-    } else {
-      throw 'Could not launch Google Maps';
-    }
-  }
-  DumpPoint? nearestDump;
-  double nearestDistanceKm = 0;
+class _DumpPointsScreenState extends State<DumpPointsScreen>
+    with SingleTickerProviderStateMixin {
 
   final DumpRepository repo = DumpRepository();
 
@@ -36,6 +22,9 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
   StreamSubscription? dumpSubscription;
 
   Position? userPosition;
+
+  DumpPoint? nearestDump;
+  double nearestDistanceKm = 0;
 
   static const CameraPosition initialCamera = CameraPosition(
     target: LatLng(6.8480, 79.9260),
@@ -47,28 +36,35 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
   BitmapDescriptor? activeIcon;
   BitmapDescriptor? closedIcon;
 
+  late AnimationController _cardController;
 
+  //--------------------------------------------------
+  // INIT
+  //--------------------------------------------------
 
   @override
   void initState() {
     super.initState();
+
+    _cardController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
     _initialize();
   }
 
   Future<void> _initialize() async {
-
     await _loadIcons();
-
-    // ⭐ DO NOT BLOCK marker loading if GPS fails
     _getUserLocation();
-
     _listenToDumps();
   }
 
-
+  //--------------------------------------------------
+  // ICONS
+  //--------------------------------------------------
 
   Future<void> _loadIcons() async {
-
     activeIcon = await BitmapDescriptor.asset(
       const ImageConfiguration(),
       "assets/icons/dump_active.png",
@@ -84,234 +80,93 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
     );
   }
 
+  //--------------------------------------------------
+  // USER LOCATION
+  //--------------------------------------------------
 
   Future<void> _getUserLocation() async {
-
     try {
-
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      bool serviceEnabled =
+      await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) return;
 
-      LocationPermission permission = await Geolocator.checkPermission();
+      LocationPermission permission =
+      await Geolocator.checkPermission();
 
       if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
+        permission =
+        await Geolocator.requestPermission();
       }
 
       if (permission == LocationPermission.deniedForever) {
         return;
       }
 
-      userPosition = await Geolocator.getCurrentPosition(
+      userPosition =
+      await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.best,
         ),
       );
-
-      // SAFE debug print
-      if (userPosition != null) {
-        print("USER LAT: ${userPosition!.latitude}");
-        print("USER LNG: ${userPosition!.longitude}");
-      }
-
     } catch (e) {
-      print("LOCATION ERROR: $e");
+      debugPrint("Location error: $e");
     }
   }
 
-
+  //--------------------------------------------------
+  // FIREBASE LISTENER
+  //--------------------------------------------------
 
   void _listenToDumps() {
-
-
     dumpSubscription =
         repo.watchDumpPoints().listen((List<DumpPoint> dumps) {
+
           _calculateNearestDump(dumps);
 
-
           final markers = dumps.map((dump) {
-
             return Marker(
               markerId: MarkerId(dump.id),
               position: LatLng(dump.lat, dump.lng),
-
               icon: dump.status == "active"
                   ? activeIcon ?? BitmapDescriptor.defaultMarker
                   : closedIcon ?? BitmapDescriptor.defaultMarker,
-
               infoWindow: InfoWindow(
                 title: dump.name,
                 snippet: dump.address,
               ),
-
               onTap: () {
                 _showDumpDetails(dump);
               },
             );
-
           }).toSet();
 
           if (mounted) {
             setState(() {
               dumpMarkers = markers;
             });
+
+            if (nearestDump != null) {
+              _cardController.forward(from: 0);
+            }
           }
         });
   }
 
-
-
-  void _showDumpDetails(DumpPoint dump) {
-
-    double distanceKm = 0;
-    Color capacityColor = Colors.green;
-
-    double percent = dump.currentLoad / dump.capacityTons;
-
-    if (percent > 0.8) {
-      capacityColor = Colors.red;
-    } else if (percent > 0.5) {
-      capacityColor = Colors.orange;
-    }
-
-
-    if (userPosition != null) {
-
-      double meters = Geolocator.distanceBetween(
-        userPosition!.latitude,
-        userPosition!.longitude,
-        dump.lat,
-        dump.lng,
-      );
-
-      distanceKm = meters / 1000;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
-      ),
-      builder: (_) {
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          height: 260,
-
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              Text(
-                dump.name,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              Text(dump.address),
-
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-
-                  Icon(
-                    dump.status == "active"
-                        ? Icons.check_circle
-                        : Icons.cancel,
-                    color: dump.status == "active"
-                        ? Colors.green
-                        : Colors.red,
-                  ),
-
-                  const SizedBox(width: 6),
-
-                  Text(
-                    dump.status.toUpperCase(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: dump.status == "active"
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-
-                  const Icon(Icons.route, color: Colors.blue),
-                  const SizedBox(width: 6),
-
-                  Text(
-                    "${distanceKm.toStringAsFixed(2)} km away",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-
-                  Icon(
-                    Icons.storage,
-                    color: capacityColor,
-                  ),
-
-                  const SizedBox(width: 6),
-
-                  Text(
-                    "Capacity: ${dump.currentLoad} / ${dump.capacityTons} tons",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: capacityColor,
-                    ),
-                  ),
-                ],
-              ),
-
-              const Spacer(),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    _navigateToDump(dump);
-                  },
-
-                  child: const Text("Navigate"),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  //--------------------------------------------------
+  // NEAREST DUMP CALCULATION
+  //--------------------------------------------------
 
   void _calculateNearestDump(List<DumpPoint> dumps) {
-
-    if (userPosition == null) return;
+    if (userPosition == null) {
+      return;
+    }
 
     double minDistance = double.infinity;
     DumpPoint? closest;
 
     for (var dump in dumps) {
-
-      double meters = Geolocator.distanceBetween(
+      double meters =
+      Geolocator.distanceBetween(
         userPosition!.latitude,
         userPosition!.longitude,
         dump.lat,
@@ -326,136 +181,297 @@ class _DumpPointsScreenState extends State<DumpPointsScreen> {
 
     if (closest != null) {
       nearestDump = closest;
-      nearestDistanceKm = minDistance / 1000;
+      nearestDistanceKm =
+          minDistance / 1000;
     }
   }
 
-  Widget _nearestDumpCard() {
+  //--------------------------------------------------
+  // NAVIGATION
+  //--------------------------------------------------
 
-    return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+  Future<void> _navigateToDump(
+      DumpPoint dump) async {
 
-      child: Padding(
-        padding: const EdgeInsets.all(14),
+    final Uri googleMapsUrl = Uri.parse(
+      "google.navigation:q=${dump.lat},${dump.lng}&mode=d",
+    );
 
-        child: Row(
-          children: [
+    if (await canLaunchUrl(googleMapsUrl)) {
+      await launchUrl(googleMapsUrl);
+    } else {
+      throw 'Could not launch Google Maps';
+    }
+  }
 
-            //--------------------------------
-            // ICON
-            //--------------------------------
+  //--------------------------------------------------
+  // BOTTOM SHEET
+  //--------------------------------------------------
 
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.location_on,
-                color: Colors.green,
-              ),
+  void _showDumpDetails(DumpPoint dump) {
+
+    double percent =
+        dump.currentLoad / dump.capacityTons;
+
+    double distanceKm = 0;
+
+    if (userPosition != null) {
+      double meters =
+      Geolocator.distanceBetween(
+        userPosition!.latitude,
+        userPosition!.longitude,
+        dump.lat,
+        dump.lng,
+      );
+      distanceKm = meters / 1000;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return Container(
+          padding: const EdgeInsets.symmetric(
+              vertical: 20,
+              horizontal: 20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius:
+            BorderRadius.vertical(
+              top: Radius.circular(24),
             ),
+          ),
+          child: Column(
+            mainAxisSize:
+            MainAxisSize.min,
+            crossAxisAlignment:
+            CrossAxisAlignment.start,
+            children: [
 
-            const SizedBox(width: 12),
+              Text(
+                dump.name,
+                style:
+                const TextStyle(
+                  fontSize: 20,
+                  fontWeight:
+                  FontWeight.bold,
+                ),
+              ),
 
-            //--------------------------------
-            // TEXT
-            //--------------------------------
+              const SizedBox(height: 8),
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              Text(dump.address),
 
+              const SizedBox(height: 15),
+
+              LinearProgressIndicator(
+                value: percent,
+                minHeight: 8,
+                borderRadius:
+                BorderRadius.circular(
+                    8),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                "${dump.currentLoad} / ${dump.capacityTons} tons",
+                style:
+                const TextStyle(
+                  fontWeight:
+                  FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Text(
+                "${distanceKm.toStringAsFixed(2)} km away",
+                style:
+                const TextStyle(
+                  fontWeight:
+                  FontWeight.w600,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                child:
+                ElevatedButton(
+                  style:
+                  ElevatedButton
+                      .styleFrom(
+                    padding:
+                    const EdgeInsets.symmetric(
+                        vertical:
+                        14),
+                    shape:
+                    RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius
+                          .circular(
+                          12),
+                    ),
+                  ),
+                  onPressed: () {
+                    _navigateToDump(
+                        dump);
+                  },
+                  child:
                   const Text(
-                    "Nearest Dump",
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey,
-                    ),
-                  ),
-
-                  Text(
-                    nearestDump!.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  Text(
-                    "${nearestDistanceKm.toStringAsFixed(2)} km away",
-                    style: const TextStyle(
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
+                      "Navigate"),
+                ),
               ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  //--------------------------------------------------
+  // NEAREST CARD
+  //--------------------------------------------------
+
+  Widget _nearestDumpCard() {
+    return FadeTransition(
+      opacity: _cardController,
+      child: SlideTransition(
+        position:
+        Tween<Offset>(
+          begin:
+          const Offset(0, -0.2),
+          end:
+          Offset.zero,
+        ).animate(_cardController),
+        child: Card(
+          elevation: 8,
+          shape:
+          RoundedRectangleBorder(
+            borderRadius:
+            BorderRadius.circular(
+                16),
+          ),
+          child: Padding(
+            padding:
+            const EdgeInsets.all(
+                14),
+            child: Row(
+              children: [
+
+                const Icon(
+                  Icons.location_on,
+                  color:
+                  Colors.green,
+                ),
+
+                const SizedBox(
+                    width: 12),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment:
+                    CrossAxisAlignment
+                        .start,
+                    children: [
+                      const Text(
+                        "Nearest Dump",
+                        style:
+                        TextStyle(
+                          fontSize: 12,
+                          color: Colors
+                              .grey,
+                        ),
+                      ),
+                      Text(
+                        nearestDump!
+                            .name,
+                        style:
+                        const TextStyle(
+                          fontWeight:
+                          FontWeight
+                              .bold,
+                        ),
+                      ),
+                      Text(
+                        "${nearestDistanceKm.toStringAsFixed(2)} km away",
+                      ),
+                    ],
+                  ),
+                ),
+
+                ElevatedButton(
+                  onPressed: () {
+                    _navigateToDump(
+                        nearestDump!);
+                  },
+                  child:
+                  const Text(
+                      "Go"),
+                ),
+              ],
             ),
-
-            //--------------------------------
-            // NAV BUTTON
-            //--------------------------------
-
-            ElevatedButton(
-              onPressed: () {
-                _navigateToDump(nearestDump!);
-              },
-              child: const Text("Go"),
-            )
-          ],
+          ),
         ),
       ),
     );
   }
 
+  //--------------------------------------------------
+  // DISPOSE
+  //--------------------------------------------------
+
   @override
   void dispose() {
     dumpSubscription?.cancel();
+    _cardController.dispose();
     super.dispose();
   }
 
-
+  //--------------------------------------------------
+  // UI
+  //--------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Dump Points"),
+        title:
+        const Text(
+            "Dump Points"),
       ),
-
       body: Stack(
         children: [
 
           GoogleMap(
-            initialCameraPosition: initialCamera,
-            markers: dumpMarkers,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
-            onMapCreated: (controller) {
-              mapController = controller;
+            initialCameraPosition:
+            initialCamera,
+            markers:
+            dumpMarkers,
+            myLocationEnabled:
+            true,
+            myLocationButtonEnabled:
+            true,
+            onMapCreated:
+                (controller) {
+              mapController =
+                  controller;
             },
           ),
 
-          //-----------------------------------
-          // NEAREST DUMP CARD
-          //-----------------------------------
+        if (nearestDump != null)
+    Positioned(
+      top: 20,
+      left: 16,
+      right: 16,
+      child: _nearestDumpCard(),
+    ),
 
-          if (nearestDump != null)
-            Positioned(
-              top: 20,
-              left: 16,
-              right: 16,
-              child: _nearestDumpCard(),
-            ),
         ],
       ),
-
     );
   }
 }
