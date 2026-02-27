@@ -17,6 +17,13 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
     DateTime(2026, 3, 15),
   };
 
+  String? _selectedTimeSlot;  // ← ADD THIS
+  final List<String> _availableTimeSlots = [  // ← ADD THIS (example times – later from Firebase)
+    'Morning (9:00 AM - 12:00 PM)',
+    'Afternoon (1:00 PM - 4:00 PM)',
+    'Evening (5:00 PM - 8:00 PM)',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,6 +104,49 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
               child: Text(
                 'Tap an available date to select a slot',
               style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ),
+          if (_selectedDay != null)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Select Time Slot:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: _availableTimeSlots.map((slot) {
+                      final isSelected = _selectedTimeSlot == slot;
+                      return ChoiceChip(
+                        label: Text(slot),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedTimeSlot = selected ? slot : null;
+                          });
+                        },
+                        selectedColor: Colors.blue[700],
+                        backgroundColor: Colors.grey[200],
+                        labelStyle: TextStyle(
+                          color: isSelected ? Colors.white : Colors.black,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  if (_selectedTimeSlot != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Text(
+                        'Selected Slot: $_selectedTimeSlot',
+                        style: const TextStyle(fontSize: 16, color: Colors.green),
+                      ),
+                    ),
+                ],
               ),
             ),
         ],
