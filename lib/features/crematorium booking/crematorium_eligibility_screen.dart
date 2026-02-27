@@ -56,17 +56,12 @@ class _CrematoriumEligibilityScreenState extends State<CrematoriumEligibilityScr
                 onPressed: () {
                   if (_formKey.currentState!.validate() && _isResident) {
                     // Temporary placeholder until we create the upload screen
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Eligibility passed → Next: Document Upload (coming soon)'),
-                        backgroundColor: Colors.green,
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CrematoriumDocumentUploadScreen(),
                       ),
                     );
-                    // Comment out or remove this line for now:
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(builder: (context) => const CrematoriumDocumentUploadScreen()),
-                    // );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Please complete eligibility requirements')),
