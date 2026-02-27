@@ -188,6 +188,34 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
                   ],
                 ),
               ),
+            // Proceed Button - only show if both date and time selected
+            if (_selectedDay != null && _selectedTimeSlot != null)
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    // TODO: Navigate to eligibility/form screen or show dialog
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Proceeding with: ${_selectedDay!.toLocal().toString().split(' ')[0]} at $_selectedTimeSlot'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    // Later: Navigator.push to next screen
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue[800],
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 5,
+                  ),
+                  child: const Text(
+                    'Proceed to Eligibility & Booking',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
