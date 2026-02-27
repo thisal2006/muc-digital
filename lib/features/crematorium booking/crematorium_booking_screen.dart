@@ -108,49 +108,94 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
             ),
           if (_selectedDay != null)
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Select Time Slot:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueGrey[800],
+                      ),
                   ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: _availableTimeSlots.map((slot) {
-                      final isSelected = _selectedTimeSlot == slot;
-                      return ChoiceChip(
-                        label: Text(slot),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedTimeSlot = selected ? slot : null;
-                          });
-                        },
-                        selectedColor: Colors.blue[700],
-                        backgroundColor: Colors.grey[200],
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black,
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  if (_selectedTimeSlot != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Text(
-                        'Selected Slot: $_selectedTimeSlot',
-                        style: const TextStyle(fontSize: 16, color: Colors.green),
+                  const SizedBox(height: 16),
+
+                  ..._availableTimeSlots.map((slot) {
+                  final isSelected = _selectedTimeSlot == slot;
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedTimeSlot = slot;
+                    });
+                  },
+                  child: Card(
+                    elevation: isSelected ? 6 : 3,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    color: isSelected ? Colors.blue[50] : Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: isSelected ? Colors.blue[100] : Colors.grey[200],
+                            child: Icon(
+                              _getSlotIcon(slot),
+                              color: isSelected ? Colors.blue[800] : Colors.grey[700],
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              slot,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                color: isSelected ? Colors.blue[900] : Colors.black87,
+                              ),
+                            ),
+                          ),
+                           if (isSelected)
+                              Icon(Icons.check_circle, color: Colors.green[600], size: 28),
+                        ],
                       ),
                     ),
-                ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+              if (_selectedTimeSlot != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Row(
+                    children: [
+                    Icon(Icons.check_circle_outline, color: Colors.green[700], size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Selected: $_selectedTimeSlot',
+                      style: TextStyle(fontSize: 16, color: Colors.green[800]),
+                    ),
+                  ],
+                ),
               ),
-            ),
-        ],
-      ),
+          ],
+        ),
+     ),
     );
+
+    IconData _getSlotIcon(String slot) {
+    if (slot.contains('Morning')) return Icons.wb_sunny;
+    if (slot.contains('Afternoon')) return Icons.access_time;
+    if (slot.contains('Evening')) return Icons.nights_stay;
+    return Icons.schedule;
+    }
   }
 }
