@@ -12,6 +12,7 @@ import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
 import 'screens/profile_screen.dart';
 import 'features/Property/screens/property_booking_screen.dart';
+import 'package:muc_digital/screens/crematorium_booking_screen.dart';
 
 bool _firebaseInitialized = false;
 
@@ -72,6 +73,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/garbage_tracker': (context) => const GarbageTrackingScreen(),
         '/property_booking': (context) => const PropertyBookingScreen(),
         '/profile': (context) => const ProfileScreen(),
+        '/crematorium_booking': (context) => const CrematoriumBookingScreen(),
       },
     );
   }
