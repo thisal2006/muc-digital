@@ -48,28 +48,31 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
 
             const SizedBox(height: 24),
 
-            ElevatedButton.icon(
-              icon: const Icon(Icons.photo_library),
-              label: const Text('Pick Image from Gallery'),
-              onPressed: pickImage,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
             ElevatedButton(
               onPressed: _image != null
                   ? () {
-                // TODO: Upload to Firebase Storage
+                // Simulate upload success (replace later with real Firebase upload)
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Documents uploaded successfully! Proceeding to payment...')),
+                  const SnackBar(
+                    content: Text('Documents uploaded successfully! Proceeding to payment...'),
+                    backgroundColor: Colors.green,
+                  ),
                 );
-                // Later: Navigate to payment screen
+
+                // TODO: Navigate to payment screen (add later)
+                // Navigator.push(context, MaterialPageRoute(builder: (context) => PaymentScreen()));
               }
-                  : null,
-              child: const Text('Upload & Proceed to Payment'),
+                  : null,  // Button disabled (grey) if no image selected
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _image != null ? Colors.blue[800] : Colors.grey,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text(
+                'Upload & Proceed to Payment',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
