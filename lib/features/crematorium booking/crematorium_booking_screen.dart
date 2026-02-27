@@ -194,11 +194,10 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
                 padding: const EdgeInsets.all(24.0),
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Navigate to eligibility/form screen or show dialog
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Proceeding with: ${_selectedDay!.toLocal().toString().split(' ')[0]} at $_selectedTimeSlot'),
-                        backgroundColor: Colors.green,
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CrematoriumEligibilityScreen(),
                       ),
                     );
                     // Later: Navigator.push to next screen
