@@ -12,7 +12,7 @@ import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
 import 'screens/profile_screen.dart';
 import 'features/Property/screens/property_booking_screen.dart';
-import 'package:muc_digital/screens/crematorium_booking_screen.dart';
+import 'package:muc_digital/features/crematorium%20booking/crematorium_booking_screen.dart';
 
 bool _firebaseInitialized = false;
 
