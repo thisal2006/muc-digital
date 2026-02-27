@@ -143,7 +143,7 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
                             radius: 24,
                             backgroundColor: isSelected ? Colors.blue[100] : Colors.grey[200],
                             child: Icon(
-                              _getSlotIcon(slot),
+                              _getSlotIcon(slot),   // ← must be exactly this
                               color: isSelected ? Colors.blue[800] : Colors.grey[700],
                               size: 28,
                             ),
@@ -170,32 +170,37 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
 
-              if (_selectedTimeSlot != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Row(
-                    children: [
-                    Icon(Icons.check_circle_outline, color: Colors.green[700], size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Selected: $_selectedTimeSlot',
-                      style: TextStyle(fontSize: 16, color: Colors.green[800]),
-                    ),
-                  ],
-                ),
+          if (_selectedTimeSlot != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle_outline, color: Colors.green[700], size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Selected: $_selectedTimeSlot',
+                    style: TextStyle(fontSize: 16, color: Colors.green[800]),
+                  ),
+                ],
               ),
-          ],
-        ),
-     ),
-    );
+            ),
+          const SizedBox(height: 20),
 
-    IconData _getSlotIcon(String slot) {
-    if (slot.contains('Morning')) return Icons.wb_sunny;
-    if (slot.contains('Afternoon')) return Icons.access_time;
-    if (slot.contains('Evening')) return Icons.nights_stay;
-    return Icons.schedule;
+        ],
+      ),
+    );
+  }
+  IconData _getSlotIcon(String slot) {
+    if (slot.contains('Morning')) {
+      return Icons.wb_sunny;
     }
+    if (slot.contains('Afternoon')) {
+      return Icons.access_time;
+    }
+    if (slot.contains('Evening')) {
+      return Icons.nights_stay;
+    }
+    return Icons.schedule;
   }
 }
