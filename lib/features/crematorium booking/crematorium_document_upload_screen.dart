@@ -122,7 +122,7 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
                   border: Border.all(color: Colors.grey[300]!, width: 1),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withAlpha(13),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
