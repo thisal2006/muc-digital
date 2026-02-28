@@ -29,9 +29,6 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       return;
     }
 
-    // Store context before async gap
-    final currentContext = context;
-
     setState(() {
       _isLoading = true;
       _errorMessage = '';
@@ -45,20 +42,24 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
       await FirebaseAuth.instance.signInWithCredential(credential);
 
-      // Navigate to home
-      if (currentContext.mounted) {
-        Navigator.pushReplacementNamed(currentContext, '/home');
+      // Safe navigation after async
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
       }
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.message ?? 'Invalid OTP. Please try again.';
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.message ?? 'Invalid OTP. Please try again.';
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Something went wrong: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Something went wrong: $e';
+        });
+      }
     }
   }
 
@@ -90,7 +91,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
               ),
               const SizedBox(height: 40),
 
-              // Pin code input field
+              // PIN code input field
               PinCodeTextField(
                 length: 6,
                 obscureText: false,
@@ -112,11 +113,15 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                 enableActiveFill: true,
                 appContext: context,
                 onCompleted: (value) {
-                  _otp = value;
+                  setState(() {
+                    _otp = value;
+                  });
                   _verifyOTP();
                 },
                 onChanged: (value) {
-                  _otp = value;
+                  setState(() {
+                    _otp = value;
+                  });
                 },
               ),
 
