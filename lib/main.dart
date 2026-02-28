@@ -12,6 +12,8 @@ import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
 import 'screens/profile_screen.dart';
 import 'features/Property/screens/property_booking_screen.dart';
+import 'screens/phone_login_screen.dart';
+import 'screens/otp_verification_screen.dart';
 
 bool _firebaseInitialized = false;
 
@@ -72,6 +74,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/garbage_tracker': (context) => const GarbageTrackingScreen(),
         '/property_booking': (context) => const PropertyBookingScreen(),
         '/profile': (context) => const ProfileScreen(),
+        '/phone_login': (context) => const PhoneLoginScreen(),
       },
     );
   }
