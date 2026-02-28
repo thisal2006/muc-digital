@@ -17,12 +17,20 @@ class OTPVerificationScreen extends StatefulWidget {
 }
 
 class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
+  String _otp = '';
   bool _isLoading = false;
   String _errorMessage = '';
-  String _otp = '';
 
   Future<void> _verifyOTP() async {
-    if (_otp.length != 6) return;
+    if (_otp.length != 6) {
+      setState(() {
+        _errorMessage = 'Please enter a 6-digit code';
+      });
+      return;
+    }
+
+    // Store context before async gap
+    final currentContext = context;
 
     setState(() {
       _isLoading = true;
@@ -37,11 +45,19 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
       await FirebaseAuth.instance.signInWithCredential(credential);
 
-      Navigator.pushReplacementNamed(context, '/home');
+      // Navigate to home
+      if (currentContext.mounted) {
+        Navigator.pushReplacementNamed(currentContext, '/home');
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.message ?? 'Invalid OTP. Please try again.';
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Invalid OTP. Please try again.';
+        _errorMessage = 'Something went wrong: $e';
       });
     }
   }
@@ -73,6 +89,8 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
+
+              // Pin code input field
               PinCodeTextField(
                 length: 6,
                 obscureText: false,
@@ -92,6 +110,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                 animationDuration: const Duration(milliseconds: 300),
                 backgroundColor: Colors.transparent,
                 enableActiveFill: true,
+                appContext: context,
                 onCompleted: (value) {
                   _otp = value;
                   _verifyOTP();
@@ -99,16 +118,19 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                 onChanged: (value) {
                   _otp = value;
                 },
-                appContext: context,
               ),
+
               const SizedBox(height: 24),
+
               if (_errorMessage.isNotEmpty)
                 Text(
                   _errorMessage,
                   style: const TextStyle(color: Colors.red),
                   textAlign: TextAlign.center,
                 ),
+
               const SizedBox(height: 24),
+
               ElevatedButton(
                 onPressed: _isLoading ? null : _verifyOTP,
                 style: ElevatedButton.styleFrom(
@@ -117,8 +139,18 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                 ),
                 child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Verify OTP', style: TextStyle(fontSize: 18, color: Colors.white)),
+                    ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 3,
+                  ),
+                )
+                    : const Text(
+                  'Verify OTP',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
             ],
           ),
