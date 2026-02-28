@@ -16,19 +16,24 @@ class EmergencyScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('emergency_contacts')
-            .orderBy('priority', descending: false) // FIXED: use descending: false for ascending order
+            .orderBy('priority', descending: false) // Fixed: descending: false = ascending order
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)));
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF1B5E20)),
+            );
           }
 
           if (snapshot.hasError) {
             return Center(
-              child: Text(
-                'Error loading contacts: ${snapshot.error}',
-                style: const TextStyle(color: Colors.red, fontSize: 16),
-                textAlign: TextAlign.center,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Error loading contacts:\n${snapshot.error}',
+                  style: const TextStyle(color: Colors.red, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
               ),
             );
           }
@@ -58,7 +63,7 @@ class EmergencyScreen extends StatelessWidget {
           final contacts = snapshot.data!.docs;
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16), // FIXED: EdgeInsets.all (no typo)
+            padding: const EdgeInsets.all(16), // Fixed: correct EdgeInsets.all
             itemCount: contacts.length,
             itemBuilder: (context, index) {
               final data = contacts[index].data() as Map<String, dynamic>;
@@ -103,11 +108,11 @@ class EmergencyScreen extends StatelessWidget {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.call, color: Colors.green),
-                        onPressed: () => _makeCall(context, phone), // pass context
+                        onPressed: () => _makeCall(context, phone),
                       ),
                       IconButton(
                         icon: const Icon(Icons.message, color: Colors.blue),
-                        onPressed: () => _sendSMS(context, phone), // pass context
+                        onPressed: () => _sendSMS(context, phone),
                       ),
                     ],
                   ),
@@ -120,19 +125,33 @@ class EmergencyScreen extends StatelessWidget {
     );
   }
 
-  // One-tap call - now takes context as parameter
+  // One-tap call function (receives context)
   Future<void> _makeCall(BuildContext context, String phone) async {
     final Uri uri = Uri(scheme: 'tel', path: phone);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+
+    // Debug print to check
+    print('Trying to launch call: $uri');
+
+    final bool canLaunch = await canLaunchUrl(uri);
+    print('Can launch call? $canLaunch');
+
+    if (canLaunch) {
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        print('Launch error: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to open dialer: $e')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not launch phone call')),
+        const SnackBar(content: Text('Could not launch phone dialer')),
       );
     }
   }
 
-  // One-tap SMS - now takes context
+  // One-tap SMS function (receives context)
   Future<void> _sendSMS(BuildContext context, String phone) async {
     final String message = "Emergency! Please send help to my location.";
     final Uri uri = Uri(
@@ -140,8 +159,21 @@ class EmergencyScreen extends StatelessWidget {
       path: phone,
       queryParameters: {'body': message},
     );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+
+    print('Trying to launch SMS: $uri');
+
+    final bool canLaunch = await canLaunchUrl(uri);
+    print('Can launch SMS? $canLaunch');
+
+    if (canLaunch) {
+      try {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } catch (e) {
+        print('SMS launch error: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to open SMS: $e')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not launch SMS app')),
