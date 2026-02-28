@@ -868,10 +868,10 @@ packages:
     dependency: "direct main"
     description:
       name: pin_code_fields
-      sha256: "585e831c767bce361fdbae7c2976ef41bd2a4ff5dde8e33799d60590c93404ba"
+      sha256: "4c0db7fbc889e622e7c71ea54b9ee624bb70c7365b532abea0271b17ea75b729"
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.0"
+    version: "8.0.1"
   platform:
     dependency: transitive
     description:

@@ -35,31 +35,28 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     });
 
     try {
+      // Create credential
       final credential = PhoneAuthProvider.credential(
         verificationId: widget.verificationId,
         smsCode: _otp,
       );
 
+      // Sign in
       await FirebaseAuth.instance.signInWithCredential(credential);
 
-      // Safe navigation after async
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
     } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = e.message ?? 'Invalid OTP. Please try again.';
-        });
-      }
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.message ?? 'Invalid OTP. Please try again.';
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'Something went wrong: $e';
-        });
-      }
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Something went wrong. Please try again.';
+      });
     }
   }
 
@@ -86,13 +83,17 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
               const SizedBox(height: 8),
               Text(
                 widget.phoneNumber,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
 
-              // PIN code input field
+              // Pin Code Field
               PinCodeTextField(
+                appContext: context,
                 length: 6,
                 obscureText: false,
                 animationType: AnimationType.fade,
@@ -102,7 +103,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                   fieldHeight: 50,
                   fieldWidth: 45,
                   activeFillColor: Colors.white,
-                  inactiveFillColor: Colors.grey[200],
+                  inactiveFillColor: Colors.grey.shade200,
                   selectedFillColor: Colors.white,
                   activeColor: const Color(0xFF1B5E20),
                   inactiveColor: Colors.grey,
@@ -111,7 +112,6 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                 animationDuration: const Duration(milliseconds: 300),
                 backgroundColor: Colors.transparent,
                 enableActiveFill: true,
-                appContext: context,
                 onCompleted: (value) {
                   setState(() {
                     _otp = value;
@@ -127,21 +127,38 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
 
               const SizedBox(height: 24),
 
+              // Error Message
               if (_errorMessage.isNotEmpty)
-                Text(
-                  _errorMessage,
-                  style: const TextStyle(color: Colors.red),
-                  textAlign: TextAlign.center,
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Text(
+                    _errorMessage,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
 
               const SizedBox(height: 24),
 
+              // Verify Button
               ElevatedButton(
                 onPressed: _isLoading ? null : _verifyOTP,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1B5E20),
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 2,
                 ),
                 child: _isLoading
                     ? const SizedBox(
@@ -154,7 +171,35 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                 )
                     : const Text(
                   'Verify OTP',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Resend Code Option (Optional)
+              TextButton(
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                  // Add your resend code logic here
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Resending code...'),
+                      backgroundColor: Color(0xFF1B5E20),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Resend Code',
+                  style: TextStyle(
+                    color: Color(0xFF1B5E20),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
