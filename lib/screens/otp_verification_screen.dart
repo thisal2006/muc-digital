@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String verificationId;
@@ -16,14 +17,12 @@ class OTPVerificationScreen extends StatefulWidget {
 }
 
 class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
-  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isLoading = false;
   String _errorMessage = '';
+  String _otp = '';
 
   Future<void> _verifyOTP() async {
-    final otp = _controllers.map((c) => c.text).join();
-    if (otp.length != 6) return;
+    if (_otp.length != 6) return;
 
     setState(() {
       _isLoading = true;
@@ -33,7 +32,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
     try {
       final credential = PhoneAuthProvider.credential(
         verificationId: widget.verificationId,
-        smsCode: otp,
+        smsCode: _otp,
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
@@ -62,9 +61,9 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 40),
-              Text(
+              const Text(
                 'Enter 6-digit code sent to',
-                style: const TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 18),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -74,34 +73,33 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(6, (index) {
-                  return SizedBox(
-                    width: 50,
-                    child: TextField(
-                      controller: _controllers[index],
-                      focusNode: _focusNodes[index],
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      maxLength: 1,
-                      decoration: const InputDecoration(
-                        counterText: '',
-                        border: OutlineInputBorder(),
-                      ),
-                      onChanged: (value) {
-                        if (value.isNotEmpty && index < 5) {
-                          _focusNodes[index + 1].requestFocus();
-                        } else if (value.isEmpty && index > 0) {
-                          _focusNodes[index - 1].requestFocus();
-                        }
-                        if (index == 5 && value.isNotEmpty) {
-                          _verifyOTP();
-                        }
-                      },
-                    ),
-                  );
-                }),
+              PinCodeTextField(
+                length: 6,
+                obscureText: false,
+                animationType: AnimationType.fade,
+                pinTheme: PinTheme(
+                  shape: PinCodeFieldShape.box,
+                  borderRadius: BorderRadius.circular(8),
+                  fieldHeight: 50,
+                  fieldWidth: 45,
+                  activeFillColor: Colors.white,
+                  inactiveFillColor: Colors.grey[200],
+                  selectedFillColor: Colors.white,
+                  activeColor: const Color(0xFF1B5E20),
+                  inactiveColor: Colors.grey,
+                  selectedColor: const Color(0xFF1B5E20),
+                ),
+                animationDuration: const Duration(milliseconds: 300),
+                backgroundColor: Colors.transparent,
+                enableActiveFill: true,
+                onCompleted: (value) {
+                  _otp = value;
+                  _verifyOTP();
+                },
+                onChanged: (value) {
+                  _otp = value;
+                },
+                appContext: context,
               ),
               const SizedBox(height: 24),
               if (_errorMessage.isNotEmpty)
@@ -116,6 +114,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1B5E20),
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
