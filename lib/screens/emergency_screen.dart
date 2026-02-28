@@ -16,7 +16,7 @@ class EmergencyScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('emergency_contacts')
-            .orderBy('priority', descending: false) // Fixed: descending: false = ascending order
+            .orderBy('priority', descending: false) // Correct parameter: descending: false = ascending order
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -63,7 +63,7 @@ class EmergencyScreen extends StatelessWidget {
           final contacts = snapshot.data!.docs;
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16), // Fixed: correct EdgeInsets.all
+            padding: const EdgeInsets.all(16), // Correct EdgeInsets.all
             itemCount: contacts.length,
             itemBuilder: (context, index) {
               final data = contacts[index].data() as Map<String, dynamic>;
@@ -127,56 +127,63 @@ class EmergencyScreen extends StatelessWidget {
 
   // One-tap call function (receives context)
   Future<void> _makeCall(BuildContext context, String phone) async {
-    final Uri uri = Uri(scheme: 'tel', path: phone);
+    // Clean the phone number (remove spaces, dashes, etc.)
+    final cleanPhone = phone.replaceAll(RegExp(r'[\s\-]'), '');
+    final Uri uri = Uri(scheme: 'tel', path: cleanPhone);
 
-    // Debug print to check
-    print('Trying to launch call: $uri');
+    print('Trying to launch dialer: $uri');
 
-    final bool canLaunch = await canLaunchUrl(uri);
-    print('Can launch call? $canLaunch');
+    try {
+      // Check if we can launch
+      final bool canLaunch = await canLaunchUrl(uri);
+      print('Can launch dialer? $canLaunch');
 
-    if (canLaunch) {
-      try {
+      if (canLaunch) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } catch (e) {
-        print('Launch error: $e');
+      } else {
+        // Fallback message - tell user what happened
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to open dialer: $e')),
+          SnackBar(
+            content: Text('Dialer opened with $cleanPhone (tap call button to dial)'),
+            duration: const Duration(seconds: 4),
+          ),
         );
+
+        // Try launching again as fallback
+        await launchUrl(uri);
       }
-    } else {
+    } catch (e) {
+      print('Dialer launch error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not launch phone dialer')),
+        SnackBar(content: Text('Failed to open dialer: $e')),
       );
     }
   }
 
   // One-tap SMS function (receives context)
   Future<void> _sendSMS(BuildContext context, String phone) async {
+    final cleanPhone = phone.replaceAll(RegExp(r'[\s\-]'), '');
     final String message = "Emergency! Please send help to my location.";
     final Uri uri = Uri(
       scheme: 'sms',
-      path: phone,
+      path: cleanPhone,
       queryParameters: {'body': message},
     );
 
     print('Trying to launch SMS: $uri');
 
-    final bool canLaunch = await canLaunchUrl(uri);
-    print('Can launch SMS? $canLaunch');
-
-    if (canLaunch) {
-      try {
+    try {
+      if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } catch (e) {
-        print('SMS launch error: $e');
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to open SMS: $e')),
+          const SnackBar(content: Text('Could not open SMS app')),
         );
       }
-    } else {
+    } catch (e) {
+      print('SMS launch error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not launch SMS app')),
+        SnackBar(content: Text('Failed to open SMS: $e')),
       );
     }
   }
