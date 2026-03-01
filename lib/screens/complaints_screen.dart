@@ -243,12 +243,12 @@ class MyComplaintsList extends StatefulWidget {
   State<MyComplaintsList> createState() => _MyComplaintsListState();
 }
 
-class _MyComplaintsListState extends State<MyComplaintsList>
-    with SingleTickerProviderStateMixin {
+class _MyComplaintsListState extends State<MyComplaintsList> {
   bool _isLoading = false;
-  late final AnimationController _animationController;
+  String _searchQuery = "";
+  String _filterStatus = "All";
 
-  List<Map<String, String>> _bookings = [
+  final List<Map<String, String>> _allComplaints = [
     {
       'title': "Illegal dumping near temple road",
       'date': "2025-11-20",
@@ -269,17 +269,15 @@ class _MyComplaintsListState extends State<MyComplaintsList>
     },
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _animationController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
-  }
-
-  Future<void> _refreshList() async {
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1)); // Simulate fetching data
-    setState(() => _isLoading = false);
+  List<Map<String, String>> get _filteredComplaints {
+    return _allComplaints.where((complaint) {
+      final matchesSearch = complaint['title']!
+          .toLowerCase()
+          .contains(_searchQuery.toLowerCase());
+      final matchesFilter =
+          _filterStatus == "All" || complaint['status'] == _filterStatus;
+      return matchesSearch && matchesFilter;
+    }).toList();
   }
 
   Color _getStatusColor(String colorName) {
@@ -295,61 +293,81 @@ class _MyComplaintsListState extends State<MyComplaintsList>
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_bookings.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.history, size: 80, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              "No complaints yet",
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Stack(
-      children: [
-        RefreshIndicator(
-          onRefresh: _refreshList,
-          child: ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: _bookings.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final booking = _bookings[index];
-              final color = _getStatusColor(booking['statusColor']!);
-              return FadeTransition(
-                opacity: _animationController
-                    .drive(CurveTween(curve: Curves.easeIn)),
-                child: _ComplaintCard(
-                  title: booking['title']!,
-                  date: booking['date']!,
-                  status: booking['status']!,
-                  statusColor: color,
-                ),
-              );
-            },
-          ),
-        ),
-        if (_isLoading)
-          Container(
-            color: Colors.black.withOpacity(0.2),
-            child: const Center(child: CircularProgressIndicator()),
-          ),
-      ],
-    );
+  Future<void> _refreshList() async {
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(seconds: 1));
+    setState(() => _isLoading = false);
   }
 
   @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Search and Filter Row
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration(
+                    hintText: "Search complaints...",
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+              ),
+              const SizedBox(width: 12),
+              DropdownButton<String>(
+                value: _filterStatus,
+                items: ["All", "Pending", "In Progress", "Resolved"]
+                    .map((status) => DropdownMenuItem(
+                    value: status, child: Text(status)))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) setState(() => _filterStatus = value);
+                },
+              )
+            ],
+          ),
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _refreshList,
+            child: _filteredComplaints.isEmpty
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.history, size: 80, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    "No complaints found",
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
+                : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _filteredComplaints.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final complaint = _filteredComplaints[index];
+                final color = _getStatusColor(complaint['statusColor']!);
+                return _ComplaintCard(
+                  title: complaint['title']!,
+                  date: complaint['date']!,
+                  status: complaint['status']!,
+                  statusColor: color,
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -369,7 +387,7 @@ class _ComplaintCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,
+      elevation: 3,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       shadowColor: Colors.black26,
