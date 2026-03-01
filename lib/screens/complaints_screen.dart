@@ -287,6 +287,22 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
 
   @override
   Widget build(BuildContext context) {
+    if (_bookings.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.history, size: 80, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              "No complaints yet",
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Stack(
       children: [
         RefreshIndicator(
