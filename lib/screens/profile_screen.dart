@@ -100,36 +100,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               const SizedBox(height: 20),
 
+              // ✅ Improved Avatar UI
               Stack(
+                alignment: Alignment.center,
                 children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.grey[200],
-                    backgroundImage:
-                    _profileImage != null ? FileImage(_profileImage!) : null,
-                    child: _profileImage == null
-                        ? const Icon(Icons.person,
-                        size: 70, color: Color(0xFF2E7D32))
-                        : null,
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        )
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 65,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.grey[200],
+                        backgroundImage: _profileImage != null
+                            ? FileImage(_profileImage!)
+                            : null,
+                        child: _profileImage == null
+                            ? const Icon(Icons.person,
+                            size: 70, color: Color(0xFF2E7D32))
+                            : null,
+                      ),
+                    ),
                   ),
+
                   if (_isEditing)
                     Positioned(
-                      bottom: 4,
-                      right: 4,
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: const Color(0xFF2E7D32),
-                        child: IconButton(
-                          icon: const Icon(Icons.camera_alt,
-                              size: 18, color: Colors.white),
-                          onPressed: _showImagePickerOptions,
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: _showImagePickerOptions,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF2E7D32),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 20,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                 ],
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 30),
 
               _buildField("Full Name", _nameController),
               const SizedBox(height: 16),
