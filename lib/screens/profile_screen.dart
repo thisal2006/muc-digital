@@ -11,7 +11,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditing = false;
-  bool _isLoading = false; // ✅ Loading indicator
+  bool _isLoading = false;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -63,12 +63,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ✅ Save profile with simulated loading
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
 
-      // Simulate network delay
       await Future.delayed(const Duration(seconds: 2));
 
       setState(() {
@@ -140,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const SizedBox(height: 20),
 
-                  // Avatar
+                  // Profile Avatar
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -196,16 +194,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   const SizedBox(height: 30),
 
-                  _buildField("Full Name", _nameController),
+                  // ✅ Refactored fields
+                  ProfileField(
+                    label: "Full Name",
+                    controller: _nameController,
+                    enabled: _isEditing,
+                  ),
                   const SizedBox(height: 16),
 
-                  _buildField("Email", _emailController),
+                  ProfileField(
+                    label: "Email",
+                    controller: _emailController,
+                    enabled: _isEditing,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
                   const SizedBox(height: 16),
 
-                  _buildField("Phone Number", _phoneController),
+                  ProfileField(
+                    label: "Phone Number",
+                    controller: _phoneController,
+                    enabled: _isEditing,
+                    keyboardType: TextInputType.phone,
+                  ),
                   const SizedBox(height: 16),
 
-                  _buildField("Address", _addressController),
+                  ProfileField(
+                    label: "Address",
+                    controller: _addressController,
+                    enabled: _isEditing,
+                  ),
 
                   const SizedBox(height: 32),
 
@@ -236,7 +253,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
 
-          // ✅ Loading overlay
           if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.5),
@@ -251,49 +267,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller) {
-    TextInputType keyboardType = TextInputType.text;
-
-    if (label == "Email") {
-      keyboardType = TextInputType.emailAddress;
-    } else if (label == "Phone Number") {
-      keyboardType = TextInputType.phone;
-    }
-
-    return TextFormField(
-      controller: controller,
-      enabled: _isEditing,
-      keyboardType: keyboardType,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return "$label cannot be empty";
-        }
-
-        if (label == "Email" &&
-            !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-          return "Enter a valid email address";
-        }
-
-        if (label == "Phone Number") {
-          final cleaned = value.replaceAll(RegExp(r'\D'), '');
-          if (cleaned.length < 10) {
-            return "Enter a valid phone number";
-          }
-        }
-
-        return null;
-      },
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        filled: true,
-        fillColor: _isEditing ? Colors.white : Colors.grey[100],
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -304,7 +277,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// Reusable BookingTile
+// ✅ Reusable Profile Field Widget
+class ProfileField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final bool enabled;
+  final TextInputType? keyboardType;
+
+  const ProfileField({
+    super.key,
+    required this.label,
+    required this.controller,
+    required this.enabled,
+    this.keyboardType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType: keyboardType ?? TextInputType.text,
+      validator: (value) {
+        if (value == null || value.isEmpty) return "$label cannot be empty";
+        if (label == "Email" &&
+            !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+          return "Enter a valid email";
+        }
+        if (label == "Phone Number") {
+          final cleaned = value.replaceAll(RegExp(r'\D'), '');
+          if (cleaned.length < 10) return "Enter a valid phone number";
+        }
+        return null;
+      },
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        filled: true,
+        fillColor: enabled ? Colors.white : Colors.grey[100],
+      ),
+    );
+  }
+}
+
+// Booking Tile
 class BookingTile extends StatelessWidget {
   final IconData icon;
   final String title;
