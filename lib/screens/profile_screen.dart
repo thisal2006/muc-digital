@@ -9,7 +9,8 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   bool _isEditing = false;
   bool _isLoading = false;
 
@@ -24,10 +25,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
 
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController =
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _fadeAnimation =
+        CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
+    _animationController.forward();
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile =
     await _picker.pickImage(source: source, imageQuality: 70);
-
     if (pickedFile != null) {
       setState(() {
         _profileImage = File(pickedFile.path);
@@ -71,8 +84,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _isEditing = false;
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Profile updated")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile updated successfully")),
+      );
     }
   }
 
@@ -88,13 +102,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text("Logged out successfully")));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Logged out successfully")),
+              );
             },
-            child: const Text(
-              "Logout",
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text("Logout", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -104,155 +116,134 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
         title: const Text("Profile"),
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
+        elevation: 0,
         actions: [
-          if (!_isEditing)
-            IconButton(
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: !_isEditing
+                ? IconButton(
+              key: const ValueKey("edit"),
               icon: const Icon(Icons.edit),
               onPressed: () => setState(() => _isEditing = true),
             )
-          else
-            IconButton(
+                : IconButton(
+              key: const ValueKey("save"),
               icon: const Icon(Icons.save),
               onPressed: _saveProfile,
             ),
+          )
         ],
       ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
 
-                  // Profile Avatar
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            )
-                          ],
-                        ),
+                    // Animated Avatar
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeInOut,
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: _isEditing
+                            ? const LinearGradient(
+                            colors: [Color(0xFF2E7D32), Colors.greenAccent])
+                            : null,
+                      ),
+                      child: CircleAvatar(
+                        radius: 65,
+                        backgroundColor: Colors.white,
                         child: CircleAvatar(
-                          radius: 65,
-                          backgroundColor: Colors.white,
-                          child: CircleAvatar(
-                            radius: 60,
-                            backgroundColor: Colors.grey[200],
-                            backgroundImage: _profileImage != null
-                                ? FileImage(_profileImage!)
-                                : null,
-                            child: _profileImage == null
-                                ? const Icon(Icons.person,
-                                size: 70, color: Color(0xFF2E7D32))
-                                : null,
-                          ),
+                          radius: 60,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage:
+                          _profileImage != null ? FileImage(_profileImage!) : null,
+                          child: _profileImage == null
+                              ? const Icon(Icons.person,
+                              size: 70, color: Color(0xFF2E7D32))
+                              : null,
                         ),
                       ),
-                      if (_isEditing)
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: _showImagePickerOptions,
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF2E7D32),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt,
-                                size: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                    ),
 
-                  const SizedBox(height: 30),
+                    const SizedBox(height: 30),
 
-                  ProfileField(
-                    label: "Full Name",
-                    controller: _nameController,
-                    enabled: _isEditing,
-                  ),
-                  const SizedBox(height: 16),
-                  ProfileField(
-                    label: "Email",
-                    controller: _emailController,
-                    enabled: _isEditing,
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 16),
-                  ProfileField(
-                    label: "Phone Number",
-                    controller: _phoneController,
-                    enabled: _isEditing,
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 16),
-                  ProfileField(
-                    label: "Address",
-                    controller: _addressController,
-                    enabled: _isEditing,
-                  ),
-                  const SizedBox(height: 32),
+                    ProfileField(
+                        label: "Full Name",
+                        controller: _nameController,
+                        enabled: _isEditing),
+                    const SizedBox(height: 16),
+                    ProfileField(
+                        label: "Email",
+                        controller: _emailController,
+                        enabled: _isEditing,
+                        keyboardType: TextInputType.emailAddress),
+                    const SizedBox(height: 16),
+                    ProfileField(
+                        label: "Phone Number",
+                        controller: _phoneController,
+                        enabled: _isEditing,
+                        keyboardType: TextInputType.phone),
+                    const SizedBox(height: 16),
+                    ProfileField(
+                        label: "Address",
+                        controller: _addressController,
+                        enabled: _isEditing),
+                    const SizedBox(height: 30),
 
-                  ListTile(
-                    leading: const Icon(Icons.history, color: Color(0xFF2E7D32)),
-                    title: const Text("Booking History"),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => const BookingHistoryScreen()),
-                      );
-                    },
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.red),
-                    title:
-                    const Text("Log Out", style: TextStyle(color: Colors.red)),
-                    onTap: _confirmLogout,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (_isLoading)
-            Container(
-              color: Colors.black.withOpacity(0.5),
-              child: const Center(
-                child: CircularProgressIndicator(
-                  color: Color(0xFF2E7D32),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E7D32),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 40, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const BookingHistoryScreen()),
+                        );
+                      },
+                      child: const Text("View Booking History"),
+                    )
+                  ],
                 ),
               ),
             ),
-        ],
+
+            if (_isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.4),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF2E7D32),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -277,61 +268,26 @@ class ProfileField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      enabled: enabled,
-      keyboardType: keyboardType ?? TextInputType.text,
-      validator: (value) {
-        if (value == null || value.isEmpty) return "$label cannot be empty";
-        if (label == "Email" &&
-            !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-          return "Enter a valid email";
-        }
-        if (label == "Phone Number") {
-          final cleaned = value.replaceAll(RegExp(r'\D'), '');
-          if (cleaned.length < 10) return "Enter a valid phone number";
-        }
-        return null;
-      },
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      child: TextFormField(
+        controller: controller,
+        enabled: enabled,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: enabled ? Colors.white : Colors.grey[200],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
-        filled: true,
-        fillColor: enabled ? Colors.white : Colors.grey[100],
       ),
     );
   }
 }
 
-// Booking Tile
-class BookingTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String status;
-
-  const BookingTile({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.status,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      subtitle: Text(subtitle),
-      trailing: Chip(label: Text(status)),
-    );
-  }
-}
-
-// Booking History Screen with empty state
+// Booking History Screen
 class BookingHistoryScreen extends StatelessWidget {
   const BookingHistoryScreen({super.key});
 
@@ -342,15 +298,27 @@ class BookingHistoryScreen extends StatelessWidget {
       'status': "Completed"
     },
     {
-      'title': "Property Booking - Community Hall",
+      'title': "Community Hall Booking",
       'subtitle': "2025-12-05 | 2:00 PM - 5:00 PM",
       'status': "Upcoming"
     },
   ];
 
+  Color _statusColor(String status) {
+    switch (status) {
+      case "Completed":
+        return Colors.green;
+      case "Upcoming":
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF4F6F8),
       appBar: AppBar(
         title: const Text("Booking History"),
         backgroundColor: const Color(0xFF2E7D32),
@@ -363,21 +331,42 @@ class BookingHistoryScreen extends StatelessWidget {
           children: const [
             Icon(Icons.history, size: 80, color: Colors.grey),
             SizedBox(height: 16),
-            Text("No bookings yet", style: TextStyle(color: Colors.grey, fontSize: 18)),
+            Text("No bookings yet",
+                style: TextStyle(color: Colors.grey, fontSize: 18)),
           ],
         ),
       )
-          : ListView.separated(
-        padding: const EdgeInsets.all(16),
+          : ListView.builder(
+        padding: const EdgeInsets.all(20),
         itemCount: bookings.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final booking = bookings[index];
-          return BookingTile(
-            icon: Icons.calendar_today,
-            title: booking['title']!,
-            subtitle: booking['subtitle']!,
-            status: booking['status']!,
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            margin: const EdgeInsets.only(bottom: 15),
+            child: Card(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15)),
+              elevation: 3,
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(16),
+                leading: const Icon(Icons.calendar_today,
+                    color: Color(0xFF2E7D32)),
+                title: Text(
+                  booking['title']!,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(booking['subtitle']!),
+                trailing: Chip(
+                  backgroundColor:
+                  _statusColor(booking['status']!).withOpacity(0.15),
+                  label: Text(
+                    booking['status']!,
+                    style: TextStyle(color: _statusColor(booking['status']!)),
+                  ),
+                ),
+              ),
+            ),
           );
         },
       ),
