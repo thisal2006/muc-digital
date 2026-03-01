@@ -60,7 +60,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     "Other"
   ];
 
-  // ✅ Pick image from camera or gallery
+  // Pick image from camera or gallery
   Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(
       source: source,
@@ -74,7 +74,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     }
   }
 
-  // ✅ Show bottom sheet options
+  //  Show bottom sheet options
   void _showImageOptions() {
     showModalBottomSheet(
       context: context,
