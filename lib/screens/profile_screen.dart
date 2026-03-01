@@ -11,6 +11,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditing = false;
+  bool _isLoading = false; // ✅ Loading indicator
 
   final _formKey = GlobalKey<FormState>();
 
@@ -62,9 +63,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _saveProfile() {
+  // ✅ Save profile with simulated loading
+  Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isEditing = false);
+      setState(() => _isLoading = true);
+
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 2));
+
+      setState(() {
+        _isEditing = false;
+        _isLoading = false;
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Profile updated")),
@@ -72,7 +82,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ✅ Logout Confirmation Dialog
   void _confirmLogout() {
     showDialog(
       context: context,
@@ -121,108 +130,123 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-
-              Stack(
-                alignment: Alignment.center,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
-                        )
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 65,
-                      backgroundColor: Colors.white,
-                      child: CircleAvatar(
-                        radius: 60,
-                        backgroundColor: Colors.grey[200],
-                        backgroundImage: _profileImage != null
-                            ? FileImage(_profileImage!)
-                            : null,
-                        child: _profileImage == null
-                            ? const Icon(Icons.person,
-                            size: 70, color: Color(0xFF2E7D32))
-                            : null,
-                      ),
-                    ),
-                  ),
-                  if (_isEditing)
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: _showImagePickerOptions,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF2E7D32),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 20,
-                            color: Colors.white,
+                  const SizedBox(height: 20),
+
+                  // Avatar
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
+                            )
+                          ],
+                        ),
+                        child: CircleAvatar(
+                          radius: 65,
+                          backgroundColor: Colors.white,
+                          child: CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.grey[200],
+                            backgroundImage: _profileImage != null
+                                ? FileImage(_profileImage!)
+                                : null,
+                            child: _profileImage == null
+                                ? const Icon(Icons.person,
+                                size: 70, color: Color(0xFF2E7D32))
+                                : null,
                           ),
                         ),
                       ),
-                    ),
+                      if (_isEditing)
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: _showImagePickerOptions,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF2E7D32),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                size: 20,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  _buildField("Full Name", _nameController),
+                  const SizedBox(height: 16),
+
+                  _buildField("Email", _emailController),
+                  const SizedBox(height: 16),
+
+                  _buildField("Phone Number", _phoneController),
+                  const SizedBox(height: 16),
+
+                  _buildField("Address", _addressController),
+
+                  const SizedBox(height: 32),
+
+                  ListTile(
+                    leading:
+                    const Icon(Icons.history, color: Color(0xFF2E7D32)),
+                    title: const Text("Booking History"),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const BookingHistoryScreen()),
+                      );
+                    },
+                  ),
+
+                  const Divider(),
+
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: const Text("Log Out",
+                        style: TextStyle(color: Colors.red)),
+                    onTap: _confirmLogout,
+                  ),
                 ],
               ),
-
-              const SizedBox(height: 30),
-
-              _buildField("Full Name", _nameController),
-              const SizedBox(height: 16),
-
-              _buildField("Email", _emailController),
-              const SizedBox(height: 16),
-
-              _buildField("Phone Number", _phoneController),
-              const SizedBox(height: 16),
-
-              _buildField("Address", _addressController),
-
-              const SizedBox(height: 32),
-
-              ListTile(
-                leading:
-                const Icon(Icons.history, color: Color(0xFF2E7D32)),
-                title: const Text("Booking History"),
-                trailing: const Icon(Icons.arrow_forward_ios),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const BookingHistoryScreen()),
-                  );
-                },
-              ),
-
-              const Divider(),
-
-              // ✅ Updated Logout
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text("Log Out",
-                    style: TextStyle(color: Colors.red)),
-                onTap: _confirmLogout,
-              ),
-            ],
+            ),
           ),
-        ),
+
+          // ✅ Loading overlay
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF2E7D32),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -280,6 +304,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
+// Reusable BookingTile
 class BookingTile extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -305,6 +330,7 @@ class BookingTile extends StatelessWidget {
   }
 }
 
+// Booking History Screen
 class BookingHistoryScreen extends StatelessWidget {
   const BookingHistoryScreen({super.key});
 
