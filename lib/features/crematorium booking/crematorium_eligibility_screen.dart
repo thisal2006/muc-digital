@@ -62,7 +62,12 @@ class _CrematoriumEligibilityScreenState extends State<CrematoriumEligibilityScr
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate() && _isResident) {
-                    // Temporary placeholder until we create the upload screen
+                    final updatedData = CrematoriumBookingData(
+                      selectedDate: bookingData.selectedDate,
+                      timeSlot: bookingData.timeSlot,
+                      isResident: _isResident,
+                      relation: _relation,
+                    );
                     Navigator.push(
                       context,
                       MaterialPageRoute(
