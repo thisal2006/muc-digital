@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'crematorium_document_upload_screen.dart';
-import 'crematorium_booking_data.dart';
+import 'crematorium_booking_data.dart';                    // ← Import the model
+import 'crematorium_document_upload_screen.dart';          // ← For navigation
 
 class CrematoriumEligibilityScreen extends StatefulWidget {
-  final CrematoriumBookingData bookingData;  // ← ADD THIS FIELD
+  final CrematoriumBookingData bookingData;  // ← This field receives the data
 
   const CrematoriumEligibilityScreen({
     super.key,
-    required this.bookingData,  // ← ADD THIS REQUIRED NAMED PARAMETER
+    required this.bookingData,  // ← Required named parameter
   });
 
   @override
@@ -50,28 +50,33 @@ class _CrematoriumEligibilityScreenState extends State<CrematoriumEligibilityScr
                   labelText: 'Relation to deceased',
                   border: OutlineInputBorder(),
                 ),
-                initialValue: _relation,  // ← changed from value: to initialValue:
+                value: _relation,
                 items: ['Immediate family', 'Relative', 'Friend', 'Other']
                     .map((rel) => DropdownMenuItem(value: rel, child: Text(rel)))
                     .toList(),
                 onChanged: (value) => setState(() => _relation = value),
                 validator: (value) => value == null ? 'Required' : null,
               ),
+
               const SizedBox(height: 24),
 
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate() && _isResident) {
+                    // Create updated data with eligibility info
                     final updatedData = CrematoriumBookingData(
-                      selectedDate: bookingData.selectedDate,
-                      timeSlot: bookingData.timeSlot,
+                      selectedDate: widget.bookingData.selectedDate,
+                      timeSlot: widget.bookingData.timeSlot,
                       isResident: _isResident,
                       relation: _relation,
                     );
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const CrematoriumDocumentUploadScreen(),
+                        builder: (context) => CrematoriumDocumentUploadScreen(
+                          bookingData: updatedData,
+                        ),
                       ),
                     );
                   } else {
