@@ -44,6 +44,7 @@ class NewComplaintForm extends StatefulWidget {
 }
 
 class _NewComplaintFormState extends State<NewComplaintForm> {
+  final _formKey = GlobalKey<FormState>();
   String? _selectedCategory;
   final _descriptionController = TextEditingController();
   File? _attachedImage;
@@ -72,81 +73,91 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     }
   }
 
+  void _submitComplaint() {
+    if (_selectedCategory == null || _descriptionController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please select a category and enter a description"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // TODO: Upload complaint and image to Firebase / backend
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Complaint submitted successfully"),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    setState(() {
+      _selectedCategory = null;
+      _descriptionController.clear();
+      _attachedImage = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DropdownButtonFormField<String>(
-            value: _selectedCategory,
-            hint: const Text("Select Category"),
-            items: categories
-                .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
-                .toList(),
-            onChanged: (value) => setState(() => _selectedCategory = value),
-            decoration: _inputDecoration("Category"),
-          ),
-          const SizedBox(height: 24),
-          TextField(
-            controller: _descriptionController,
-            maxLines: 5,
-            decoration: _inputDecoration("Describe the issue..."),
-          ),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: _pickImage,
-            icon: const Icon(Icons.add_photo_alternate),
-            label: Text(
-                _attachedImage != null ? "Photo Attached" : "Attach Photo"),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              side: const BorderSide(color: Color(0xFF2E7D32)),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              hint: const Text("Select Category"),
+              items: categories
+                  .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                  .toList(),
+              onChanged: (value) => setState(() => _selectedCategory = value),
+              validator: (value) =>
+              value == null ? "Please select a category" : null,
+              decoration: _inputDecoration("Category"),
             ),
-          ),
-          if (_attachedImage != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Image.file(_attachedImage!, height: 150),
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: _descriptionController,
+              maxLines: 5,
+              validator: (value) =>
+              (value == null || value.trim().isEmpty) ? "Enter description" : null,
+              decoration: _inputDecoration("Describe the issue..."),
             ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () {
-              if (_selectedCategory == null ||
-                  _descriptionController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text("Please fill all required fields")),
-                );
-                return;
-              }
-
-              // TODO: Upload complaint and image to Firebase / backend
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Complaint submitted successfully"),
-                  backgroundColor: Colors.green,
-                ),
-              );
-
-              setState(() {
-                _selectedCategory = null;
-                _descriptionController.clear();
-                _attachedImage = null;
-              });
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D32),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: _pickImage,
+              icon: const Icon(Icons.add_photo_alternate),
+              label: Text(
+                  _attachedImage != null ? "Photo Attached" : "Attach Photo"),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(color: Color(0xFF2E7D32)),
+              ),
             ),
-            child: const Text("Submit Complaint", style: TextStyle(fontSize: 16)),
-          ),
-        ],
+            if (_attachedImage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Image.file(_attachedImage!, height: 150),
+              ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _submitComplaint,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text("Submit Complaint", style: TextStyle(fontSize: 16)),
+            ),
+          ],
+        ),
       ),
     );
   }
