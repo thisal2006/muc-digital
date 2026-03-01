@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../screens/auth/sign_in_screen.dart';
-import '../screens/home_screen.dart'; // your home screen
+import '../screens/home_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -13,30 +13,39 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   final AuthService _authService = AuthService();
+  bool _checkingBiometric = true;
 
   @override
   void initState() {
     super.initState();
-    _checkBiometricLogin();
+    _checkBiometricOnStart();
   }
 
-  Future<void> _checkBiometricLogin() async {
+  Future<void> _checkBiometricOnStart() async {
     final user = _authService.currentUser;
 
     if (user != null) {
-      // User is already signed in to Firebase → try biometric
-      final success = await _authService.authenticateWithBiometric();
+      // Already signed in to Firebase → try biometric
+      final success = await _authService.tryBiometricLogin();
       if (success && mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
+      } else if (mounted) {
+        setState(() => _checkingBiometric = false);
       }
+    } else {
+      setState(() => _checkingBiometric = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_checkingBiometric) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
@@ -45,11 +54,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
 
         if (snapshot.hasData) {
-          // Already logged in → home (biometric already checked in initState)
           return const HomeScreen();
         }
 
-        // Not logged in → show sign in
         return const SignInScreen();
       },
     );

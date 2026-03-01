@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'sign_up_screen.dart';
+import '../../services/auth_service.dart'; // Add this import
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -25,6 +26,17 @@ class _SignInScreenState extends State<SignInScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+
+      // After successful login, prompt for biometric if not already enabled
+      final success = await AuthService().enableBiometric();
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fingerprint login enabled!'),
+            backgroundColor: Color(0xFF1B5E20),
+          ),
+        );
+      }
 
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');

@@ -38,8 +38,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // In SignUpScreen after success
-      await AuthService().enableBiometric(); // shows prompt
+      // After Firebase creates user
+      final success = await AuthService().enableBiometric();
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fingerprint login enabled!'),
+            backgroundColor: Color(0xFF1B5E20),
+          ),
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
