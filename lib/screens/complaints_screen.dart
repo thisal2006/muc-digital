@@ -43,13 +43,11 @@ class NewComplaintForm extends StatefulWidget {
   State<NewComplaintForm> createState() => _NewComplaintFormState();
 }
 
-class _NewComplaintFormState extends State<NewComplaintForm>
-    with SingleTickerProviderStateMixin {
+class _NewComplaintFormState extends State<NewComplaintForm> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedCategory;
   final _descriptionController = TextEditingController();
   File? _attachedImage;
-
   final _picker = ImagePicker();
 
   final categories = [
@@ -299,6 +297,16 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
     setState(() => _isLoading = false);
   }
 
+  void _deleteComplaint(int index) {
+    final removed = _filteredComplaints[index];
+    setState(() {
+      _allComplaints.removeWhere((c) => c['title'] == removed['title']);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Deleted complaint: ${removed['title']}")),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -356,11 +364,22 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
               itemBuilder: (context, index) {
                 final complaint = _filteredComplaints[index];
                 final color = _getStatusColor(complaint['statusColor']!);
-                return _ComplaintCard(
-                  title: complaint['title']!,
-                  date: complaint['date']!,
-                  status: complaint['status']!,
-                  statusColor: color,
+                return Dismissible(
+                  key: Key(complaint['title']!),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    color: Colors.red,
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  onDismissed: (_) => _deleteComplaint(index),
+                  child: _ComplaintCard(
+                    title: complaint['title']!,
+                    date: complaint['date']!,
+                    status: complaint['status']!,
+                    statusColor: color,
+                  ),
                 );
               },
             ),
