@@ -14,6 +14,9 @@ import 'screens/profile_screen.dart';
 import 'features/Property/screens/property_booking_screen.dart';
 import 'screens/phone_login_screen.dart';
 import 'screens/otp_verification_screen.dart';
+import 'screens/auth/sign_up_screen.dart';
+import 'screens/auth/sign_in_screen.dart';
+import 'screens/auth/forgot_password_screen.dart';
 
 bool _firebaseInitialized = false;
 
@@ -75,6 +78,10 @@ class MUCdigitalApp extends StatelessWidget {
         '/property_booking': (context) => const PropertyBookingScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/phone_login': (context) => const PhoneLoginScreen(),
+        '/sign_up': (context) => const SignUpScreen(),
+        '/sign_in': (context) => const SignInScreen(),
+        '/forgot_password': (context) => const ForgotPasswordScreen(),
+
       },
     );
   }
