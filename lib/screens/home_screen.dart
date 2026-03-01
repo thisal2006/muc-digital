@@ -20,7 +20,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const _HomeDashboardContent(), // Home tab (search + cards)
     const Center(child: Text('Bookings - Coming soon')), // Bookings tab
     const AnnouncementsScreen(), // Updates tab → Announcements
-    const Center(child: Text('Chat - Coming soon')), // Chat tab
   ];
 
   void _onItemTapped(int index) {
@@ -110,11 +109,18 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.notifications_rounded),
             label: 'Updates',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_rounded),
-            label: 'Chat',
-          ),
         ],
+      ),
+      floatingActionButton: FadeInUp(
+        duration: const Duration(milliseconds: 1000),
+        child: FloatingActionButton(
+          heroTag: 'home_chat_fab',
+          onPressed: () {
+            Navigator.pushNamed(context, '/chatbot');
+          },
+          backgroundColor: const Color(0xFF1B5E20),
+          child: const Icon(Icons.chat_bubble_rounded, color: Colors.white),
+        ),
       ),
     );
   }
@@ -160,6 +166,13 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'subtitle': 'Cemetery & crematorium',
       'color': const Color(0xFF7B1FA2),
       'route': null,
+    },
+    {
+      'icon': Icons.chat_bubble_rounded,
+      'title': 'Chat Assistant',
+      'subtitle': 'AI support for queries',
+      'color': const Color(0xFF00796B),
+      'route': '/chatbot',
     },
     {
       'icon': Icons.emergency_rounded,

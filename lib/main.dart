@@ -13,6 +13,7 @@ import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
 import 'features/Property/screens/property_booking_screen.dart';
 import 'vehicleBooking/vehicle_type_screen.dart';
+import 'chatbot.dart';
 
 //import 'widgets/app_drawer.dart';
 
@@ -74,6 +75,7 @@ class MUCdigitalApp extends StatelessWidget {
 
         '/property_booking': (context) => const PropertyBookingScreen(),
         '/vehicle_booking': (context) => const VehicleTypeScreen(),
+        '/chatbot': (context) => const ChatbotScreen(),
         //'/cemetery_booking': (context) => PlaceholderScreen(title: 'Cemetery Booking'),
       },
     );
