@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'sign_in_screen.dart';
+import '../../services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -36,6 +37,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'phone': _phoneController.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
       });
+
+      // In SignUpScreen after success
+      await AuthService().enableBiometric(); // shows prompt
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
