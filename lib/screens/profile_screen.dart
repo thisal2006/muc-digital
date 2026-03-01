@@ -100,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               const SizedBox(height: 20),
 
-              // ✅ Improved Avatar UI
+              // Avatar UI (from Commit 4)
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -131,7 +131,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-
                   if (_isEditing)
                     Positioned(
                       bottom: 0,
@@ -252,6 +251,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
+//
+// ✅ Reusable Booking Tile Widget
+//
+class BookingTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String status;
+
+  const BookingTile({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: Chip(
+        label: Text(status),
+      ),
+    );
+  }
+}
+
+//
+// Booking History Screen
+//
 class BookingHistoryScreen extends StatelessWidget {
   const BookingHistoryScreen({super.key});
 
@@ -266,17 +298,17 @@ class BookingHistoryScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: const [
-          ListTile(
-            leading: Icon(Icons.local_shipping),
-            title: Text("Garbage Pickup - 2025-11-26"),
-            subtitle: Text("Both | 8:00 AM - 12:00 PM"),
-            trailing: Chip(label: Text("Completed")),
+          BookingTile(
+            icon: Icons.local_shipping,
+            title: "Garbage Pickup - 2025-11-26",
+            subtitle: "Both | 8:00 AM - 12:00 PM",
+            status: "Completed",
           ),
-          ListTile(
-            leading: Icon(Icons.apartment),
-            title: Text("Property Booking - Community Hall"),
-            subtitle: Text("2025-12-05 | 2:00 PM - 5:00 PM"),
-            trailing: Chip(label: Text("Upcoming")),
+          BookingTile(
+            icon: Icons.apartment,
+            title: "Property Booking - Community Hall",
+            subtitle: "2025-12-05 | 2:00 PM - 5:00 PM",
+            status: "Upcoming",
           ),
         ],
       ),
