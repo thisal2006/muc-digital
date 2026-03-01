@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'crematorium_eligibility_screen.dart';
+import 'crematorium_booking_data.dart';               // Model for passing data
+import 'crematorium_eligibility_screen.dart';        // Eligibility screen
 
 class CrematoriumBookingScreen extends StatefulWidget {
   const CrematoriumBookingScreen({super.key});
@@ -26,20 +27,32 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
     'Evening (5:00 PM - 8:00 PM)',
   ];
 
+  IconData _getSlotIcon(String slot) {
+    if (slot.contains('Morning')) return Icons.wb_sunny;
+    if (slot.contains('Afternoon')) return Icons.access_time;
+    if (slot.contains('Evening')) return Icons.nights_stay;
+    return Icons.schedule;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Crematorium Booking'),
+        backgroundColor: Colors.blue[800],
+        foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(  // ← ADDED: Fixes yellow/black overflow bar
+      body: SingleChildScrollView(
         child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
                 'Select a Date for Crematorium Slot',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey[900],
+                ),
               ),
             ),
             TableCalendar(
@@ -52,7 +65,7 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
                   setState(() {
                     _selectedDay = selectedDay;
                     _focusedDay = focusedDay;
-                    _selectedTimeSlot = null; // Reset time when new date selected
+                    _selectedTimeSlot = null; // Reset time when date changes
                   });
                 }
               },
@@ -61,12 +74,7 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
               },
               calendarBuilders: CalendarBuilders(
                 disabledBuilder: (context, day, focusedDay) {
-                  return Center(
-                    child: Text(
-                      '${day.day}',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
-                  );
+                  return Center(child: Text('${day.day}', style: const TextStyle(color: Colors.grey)));
                 },
                 defaultBuilder: (context, day, focusedDay) {
                   if (_bookedDates.any((booked) => isSameDay(booked, day))) {
@@ -81,14 +89,8 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
                 },
               ),
               calendarStyle: CalendarStyle(
-                selectedDecoration: BoxDecoration(
-                  color: Colors.blue[700],
-                  shape: BoxShape.circle,
-                ),
-                todayDecoration: BoxDecoration(
-                  color: Colors.blue[200],
-                  shape: BoxShape.circle,
-                ),
+                selectedDecoration: BoxDecoration(color: Colors.blue[700], shape: BoxShape.circle),
+                todayDecoration: BoxDecoration(color: Colors.blue[200], shape: BoxShape.circle),
               ),
             ),
             const SizedBox(height: 20),
@@ -109,7 +111,7 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
                 ),
               ),
 
-            // Time Slot Section
+            // Time Slot Selection
             if (_selectedDay != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -130,9 +132,7 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
 
                       return GestureDetector(
                         onTap: () {
-                          setState(() {
-                            _selectedTimeSlot = slot;
-                          });
+                          setState(() => _selectedTimeSlot = slot);
                         },
                         child: Card(
                           elevation: isSelected ? 6 : 3,
@@ -186,53 +186,49 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
                           ],
                         ),
                       ),
-                  ],
-                ),
-              ),
-            // Proceed Button - only show if both date and time selected
-            if (_selectedDay != null && _selectedTimeSlot != null)
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CrematoriumEligibilityScreen(),
+
+                    // Proceed Button - passes data
+                    Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (_selectedDay != null && _selectedTimeSlot != null) {
+                            final bookingData = CrematoriumBookingData(
+                              selectedDate: _selectedDay,
+                              timeSlot: _selectedTimeSlot,
+                            );
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CrematoriumEligibilityScreen(bookingData: bookingData),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please select date and time slot')),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[800],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 5,
+                        ),
+                        child: const Text(
+                          'Proceed to Eligibility & Booking',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                       ),
-                    );
-                    // Later: Navigator.push to next screen
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[800],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 5,
-                  ),
-                  child: const Text(
-                    'Proceed to Eligibility & Booking',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                    ),
+                  ],
                 ),
               ),
           ],
         ),
       ),
     );
-  }
-
-  // Helper function – correctly placed outside build()
-  IconData _getSlotIcon(String slot) {
-    if (slot.contains('Morning')) {
-      return Icons.wb_sunny;
-    }
-    if (slot.contains('Afternoon')) {
-      return Icons.access_time;
-    }
-    if (slot.contains('Evening')) {
-      return Icons.nights_stay;
-    }
-    return Icons.schedule;
   }
 }
