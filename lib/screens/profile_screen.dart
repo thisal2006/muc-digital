@@ -66,17 +66,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-
       await Future.delayed(const Duration(seconds: 2));
-
       setState(() {
         _isEditing = false;
         _isLoading = false;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile updated")),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Profile updated")));
     }
   }
 
@@ -88,15 +84,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         content: const Text("Are you sure you want to log out?"),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
+              onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Logged out successfully")),
-              );
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text("Logged out successfully")));
             },
             child: const Text(
               "Logout",
@@ -194,14 +187,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   const SizedBox(height: 30),
 
-                  // ✅ Refactored fields
                   ProfileField(
                     label: "Full Name",
                     controller: _nameController,
                     enabled: _isEditing,
                   ),
                   const SizedBox(height: 16),
-
                   ProfileField(
                     label: "Email",
                     controller: _emailController,
@@ -209,7 +200,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 16),
-
                   ProfileField(
                     label: "Phone Number",
                     controller: _phoneController,
@@ -217,18 +207,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 16),
-
                   ProfileField(
                     label: "Address",
                     controller: _addressController,
                     enabled: _isEditing,
                   ),
-
                   const SizedBox(height: 32),
 
                   ListTile(
-                    leading:
-                    const Icon(Icons.history, color: Color(0xFF2E7D32)),
+                    leading: const Icon(Icons.history, color: Color(0xFF2E7D32)),
                     title: const Text("Booking History"),
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
@@ -239,20 +226,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
                     },
                   ),
-
                   const Divider(),
-
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.red),
-                    title: const Text("Log Out",
-                        style: TextStyle(color: Colors.red)),
+                    title:
+                    const Text("Log Out", style: TextStyle(color: Colors.red)),
                     onTap: _confirmLogout,
                   ),
                 ],
               ),
             ),
           ),
-
           if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.5),
@@ -277,7 +261,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// ✅ Reusable Profile Field Widget
 class ProfileField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
@@ -348,9 +331,22 @@ class BookingTile extends StatelessWidget {
   }
 }
 
-// Booking History Screen
+// Booking History Screen with empty state
 class BookingHistoryScreen extends StatelessWidget {
   const BookingHistoryScreen({super.key});
+
+  final List<Map<String, String>> bookings = const [
+    {
+      'title': "Garbage Pickup - 2025-11-26",
+      'subtitle': "Both | 8:00 AM - 12:00 PM",
+      'status': "Completed"
+    },
+    {
+      'title': "Property Booking - Community Hall",
+      'subtitle': "2025-12-05 | 2:00 PM - 5:00 PM",
+      'status': "Upcoming"
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -360,22 +356,30 @@ class BookingHistoryScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
       ),
-      body: ListView(
+      body: bookings.isEmpty
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.history, size: 80, color: Colors.grey),
+            SizedBox(height: 16),
+            Text("No bookings yet", style: TextStyle(color: Colors.grey, fontSize: 18)),
+          ],
+        ),
+      )
+          : ListView.separated(
         padding: const EdgeInsets.all(16),
-        children: const [
-          BookingTile(
-            icon: Icons.local_shipping,
-            title: "Garbage Pickup - 2025-11-26",
-            subtitle: "Both | 8:00 AM - 12:00 PM",
-            status: "Completed",
-          ),
-          BookingTile(
-            icon: Icons.apartment,
-            title: "Property Booking - Community Hall",
-            subtitle: "2025-12-05 | 2:00 PM - 5:00 PM",
-            status: "Upcoming",
-          ),
-        ],
+        itemCount: bookings.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final booking = bookings[index];
+          return BookingTile(
+            icon: Icons.calendar_today,
+            title: booking['title']!,
+            subtitle: booking['subtitle']!,
+            status: booking['status']!,
+          );
+        },
       ),
     );
   }
