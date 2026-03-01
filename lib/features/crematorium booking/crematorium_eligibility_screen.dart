@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'crematorium_document_upload_screen.dart';
+import 'crematorium_booking_data.dart';
 
 class CrematoriumEligibilityScreen extends StatefulWidget {
-  const CrematoriumEligibilityScreen({super.key});
+  final CrematoriumBookingData bookingData;  // ← ADD THIS FIELD
+
+  const CrematoriumEligibilityScreen({
+    super.key,
+    required this.bookingData,  // ← ADD THIS REQUIRED NAMED PARAMETER
+  });
 
   @override
   State<CrematoriumEligibilityScreen> createState() => _CrematoriumEligibilityScreenState();
