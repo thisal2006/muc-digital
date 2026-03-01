@@ -235,32 +235,83 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
   }
 }
 
-class MyComplaintsList extends StatelessWidget {
+class MyComplaintsList extends StatefulWidget {
   const MyComplaintsList({super.key});
 
   @override
+  State<MyComplaintsList> createState() => _MyComplaintsListState();
+}
+
+class _MyComplaintsListState extends State<MyComplaintsList> {
+  bool _isLoading = false;
+
+  List<Map<String, String>> _bookings = [
+    {
+      'title': "Illegal dumping near temple road",
+      'date': "2025-11-20",
+      'status': "In Progress",
+      'statusColor': "orange"
+    },
+    {
+      'title': "Street light not working - 3rd lane",
+      'date': "2025-11-15",
+      'status': "Resolved",
+      'statusColor': "green"
+    },
+    {
+      'title': "Pothole on High Level Road",
+      'date': "2025-11-10",
+      'status': "Pending",
+      'statusColor': "red"
+    },
+  ];
+
+  Future<void> _refreshList() async {
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(seconds: 1)); // Simulate fetching data
+    setState(() => _isLoading = false);
+  }
+
+  Color _getStatusColor(String colorName) {
+    switch (colorName) {
+      case "green":
+        return Colors.green;
+      case "orange":
+        return Colors.orange;
+      case "red":
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: const [
-        _ComplaintCard(
-          title: "Illegal dumping near temple road",
-          date: "2025-11-20",
-          status: "In Progress",
-          statusColor: Colors.orange,
+    return Stack(
+      children: [
+        RefreshIndicator(
+          onRefresh: _refreshList,
+          child: ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: _bookings.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final booking = _bookings[index];
+              final color = _getStatusColor(booking['statusColor']!);
+              return _ComplaintCard(
+                title: booking['title']!,
+                date: booking['date']!,
+                status: booking['status']!,
+                statusColor: color,
+              );
+            },
+          ),
         ),
-        _ComplaintCard(
-          title: "Street light not working - 3rd lane",
-          date: "2025-11-15",
-          status: "Resolved",
-          statusColor: Colors.green,
-        ),
-        _ComplaintCard(
-          title: "Pothole on High Level Road",
-          date: "2025-11-10",
-          status: "Pending",
-          statusColor: Colors.red,
-        ),
+        if (_isLoading)
+          Container(
+            color: Colors.black.withOpacity(0.2),
+            child: const Center(child: CircularProgressIndicator()),
+          ),
       ],
     );
   }
