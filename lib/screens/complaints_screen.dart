@@ -43,7 +43,8 @@ class NewComplaintForm extends StatefulWidget {
   State<NewComplaintForm> createState() => _NewComplaintFormState();
 }
 
-class _NewComplaintFormState extends State<NewComplaintForm> {
+class _NewComplaintFormState extends State<NewComplaintForm>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   String? _selectedCategory;
   final _descriptionController = TextEditingController();
@@ -242,8 +243,10 @@ class MyComplaintsList extends StatefulWidget {
   State<MyComplaintsList> createState() => _MyComplaintsListState();
 }
 
-class _MyComplaintsListState extends State<MyComplaintsList> {
+class _MyComplaintsListState extends State<MyComplaintsList>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = false;
+  late final AnimationController _animationController;
 
   List<Map<String, String>> _bookings = [
     {
@@ -265,6 +268,13 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
       'statusColor': "red"
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController =
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+  }
 
   Future<void> _refreshList() async {
     setState(() => _isLoading = true);
@@ -314,11 +324,15 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
             itemBuilder: (context, index) {
               final booking = _bookings[index];
               final color = _getStatusColor(booking['statusColor']!);
-              return _ComplaintCard(
-                title: booking['title']!,
-                date: booking['date']!,
-                status: booking['status']!,
-                statusColor: color,
+              return FadeTransition(
+                opacity: _animationController
+                    .drive(CurveTween(curve: Curves.easeIn)),
+                child: _ComplaintCard(
+                  title: booking['title']!,
+                  date: booking['date']!,
+                  status: booking['status']!,
+                  statusColor: color,
+                ),
               );
             },
           ),
@@ -330,6 +344,12 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
           ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 }
 
