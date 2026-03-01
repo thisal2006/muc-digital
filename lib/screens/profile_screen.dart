@@ -72,6 +72,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // ✅ Logout Confirmation Dialog
+  void _confirmLogout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirm Logout"),
+        content: const Text("Are you sure you want to log out?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Logged out successfully")),
+              );
+            },
+            child: const Text(
+              "Logout",
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,7 +129,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               const SizedBox(height: 20),
 
-              // Avatar UI (from Commit 4)
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -185,11 +213,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
               const Divider(),
 
+              // ✅ Updated Logout
               ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
                 title: const Text("Log Out",
                     style: TextStyle(color: Colors.red)),
-                onTap: () {},
+                onTap: _confirmLogout,
               ),
             ],
           ),
@@ -251,9 +280,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-//
-// ✅ Reusable Booking Tile Widget
-//
 class BookingTile extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -274,16 +300,11 @@ class BookingTile extends StatelessWidget {
       leading: Icon(icon),
       title: Text(title),
       subtitle: Text(subtitle),
-      trailing: Chip(
-        label: Text(status),
-      ),
+      trailing: Chip(label: Text(status)),
     );
   }
 }
 
-//
-// Booking History Screen
-//
 class BookingHistoryScreen extends StatelessWidget {
   const BookingHistoryScreen({super.key});
 
