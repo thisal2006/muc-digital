@@ -60,7 +60,6 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     "Other"
   ];
 
-  // Pick image from camera or gallery
   Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(
       source: source,
@@ -74,7 +73,6 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     }
   }
 
-  //  Show bottom sheet options
   void _showImageOptions() {
     showModalBottomSheet(
       context: context,
@@ -176,12 +174,19 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 side: const BorderSide(color: Color(0xFF2E7D32)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                shadowColor: Colors.black26,
               ),
             ),
             if (_attachedImage != null)
               Padding(
                 padding: const EdgeInsets.only(top: 16),
-                child: Image.file(_attachedImage!, height: 150),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(_attachedImage!, height: 150, fit: BoxFit.cover),
+                ),
               ),
             const SizedBox(height: 32),
             ElevatedButton(
@@ -192,6 +197,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
+                elevation: 4,
               ),
               child: const Text("Submit Complaint", style: TextStyle(fontSize: 16)),
             ),
@@ -276,11 +282,12 @@ class _ComplaintCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      elevation: 4,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shadowColor: Colors.black26,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         leading: Icon(Icons.report_problem, color: statusColor, size: 32),
         title: Text(
           title,
