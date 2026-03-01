@@ -1,5 +1,6 @@
 // Updated main.dart - fixed const constructors, imports, routing, theme
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'features/Garbage_tracking/garbage_tracking_screen.dart';
@@ -39,7 +40,7 @@ void main() async {
     }
   }
 
-  runApp(const MUCdigitalApp());
+  runApp(const MaterialApp(home: AuthWrapper()));
 }
 
 class MUCdigitalApp extends StatelessWidget {
@@ -82,6 +83,27 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_in': (context) => const SignInScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
 
+      },
+    );
+  }
+}
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasData) {
+          return const HomeScreen(); // or your main screen
+        }
+
+        return const SignInScreen();
       },
     );
   }
