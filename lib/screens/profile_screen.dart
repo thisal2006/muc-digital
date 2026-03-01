@@ -174,18 +174,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildField(String label, TextEditingController controller) {
+    TextInputType keyboardType = TextInputType.text;
+
+    if (label == "Email") {
+      keyboardType = TextInputType.emailAddress;
+    } else if (label == "Phone Number") {
+      keyboardType = TextInputType.phone;
+    }
+
     return TextFormField(
       controller: controller,
       enabled: _isEditing,
+      keyboardType: keyboardType,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return "$label cannot be empty";
         }
 
-        // ✅ Email Format Validation
         if (label == "Email" &&
             !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
           return "Enter a valid email address";
+        }
+
+        if (label == "Phone Number") {
+          final cleaned = value.replaceAll(RegExp(r'\D'), '');
+          if (cleaned.length < 10) {
+            return "Enter a valid phone number";
+          }
         }
 
         return null;
