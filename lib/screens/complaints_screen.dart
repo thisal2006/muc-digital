@@ -64,11 +64,8 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
       source: source,
       imageQuality: 70,
     );
-
     if (pickedFile != null) {
-      setState(() {
-        _attachedImage = File(pickedFile.path);
-      });
+      setState(() => _attachedImage = File(pickedFile.path));
     }
   }
 
@@ -246,28 +243,31 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
   String _searchQuery = "";
   String _filterStatus = "All";
 
-  final List<Map<String, String>> _allComplaints = [
+  final List<Map<String, dynamic>> _allComplaints = [
     {
       'title': "Illegal dumping near temple road",
       'date': "2025-11-20",
       'status': "In Progress",
-      'statusColor': "orange"
+      'statusColor': Colors.orange,
+      'image': null
     },
     {
       'title': "Street light not working - 3rd lane",
       'date': "2025-11-15",
       'status': "Resolved",
-      'statusColor': "green"
+      'statusColor': Colors.green,
+      'image': null
     },
     {
       'title': "Pothole on High Level Road",
       'date': "2025-11-10",
       'status': "Pending",
-      'statusColor': "red"
+      'statusColor': Colors.red,
+      'image': null
     },
   ];
 
-  List<Map<String, String>> get _filteredComplaints {
+  List<Map<String, dynamic>> get _filteredComplaints {
     return _allComplaints.where((complaint) {
       final matchesSearch = complaint['title']!
           .toLowerCase()
@@ -275,20 +275,8 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
       final matchesFilter =
           _filterStatus == "All" || complaint['status'] == _filterStatus;
       return matchesSearch && matchesFilter;
-    }).toList();
-  }
-
-  Color _getStatusColor(String colorName) {
-    switch (colorName) {
-      case "green":
-        return Colors.green;
-      case "orange":
-        return Colors.orange;
-      case "red":
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
+    }).toList()
+      ..sort((a, b) => b['date'].compareTo(a['date'])); // Newest first
   }
 
   Future<void> _refreshList() async {
@@ -311,7 +299,6 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Search and Filter Row
         Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(
@@ -363,9 +350,8 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final complaint = _filteredComplaints[index];
-                final color = _getStatusColor(complaint['statusColor']!);
                 return Dismissible(
-                  key: Key(complaint['title']!),
+                  key: Key(complaint['title']),
                   direction: DismissDirection.endToStart,
                   background: Container(
                     alignment: Alignment.centerRight,
@@ -378,7 +364,8 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                     title: complaint['title']!,
                     date: complaint['date']!,
                     status: complaint['status']!,
-                    statusColor: color,
+                    statusColor: complaint['statusColor']!,
+                    image: complaint['image'],
                   ),
                 );
               },
@@ -395,12 +382,14 @@ class _ComplaintCard extends StatelessWidget {
   final String date;
   final String status;
   final Color statusColor;
+  final File? image;
 
   const _ComplaintCard({
     required this.title,
     required this.date,
     required this.status,
     required this.statusColor,
+    this.image,
   });
 
   @override
@@ -413,16 +402,25 @@ class _ComplaintCard extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         leading: Icon(Icons.report_problem, color: statusColor, size: 32),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(date),
+            if (image != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(image!, height: 80, width: 80, fit: BoxFit.cover),
+                ),
+              ),
+          ],
         ),
-        subtitle: Text(date),
         trailing: Chip(
           label: Text(status),
           backgroundColor: statusColor.withOpacity(0.15),
-          labelStyle:
-          TextStyle(color: statusColor, fontWeight: FontWeight.w600),
+          labelStyle: TextStyle(color: statusColor, fontWeight: FontWeight.w600),
           padding: const EdgeInsets.symmetric(horizontal: 12),
         ),
       ),
