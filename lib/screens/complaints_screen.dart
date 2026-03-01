@@ -60,9 +60,10 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     "Other"
   ];
 
-  Future<void> _pickImage() async {
+  // ✅ Pick image from camera or gallery
+  Future<void> _pickImage(ImageSource source) async {
     final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
+      source: source,
       imageQuality: 70,
     );
 
@@ -71,6 +72,44 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
         _attachedImage = File(pickedFile.path);
       });
     }
+  }
+
+  // ✅ Show bottom sheet options
+  void _showImageOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text("Choose from Gallery"),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text("Take a Photo"),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            if (_attachedImage != null)
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text("Remove Photo"),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _attachedImage = null);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _submitComplaint() {
@@ -130,7 +169,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             ),
             const SizedBox(height: 24),
             OutlinedButton.icon(
-              onPressed: _pickImage,
+              onPressed: _showImageOptions,
               icon: const Icon(Icons.add_photo_alternate),
               label: Text(
                   _attachedImage != null ? "Photo Attached" : "Attach Photo"),
