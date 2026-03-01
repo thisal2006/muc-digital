@@ -181,6 +181,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (value == null || value.isEmpty) {
           return "$label cannot be empty";
         }
+
+        // ✅ Email Format Validation
+        if (label == "Email" &&
+            !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+          return "Enter a valid email address";
+        }
+
         return null;
       },
       decoration: InputDecoration(
