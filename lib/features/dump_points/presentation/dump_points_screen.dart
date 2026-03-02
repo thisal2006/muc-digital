@@ -463,6 +463,11 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
                     ],
                   ),
                 ),
+                AnimatedScale(
+                  duration: const Duration(milliseconds: 400),
+                  scale: 1,
+                  child: _nearestDumpCard(),
+                ),
 
                 ElevatedButton(
                   onPressed: () {
