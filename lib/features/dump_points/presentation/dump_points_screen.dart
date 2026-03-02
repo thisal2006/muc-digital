@@ -189,6 +189,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       nearestDump = closest;
       nearestDistanceKm =
           minDistance / 1000;
+      print("Nearest Dump: ${nearestDump?.name}");
     }
     if (closest == null) {
       nearestDump = null;
@@ -548,3 +549,4 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     );
   }
 }
+void _calculateNearestDump(List<DumpPoint> dumps) {
