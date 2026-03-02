@@ -525,6 +525,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
             true,
             tiltGesturesEnabled: true,
             zoomControlsEnabled: true,
+            trafficEnabled: true,
             myLocationButtonEnabled:
             true,
             onMapCreated:
