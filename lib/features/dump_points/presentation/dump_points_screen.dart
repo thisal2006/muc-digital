@@ -7,16 +7,16 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DumpPointsScreen extends StatefulWidget {
-  bool _hasFocusedNearest = false;
   const DumpPointsScreen({super.key});
 
   @override
-  State<DumpPointsScreen> createState() => _DumpPointsScreenState();
+  State<DumpPointsScreen> createState() =>
+      _DumpPointsScreenState();
 }
 
 class _DumpPointsScreenState extends State<DumpPointsScreen>
     with SingleTickerProviderStateMixin {
-
+  bool _hasFocusedNearest = false;
   final DumpRepository repo = DumpRepository();
 
   GoogleMapController? mapController;
@@ -196,7 +196,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       nearestDump = null;
       nearestDistanceKm = 0;
     }
-    iif (mapController != null && !_hasFocusedNearest) {
+    if (mapController != null && !_hasFocusedNearest) {
       _hasFocusedNearest = true;
 
       mapController!.animateCamera(
@@ -206,6 +206,8 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
         ),
       );
     }
+  }
+
 
   //--------------------------------------------------
   // NAVIGATION
@@ -550,4 +552,3 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     );
   }
 }
-mapController
