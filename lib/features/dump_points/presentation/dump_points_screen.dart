@@ -169,6 +169,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     for (var dump in dumps) {
       if (dump.status != "active") continue;
 
+
       double meters =
       Geolocator.distanceBetween(
         userPosition!.latitude,
@@ -285,6 +286,41 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
               const SizedBox(height: 8),
 
               Text(dump.address),
+              const SizedBox(height: 10),
+
+              if (dump.supportsRecycling)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.green,
+                      width: 1,
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.recycling,
+                        color: Colors.green,
+                        size: 18,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        "Recycling Supported",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
             const SizedBox(height: 15),
 
