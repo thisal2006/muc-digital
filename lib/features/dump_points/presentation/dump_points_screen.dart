@@ -186,6 +186,10 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       nearestDistanceKm =
           minDistance / 1000;
     }
+    if (closest == null) {
+      nearestDump = null;
+      nearestDistanceKm = 0;
+    }
   }
 
   //--------------------------------------------------
