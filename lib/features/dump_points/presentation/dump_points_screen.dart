@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DumpPointsScreen extends StatefulWidget {
+  bool _hasFocusedNearest = false;
   const DumpPointsScreen({super.key});
 
   @override
@@ -195,16 +196,16 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       nearestDump = null;
       nearestDistanceKm = 0;
     }
-    if (mapController != null) {
+    iif (mapController != null && !_hasFocusedNearest) {
+      _hasFocusedNearest = true;
+
       mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(
-            LatLng(closest!.lat, closest!.lng),
+          LatLng(closest!.lat, closest!.lng),
           15,
         ),
       );
     }
-
-  }
 
   //--------------------------------------------------
   // NAVIGATION
@@ -549,4 +550,4 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     );
   }
 }
-void _calculateNearestDump(List<DumpPoint> dumps) {
+mapController
