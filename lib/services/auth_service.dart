@@ -1,19 +1,33 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final LocalAuthentication _localAuth = LocalAuthentication();
 
-  // Stream of auth state changes
+  // Stream to listen for auth changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Current user
+  // Current logged-in user
   User? get currentUser => _auth.currentUser;
 
-  // Sign up with email/password
+  // Sign in with email & password
+  Future<User?> signIn(String email, String password) async {
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
+
+      // Update last active time on successful login
+      await _updateLastActive();
+
+      return credential.user;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Sign up with email & password
   Future<User?> signUp(String email, String password, String name, String phone) async {
     try {
       final credential = await _auth.createUserWithEmailAndPassword(
@@ -21,13 +35,15 @@ class AuthService {
         password: password.trim(),
       );
 
-      await FirebaseFirestore.instance.collection('users').doc(credential.user!.uid).set({
-        'name': name.trim(),
-        'email': email.trim(),
-        'phone': phone.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'biometricEnabled': false, // default false
-      });
+      // Optional: save extra user info to Firestore
+      // await FirebaseFirestore.instance.collection('users').doc(credential.user!.uid).set({
+      //   'name': name.trim(),
+      //   'phone': phone.trim(),
+      //   'createdAt': FieldValue.serverTimestamp(),
+      // });
+
+      // Update last active
+      await _updateLastActive();
 
       return credential.user;
     } catch (e) {
@@ -35,76 +51,30 @@ class AuthService {
     }
   }
 
-  // Sign in with email/password
-  Future<User?> signIn(String email, String password) async {
-    try {
-      final credential = await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
-        password: password.trim(),
-      );
-      return credential.user;
-    } catch (e) {
-      rethrow;
-    }
+  // Check if user must re-login due to inactivity (10 days)
+  Future<bool> mustReLoginDueToInactivity() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastActiveMillis = prefs.getInt('last_active_timestamp') ?? 0;
+
+    if (lastActiveMillis == 0) return true; // first time ever
+
+    final lastActive = DateTime.fromMillisecondsSinceEpoch(lastActiveMillis);
+    final now = DateTime.now();
+
+    final daysInactive = now.difference(lastActive).inDays;
+    return daysInactive >= 10;
   }
 
-  // Enable biometric login (called after signup or from settings)
-  Future<bool> enableBiometric() async {
-    try {
-      final canAuthenticate = await _localAuth.canCheckBiometrics;
-      final isSupported = await _localAuth.isDeviceSupported();
-
-      if (!canAuthenticate || !isSupported) return false;
-
-      final authenticated = await _localAuth.authenticate(
-        localizedReason: 'Scan your fingerprint to enable quick login',
-        options: const AuthenticationOptions(biometricOnly: true, stickyAuth: true),
-      );
-
-      if (authenticated) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('biometric_enabled', true);
-
-        // Also save in Firestore (optional)
-        if (_auth.currentUser != null) {
-          await FirebaseFirestore.instance.collection('users').doc(_auth.currentUser!.uid).update({
-            'biometricEnabled': true,
-          });
-        }
-        return true;
-      }
-      return false;
-    } catch (e) {
-      print('Biometric enable error: $e');
-      return false;
-    }
+  // Update last active timestamp (call after every successful login)
+  Future<void> _updateLastActive() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_active_timestamp', DateTime.now().millisecondsSinceEpoch);
   }
 
-  // Check if biometric is enabled and authenticate
-  Future<bool> tryBiometricLogin() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final enabled = prefs.getBool('biometric_enabled') ?? false;
-
-      if (!enabled) return false;
-
-      final canAuthenticate = await _localAuth.canCheckBiometrics;
-      if (!canAuthenticate) return false;
-
-      return await _localAuth.authenticate(
-        localizedReason: 'Scan your fingerprint to log in',
-        options: const AuthenticationOptions(biometricOnly: true, stickyAuth: true),
-      );
-    } catch (e) {
-      print('Biometric login error: $e');
-      return false;
-    }
-  }
-
-  // Sign out (also disable biometric)
+  // Sign out (also clear timestamp)
   Future<void> signOut() async {
     await _auth.signOut();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('biometric_enabled');
+    await prefs.remove('last_active_timestamp');
   }
 }
