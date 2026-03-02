@@ -523,6 +523,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
             dumpMarkers,
             myLocationEnabled:
             true,
+            tiltGesturesEnabled: true,
             zoomControlsEnabled: true,
             myLocationButtonEnabled:
             true,
@@ -546,4 +547,3 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     );
   }
 }
-_listenToDumps
