@@ -46,6 +46,7 @@ async function moveTrucks() {
         lat: position.lat,
         lng: position.lng,
 
+        speed: Math.floor(Math.random() * 20) + 25, // 25–45 realistic
         speed: Math.floor(Math.random() * 20) + 25,
 
         status: "on_route",
@@ -67,6 +68,12 @@ async function moveTrucks() {
     console.error("Simulator Error:", err);
   }
 }
+
+//--------------------------------------
+// RUN EVERY 3 SECONDS (SMOOTH)
+//--------------------------------------
+
+setInterval(moveTrucks, 3000);
 
 //--------------------------------------
 // RUN EVERY 1 SECOND
