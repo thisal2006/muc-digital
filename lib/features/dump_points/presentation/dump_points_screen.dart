@@ -145,6 +145,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
           if (mounted) {
             setState(() {
               dumpMarkers = markers;
+              Future.delayed(const Duration(milliseconds: 100));
             });
 
             if (nearestDump != null) {
@@ -545,4 +546,4 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     );
   }
 }
-show
+_listenToDumps
