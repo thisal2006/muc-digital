@@ -19,6 +19,7 @@ import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'services/auth_service.dart';
+import 'package:muc_digital/features/crematorium%20booking/crematorium_booking_screen.dart';
 
 bool _firebaseInitialized = false;
 
@@ -88,6 +89,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_in': (context) => const SignInScreen(),
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
+        '/crematorium_booking': (context) => const CrematoriumBookingScreen(),
       },
     );
   }

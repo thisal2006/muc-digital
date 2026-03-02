@@ -138,7 +138,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Cemetery Booking',
       'subtitle': 'Cemetery & crematorium',
       'color': const Color(0xFF7B1FA2),
-      'route': null,
+      'route': '/crematorium_booking',
     },
     {
       'icon': Icons.emergency_rounded,
