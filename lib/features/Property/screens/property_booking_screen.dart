@@ -124,4 +124,4 @@ class PropertyCard extends StatelessWidget {
 }
 
 //ready to commit
-//go
+//ready
