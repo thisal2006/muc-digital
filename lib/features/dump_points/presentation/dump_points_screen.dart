@@ -10,12 +10,13 @@ class DumpPointsScreen extends StatefulWidget {
   const DumpPointsScreen({super.key});
 
   @override
-  State<DumpPointsScreen> createState() => _DumpPointsScreenState();
+  State<DumpPointsScreen> createState() =>
+      _DumpPointsScreenState();
 }
 
 class _DumpPointsScreenState extends State<DumpPointsScreen>
     with SingleTickerProviderStateMixin {
-
+  bool _hasFocusedNearest = false;
   final DumpRepository repo = DumpRepository();
 
   GoogleMapController? mapController;
@@ -127,7 +128,9 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
             return Marker(
               markerId: MarkerId(dump.id),
               position: LatLng(dump.lat, dump.lng),
-              icon: dump.status == "active"
+              icon: dump.id == nearestDump?.id
+                  ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)
+                  : dump.status == "active"
                   ? activeIcon ?? BitmapDescriptor.defaultMarker
                   : closedIcon ?? BitmapDescriptor.defaultMarker,
               infoWindow: InfoWindow(
@@ -143,6 +146,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
           if (mounted) {
             setState(() {
               dumpMarkers = markers;
+              Future.delayed(const Duration(milliseconds: 100));
             });
 
             if (nearestDump != null) {
@@ -165,6 +169,9 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     DumpPoint? closest;
 
     for (var dump in dumps) {
+      if (dump.status != "active") continue;
+
+
       double meters =
       Geolocator.distanceBetween(
         userPosition!.latitude,
@@ -183,8 +190,24 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       nearestDump = closest;
       nearestDistanceKm =
           minDistance / 1000;
+      print("Nearest Dump: ${nearestDump?.name}");
+    }
+    if (closest == null) {
+      nearestDump = null;
+      nearestDistanceKm = 0;
+    }
+    if (mapController != null && !_hasFocusedNearest) {
+      _hasFocusedNearest = true;
+
+      mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(closest!.lat, closest!.lng),
+          15,
+        ),
+      );
     }
   }
+
 
   //--------------------------------------------------
   // NAVIGATION
@@ -212,6 +235,13 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
     double percent =
         dump.currentLoad / dump.capacityTons;
+    Color capacityColor = Colors.green;
+
+    if (percent >= 0.9) {
+      capacityColor = Colors.red;
+    } else if (percent >= 0.6) {
+      capacityColor = Colors.orange;
+    }
 
     double distanceKm = 0;
 
@@ -227,6 +257,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     }
 
     showModalBottomSheet(
+      isScrollControlled: true,
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) {
@@ -261,27 +292,64 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
               const SizedBox(height: 8),
 
               Text(dump.address),
+              const SizedBox(height: 10),
 
-              const SizedBox(height: 15),
-
-              LinearProgressIndicator(
-                value: percent,
-                minHeight: 8,
-                borderRadius:
-                BorderRadius.circular(
-                    8),
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                "${dump.currentLoad} / ${dump.capacityTons} tons",
-                style:
-                const TextStyle(
-                  fontWeight:
-                  FontWeight.bold,
+              if (dump.supportsRecycling)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.green,
+                      width: 1,
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.recycling,
+                        color: Colors.green,
+                        size: 18,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        "Recycling Supported",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+
+            const SizedBox(height: 15),
+
+
+
+        const SizedBox(height: 8),
+
+        LinearProgressIndicator(
+        value: percent,
+        minHeight: 8,
+        borderRadius: BorderRadius.circular(8),
+        backgroundColor: Colors.grey.shade300,
+        valueColor: AlwaysStoppedAnimation<Color>(capacityColor),
+        ),
+
+        const SizedBox(height: 8),
+
+        Text(
+        "${dump.currentLoad} / ${dump.capacityTons} tons",
+        style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        ),
+        ),
 
               const SizedBox(height: 10),
 
@@ -401,6 +469,11 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
                     ],
                   ),
                 ),
+                AnimatedScale(
+                  duration: const Duration(milliseconds: 400),
+                  scale: 1,
+                  child: _nearestDumpCard(),
+                ),
 
                 ElevatedButton(
                   onPressed: () {
@@ -417,6 +490,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
         ),
       ),
     );
+
   }
 
   //--------------------------------------------------
@@ -453,6 +527,9 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
             dumpMarkers,
             myLocationEnabled:
             true,
+            tiltGesturesEnabled: true,
+            zoomControlsEnabled: true,
+            trafficEnabled: true,
             myLocationButtonEnabled:
             true,
             onMapCreated:
