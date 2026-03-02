@@ -127,7 +127,9 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
             return Marker(
               markerId: MarkerId(dump.id),
               position: LatLng(dump.lat, dump.lng),
-              icon: dump.status == "active"
+              icon: dump.id == nearestDump?.id
+                  ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)
+                  : dump.status == "active"
                   ? activeIcon ?? BitmapDescriptor.defaultMarker
                   : closedIcon ?? BitmapDescriptor.defaultMarker,
               infoWindow: InfoWindow(
