@@ -50,7 +50,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   }
 
   Future<void> _saveBooking() async {
-    // Check mounted before showing dialog
     if (!mounted) return;
 
     showDialog(
@@ -72,14 +71,12 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
       await FirebaseFirestore.instance.collection('bookings').add(bookingData);
 
-      // Async Gap Check
       if (!mounted) return;
-      Navigator.of(context).pop(); // Close loader
+      Navigator.of(context).pop();
       _showSuccessDialog();
     } catch (e) {
-      // Async Gap Check
       if (!mounted) return;
-      Navigator.of(context).pop(); // Close loader
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to save: $e")),
       );
@@ -92,12 +89,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       builder: (context) => AlertDialog(
         icon: const Icon(Icons.check_circle, color: Colors.green, size: 50),
         title: const Text("Booking Confirmed!"),
-        content: const Text("Your booking has been paid for and saved to the Council database."),
+        content: const Text("Your booking has been saved to the database."),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
+            onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
             child: const Text("OK"),
           )
         ],
@@ -108,11 +103,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   Future<void> _processPayment() async {
     if (selectedDate == null || selectedSlot == null) return;
 
+    // Use the StripeService with correct parameter order
     await StripeService.makePayment(
       context,
       widget.property.price,
           () {
-        // Safe check for the callback execution
         if (mounted) _saveBooking();
       },
     );
@@ -131,6 +126,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Property Info Card
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -160,6 +156,8 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             const SizedBox(height: 30),
             const Text("Select Date", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
+
+            // Fixed Date Picker with Expanded to prevent overflow
             InkWell(
               onTap: () => _selectDate(context),
               child: Container(
@@ -171,17 +169,24 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      selectedDate == null
-                          ? "Tap to choose a date"
-                          : "${selectedDate!.year}-${selectedDate!.month}-${selectedDate!.day}",
-                      style: TextStyle(color: selectedDate == null ? Colors.grey : Colors.black, fontSize: 16),
+                    Expanded( // FIXED Overflow here
+                      child: Text(
+                        selectedDate == null
+                            ? "Tap to choose a date"
+                            : "${selectedDate!.year}-${selectedDate!.month}-${selectedDate!.day}",
+                        style: TextStyle(
+                            color: selectedDate == null ? Colors.grey : Colors.black,
+                            fontSize: 16
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const Icon(Icons.calendar_today, color: Color(0xFFE67E22)),
                   ],
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
             const Text("Select Time Slot", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
@@ -191,7 +196,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               hint: const Text("Choose a slot"),
-              // Using initialValue instead of value to resolve deprecation
               initialValue: selectedSlot,
               items: timeSlots.map((String slot) {
                 return DropdownMenuItem<String>(value: slot, child: Text(slot));

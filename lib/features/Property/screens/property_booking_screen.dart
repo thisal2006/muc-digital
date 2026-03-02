@@ -91,17 +91,31 @@ class PropertyCard extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(property.name, style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text(property.capacity, style: const TextStyle(color: Colors.grey)),
-                    ],
+                  // 1. Wrap the Column in Expanded
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          property.name,
+                          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis, // Adds '...' if the name is massive
+                        ),
+                        Text(property.capacity, style: const TextStyle(color: Colors.grey)),
+                      ],
+                    ),
                   ),
+                  // 2. Add a tiny bit of spacing
+                  const SizedBox(width: 10),
+                  // 3. Price stays safely on the right
                   Text(property.price, style: const TextStyle(color: Color(0xFFE67E22), fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
+
+            const SizedBox(width: 10),
+            // 3. Price stays safely on the right
+            Text(property.price, style: const TextStyle(color: Color(0xFFE67E22), fontWeight: FontWeight.bold)),
           ],
         ),
       ),
