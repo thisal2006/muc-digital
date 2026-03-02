@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'sign_up_screen.dart';
-import '../../services/auth_service.dart'; // Add this import
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -15,11 +14,15 @@ class _SignInScreenState extends State<SignInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  String? _errorMessage;
 
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -27,33 +30,15 @@ class _SignInScreenState extends State<SignInScreen> {
         password: _passwordController.text.trim(),
       );
 
-      // After successful login, prompt for biometric if not already enabled
-      final success = await AuthService().enableBiometric();
-      if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Fingerprint login enabled!'),
-            backgroundColor: Color(0xFF1B5E20),
-          ),
-        );
-      }
-
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
     } on FirebaseAuthException catch (e) {
-      String msg = 'Login failed';
-      if (e.code == 'user-not-found') msg = 'No user with this email';
-      if (e.code == 'wrong-password') msg = 'Incorrect password';
-      if (e.code == 'invalid-email') msg = 'Invalid email format';
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-      }
+      setState(() {
+        _errorMessage = e.message ?? 'Login failed';
+      });
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
+      setState(() => _errorMessage = 'An error occurred');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -64,7 +49,7 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Sign In')),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
@@ -72,10 +57,9 @@ class _SignInScreenState extends State<SignInScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text('Welcome Back', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 32),
+                const SizedBox(height: 40),
                 TextFormField(
                   controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
                   validator: (val) => val!.isEmpty || !val.contains('@') ? 'Valid email required' : null,
                 ),
@@ -86,7 +70,10 @@ class _SignInScreenState extends State<SignInScreen> {
                   decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
                   validator: (val) => val!.isEmpty ? 'Password required' : null,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                if (_errorMessage != null)
+                  Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signIn,
                   style: ElevatedButton.styleFrom(
@@ -99,20 +86,8 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                  ),
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignUpScreen())),
                   child: const Text('Don\'t have an account? Sign Up'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Implement Forgot Password screen
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Forgot password - coming soon')),
-                    );
-                  },
-                  child: const Text('Forgot Password?'),
                 ),
               ],
             ),
