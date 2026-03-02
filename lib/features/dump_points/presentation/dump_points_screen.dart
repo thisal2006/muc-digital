@@ -229,6 +229,13 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
     double percent =
         dump.currentLoad / dump.capacityTons;
+    Color capacityColor = Colors.green;
+
+    if (percent >= 0.9) {
+      capacityColor = Colors.red;
+    } else if (percent >= 0.6) {
+      capacityColor = Colors.orange;
+    }
 
     double distanceKm = 0;
 
@@ -279,26 +286,28 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
               Text(dump.address),
 
-              const SizedBox(height: 15),
+            const SizedBox(height: 15),
 
-              LinearProgressIndicator(
-                value: percent,
-                minHeight: 8,
-                borderRadius:
-                BorderRadius.circular(
-                    8),
-              ),
 
-              const SizedBox(height: 8),
 
-              Text(
-                "${dump.currentLoad} / ${dump.capacityTons} tons",
-                style:
-                const TextStyle(
-                  fontWeight:
-                  FontWeight.bold,
-                ),
-              ),
+        const SizedBox(height: 8),
+
+        LinearProgressIndicator(
+        value: percent,
+        minHeight: 8,
+        borderRadius: BorderRadius.circular(8),
+        backgroundColor: Colors.grey.shade300,
+        valueColor: AlwaysStoppedAnimation<Color>(capacityColor),
+        ),
+
+        const SizedBox(height: 8),
+
+        Text(
+        "${dump.currentLoad} / ${dump.capacityTons} tons",
+        style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        ),
+        ),
 
               const SizedBox(height: 10),
 
