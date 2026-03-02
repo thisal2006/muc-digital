@@ -190,6 +190,15 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       nearestDump = null;
       nearestDistanceKm = 0;
     }
+    if (mapController != null) {
+      mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(
+            LatLng(closest!.lat, closest!.lng),
+          15,
+        ),
+      );
+    }
+
   }
 
   //--------------------------------------------------
