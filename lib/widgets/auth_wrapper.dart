@@ -13,36 +13,41 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   final AuthService _authService = AuthService();
-  bool _checkingBiometric = true;
+  bool _checking = true;
 
   @override
   void initState() {
     super.initState();
-    _checkBiometricOnStart();
+    _checkLoginState();
   }
 
-  Future<void> _checkBiometricOnStart() async {
+  Future<void> _checkLoginState() async {
     final user = _authService.currentUser;
 
     if (user != null) {
-      // Already signed in to Firebase → try biometric
-      final success = await _authService.tryBiometricLogin();
-      if (success && mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
-      } else if (mounted) {
-        setState(() => _checkingBiometric = false);
+      final mustReLogin = await _authService.mustReLoginDueToInactivity();
+      if (mustReLogin) {
+        await _authService.signOut();
+      } else {
+        await _authService.updateLastActive(); // public method
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+          return;
+        }
       }
-    } else {
-      setState(() => _checkingBiometric = false);
+    }
+
+    if (mounted) {
+      setState(() => _checking = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_checkingBiometric) {
+    if (_checking) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
