@@ -252,6 +252,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     }
 
     showModalBottomSheet(
+      isScrollControlled: true,
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) {
@@ -544,3 +545,4 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     );
   }
 }
+show
