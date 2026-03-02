@@ -165,6 +165,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     DumpPoint? closest;
 
     for (var dump in dumps) {
+      if (dump.status != "active") continue;
       double meters =
       Geolocator.distanceBetween(
         userPosition!.latitude,
