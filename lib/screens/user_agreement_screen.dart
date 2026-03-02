@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Add this for AuthWrapper
+import '../main.dart'; // Import to access AuthWrapper
 
 class UserAgreementScreen extends StatelessWidget {
   const UserAgreementScreen({super.key});
@@ -112,15 +114,12 @@ class UserAgreementScreen extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Navigate to phone login screen when user agrees
-                      Navigator.pushReplacementNamed(context, '/home');
+                      // After agreement → go to auth flow (AuthWrapper will handle the rest)
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AuthWrapper()),
+                      );
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      elevation: 6,
-                    ),
                     child: const Text(
                       'I Agree',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),

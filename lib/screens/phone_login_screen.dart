@@ -26,7 +26,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
         phoneNumber: _phoneNumber,
         verificationCompleted: (PhoneAuthCredential credential) async {
           await FirebaseAuth.instance.signInWithCredential(credential);
-          _navigateToHome();
+          _goToHome();
         },
         verificationFailed: (FirebaseAuthException e) {
           setState(() => _isLoading = false);
@@ -51,12 +51,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending OTP: $e')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
 
-  void _navigateToHome() {
+  void _goToHome() {
     Navigator.pushReplacementNamed(context, '/home');
   }
 
@@ -84,7 +84,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'We will send you a one-time password (OTP)',
+                  'We will send a one-time password (OTP)',
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
@@ -97,8 +97,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                     selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
                     setSelectorButtonAsPrefixIcon: true,
                   ),
-                  countries: const ['LK', 'IN', 'US'], // add more if needed
-                  initialValue: PhoneNumber(isoCode: _initialCountryCode), // corrected parameter
+                  countries: const ['LK', 'IN', 'US'],
+                  initialValue: PhoneNumber(isoCode: _initialCountryCode),
                   inputDecoration: const InputDecoration(
                     labelText: 'Phone Number',
                     border: OutlineInputBorder(),
