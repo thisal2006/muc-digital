@@ -521,6 +521,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
             dumpMarkers,
             myLocationEnabled:
             true,
+            zoomControlsEnabled: true,
             myLocationButtonEnabled:
             true,
             onMapCreated:
