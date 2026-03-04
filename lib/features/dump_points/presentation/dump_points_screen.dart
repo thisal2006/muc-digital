@@ -519,7 +519,11 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       ),
       body: Stack(
         children: [
-
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.03),
+            ),
+          ),
           GoogleMap(
             initialCameraPosition:
             initialCamera,
