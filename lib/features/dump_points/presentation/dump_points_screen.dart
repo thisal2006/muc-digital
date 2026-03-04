@@ -255,7 +255,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       );
       distanceKm = meters / 1000;
     }
-
+bold
     showModalBottomSheet(
       isScrollControlled: true,
       context: context,
@@ -345,7 +345,8 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
         Text(
         "${dump.currentLoad} / ${dump.capacityTons} tons",
         style: const TextStyle(
-        fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.3,
         ),
         ),
 
