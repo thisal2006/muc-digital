@@ -79,7 +79,7 @@ setInterval(moveTrucks, 3000);
 // RUN EVERY 1 SECOND
 //--------------------------------------
 
-setInterval(moveTrucks, 1000);
+setInterval(moveTrucks, 3000);
 
 //--------------------------------------
 // SEED DUMP POINTS
