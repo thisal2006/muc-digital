@@ -255,7 +255,6 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       );
       distanceKm = meters / 1000;
     }
-bold
     showModalBottomSheet(
       isScrollControlled: true,
       context: context,
