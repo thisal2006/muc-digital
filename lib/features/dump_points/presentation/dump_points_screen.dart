@@ -420,7 +420,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
           RoundedRectangleBorder(
             borderRadius:
             BorderRadius.circular(
-                16),
+                24),
           ),
           child: Padding(
             padding:
