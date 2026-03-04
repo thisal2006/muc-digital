@@ -369,18 +369,12 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
                 child:
                 ElevatedButton(
                   style:
-                  ElevatedButton
-                      .styleFrom(
-                    padding:
-                    const EdgeInsets.symmetric(
-                        vertical:
-                        14),
-                    shape:
-                    RoundedRectangleBorder(
-                      borderRadius:
-                      BorderRadius
-                          .circular(
-                          12),
+                  ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    elevation: 6,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                   onPressed: () {
