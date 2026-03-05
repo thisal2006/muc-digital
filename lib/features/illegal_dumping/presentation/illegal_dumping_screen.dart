@@ -123,7 +123,7 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
       UploadTask uploadTask =
       ref.putFile(imageFile!);
 
-      /// 🔥 TRACK PROGRESS
+      ///TRACK PROGRESS
       uploadTask.snapshotEvents.listen((event) {
 
         final progress =
@@ -135,7 +135,7 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
         });
       });
 
-      /// 🔥 FORCE TIMEOUT (NO MORE INFINITE SPINNER)
+      /// FORCE TIMEOUT (NO MORE INFINITE SPINNER)
       TaskSnapshot snapshot =
       await uploadTask.timeout(
         const Duration(seconds: 30),
@@ -155,7 +155,7 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
         "description": description,
         "imageUrl": imageUrl,
 
-        // ⭐ USE GEOPPOINT (VERY IMPORTANT FOR FUTURE MAP QUERIES)
+        //USED GEOPPOINT (VERY IMPORTANT FOR FUTURE MAP QUERIES)
         "location": GeoPoint(
           position.latitude,
           position.longitude,
@@ -220,8 +220,16 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title:
-        const Text("Report Illegal Dumping"),
+        elevation: 0,
+        centerTitle: true,
+        backgroundColor: Colors.green.shade700,
+        title: const Text(
+          "Report Illegal Dumping",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
 
       body: Padding(
