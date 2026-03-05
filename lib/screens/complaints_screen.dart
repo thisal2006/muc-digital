@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ComplaintsScreen extends StatelessWidget {
   const ComplaintsScreen({super.key});
@@ -6,27 +8,21 @@ class ComplaintsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2, // ← number of tabs
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: const Text("My Complaints"),
           backgroundColor: const Color(0xFF2E7D32),
           foregroundColor: Colors.white,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(48),
-            child: Container(
-              color: Colors.white,
-              child: const TabBar(
-                labelColor: Color(0xFF2E7D32),
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: Color(0xFF2E7D32),
-                indicatorWeight: 4,
-                tabs: [
-                  Tab(text: "New Complaint"),
-                  Tab(text: "My Complaints"),
-                ],
-              ),
-            ),
+          bottom: const TabBar(
+            labelColor: Color(0xFF2E7D32),
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: Color(0xFF2E7D32),
+            indicatorWeight: 4,
+            tabs: [
+              Tab(text: "New Complaint"),
+              Tab(text: "My Complaints"),
+            ],
           ),
         ),
         body: const TabBarView(
@@ -48,9 +44,11 @@ class NewComplaintForm extends StatefulWidget {
 }
 
 class _NewComplaintFormState extends State<NewComplaintForm> {
+  final _formKey = GlobalKey<FormState>();
   String? _selectedCategory;
   final _descriptionController = TextEditingController();
-  bool _imageAttached = false;
+  File? _attachedImage;
+  final _picker = ImagePicker();
 
   final categories = [
     "Illegal Dumping",
@@ -61,79 +59,146 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     "Other"
   ];
 
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: source,
+      imageQuality: 70,
+    );
+    if (pickedFile != null) {
+      setState(() => _attachedImage = File(pickedFile.path));
+    }
+  }
+
+  void _showImageOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text("Choose from Gallery"),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text("Take a Photo"),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            if (_attachedImage != null)
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text("Remove Photo"),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _attachedImage = null);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _submitComplaint() {
+    if (_selectedCategory == null || _descriptionController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please select a category and enter a description"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // TODO: Upload complaint and image to Firebase / backend
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Complaint submitted successfully"),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    setState(() {
+      _selectedCategory = null;
+      _descriptionController.clear();
+      _attachedImage = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 16),
-
-          DropdownButtonFormField<String>(
-            value: _selectedCategory,
-            hint: const Text("Select Category"),
-            items: categories
-                .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
-                .toList(),
-            onChanged: (value) => setState(() => _selectedCategory = value),
-            decoration: _inputDecoration("Category"),
-          ),
-          const SizedBox(height: 24),
-
-          TextField(
-            controller: _descriptionController,
-            maxLines: 5,
-            decoration: _inputDecoration("Describe the issue..."),
-          ),
-          const SizedBox(height: 24),
-
-          OutlinedButton.icon(
-            onPressed: () {
-              // TODO: add real image picker (image_picker package)
-              setState(() => _imageAttached = true);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Photo attached (demo)")),
-              );
-            },
-            icon: const Icon(Icons.add_photo_alternate),
-            label: Text(_imageAttached ? "Photo Attached" : "Attach Photo"),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              side: const BorderSide(color: Color(0xFF2E7D32)),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              hint: const Text("Select Category"),
+              items: categories
+                  .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                  .toList(),
+              onChanged: (value) => setState(() => _selectedCategory = value),
+              validator: (value) =>
+              value == null ? "Please select a category" : null,
+              decoration: _inputDecoration("Category"),
             ),
-          ),
-          const SizedBox(height: 32),
-
-          ElevatedButton(
-            onPressed: () {
-              if (_selectedCategory == null || _descriptionController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Please fill all required fields")),
-                );
-                return;
-              }
-
-              // TODO: send to Firebase / your backend here
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Complaint submitted successfully"),
-                  backgroundColor: Colors.green,
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: _descriptionController,
+              maxLines: 5,
+              validator: (value) =>
+              (value == null || value.trim().isEmpty) ? "Enter description" : null,
+              decoration: _inputDecoration("Describe the issue..."),
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: _showImageOptions,
+              icon: const Icon(Icons.add_photo_alternate),
+              label: Text(
+                  _attachedImage != null ? "Photo Attached" : "Attach Photo"),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(color: Color(0xFF2E7D32)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              );
-
-              // Return to previous screen or reset form
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D32),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shadowColor: Colors.black26,
+              ),
             ),
-            child: const Text("Submit Complaint", style: TextStyle(fontSize: 16)),
-          ),
-        ],
+            if (_attachedImage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(_attachedImage!, height: 150, fit: BoxFit.cover),
+                ),
+              ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _submitComplaint,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                elevation: 4,
+              ),
+              child: const Text("Submit Complaint", style: TextStyle(fontSize: 16)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -166,31 +231,146 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
   }
 }
 
-class MyComplaintsList extends StatelessWidget {
+class MyComplaintsList extends StatefulWidget {
   const MyComplaintsList({super.key});
 
   @override
+  State<MyComplaintsList> createState() => _MyComplaintsListState();
+}
+
+class _MyComplaintsListState extends State<MyComplaintsList> {
+  bool _isLoading = false;
+  String _searchQuery = "";
+  String _filterStatus = "All";
+
+  final List<Map<String, dynamic>> _allComplaints = [
+    {
+      'title': "Illegal dumping near temple road",
+      'date': "2025-11-20",
+      'status': "In Progress",
+      'statusColor': Colors.orange,
+      'image': null
+    },
+    {
+      'title': "Street light not working - 3rd lane",
+      'date': "2025-11-15",
+      'status': "Resolved",
+      'statusColor': Colors.green,
+      'image': null
+    },
+    {
+      'title': "Pothole on High Level Road",
+      'date': "2025-11-10",
+      'status': "Pending",
+      'statusColor': Colors.red,
+      'image': null
+    },
+  ];
+
+  List<Map<String, dynamic>> get _filteredComplaints {
+    return _allComplaints.where((complaint) {
+      final matchesSearch = complaint['title']!
+          .toLowerCase()
+          .contains(_searchQuery.toLowerCase());
+      final matchesFilter =
+          _filterStatus == "All" || complaint['status'] == _filterStatus;
+      return matchesSearch && matchesFilter;
+    }).toList()
+      ..sort((a, b) => b['date'].compareTo(a['date'])); // Newest first
+  }
+
+  Future<void> _refreshList() async {
+    setState(() => _isLoading = true);
+    await Future.delayed(const Duration(seconds: 1));
+    setState(() => _isLoading = false);
+  }
+
+  void _deleteComplaint(int index) {
+    final removed = _filteredComplaints[index];
+    setState(() {
+      _allComplaints.removeWhere((c) => c['title'] == removed['title']);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Deleted complaint: ${removed['title']}")),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: const [
-        _ComplaintCard(
-          title: "Illegal dumping near temple road",
-          date: "2025-11-20",
-          status: "In Progress",
-          statusColor: Colors.orange,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration(
+                    hintText: "Search complaints...",
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+              ),
+              const SizedBox(width: 12),
+              DropdownButton<String>(
+                value: _filterStatus,
+                items: ["All", "Pending", "In Progress", "Resolved"]
+                    .map((status) => DropdownMenuItem(
+                    value: status, child: Text(status)))
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) setState(() => _filterStatus = value);
+                },
+              )
+            ],
+          ),
         ),
-        _ComplaintCard(
-          title: "Street light not working - 3rd lane",
-          date: "2025-11-15",
-          status: "Resolved",
-          statusColor: Colors.green,
-        ),
-        _ComplaintCard(
-          title: "Pothole on High Level Road",
-          date: "2025-11-10",
-          status: "Pending",
-          statusColor: Colors.red,
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _refreshList,
+            child: _filteredComplaints.isEmpty
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.history, size: 80, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    "No complaints found",
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
+                : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _filteredComplaints.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final complaint = _filteredComplaints[index];
+                return Dismissible(
+                  key: Key(complaint['title']),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    color: Colors.red,
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  onDismissed: (_) => _deleteComplaint(index),
+                  child: _ComplaintCard(
+                    title: complaint['title']!,
+                    date: complaint['date']!,
+                    status: complaint['status']!,
+                    statusColor: complaint['statusColor']!,
+                    image: complaint['image'],
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ],
     );
@@ -202,28 +382,41 @@ class _ComplaintCard extends StatelessWidget {
   final String date;
   final String status;
   final Color statusColor;
+  final File? image;
 
   const _ComplaintCard({
     required this.title,
     required this.date,
     required this.status,
     required this.statusColor,
+    this.image,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      elevation: 3,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shadowColor: Colors.black26,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         leading: Icon(Icons.report_problem, color: statusColor, size: 32),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(date),
+            if (image != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(image!, height: 80, width: 80, fit: BoxFit.cover),
+                ),
+              ),
+          ],
         ),
-        subtitle: Text(date),
         trailing: Chip(
           label: Text(status),
           backgroundColor: statusColor.withOpacity(0.15),

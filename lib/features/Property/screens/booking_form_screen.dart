@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/stripe_service.dart';
-import 'package:muc_digital/models/property_model.dart';
+import '../models/property_model.dart';
 
 class BookingFormScreen extends StatefulWidget {
   final Property property;

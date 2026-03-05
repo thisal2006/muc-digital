@@ -84,5 +84,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'muc-digital-4390a.firebasestorage.app',
     measurementId: 'G-CWR1WK96G2',
   );
-
 }

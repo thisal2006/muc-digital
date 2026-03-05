@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:muc_digital/models/property_model.dart';
+import '../models/property_model.dart';
 import 'property_details_screen.dart';
 
 

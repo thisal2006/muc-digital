@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:muc_digital/models/property_model.dart';
+import '../models/property_model.dart';
 import 'booking_form_screen.dart';
 
 class PropertyDetailsScreen extends StatefulWidget {

@@ -1,9 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import '../widgets/app_drawer.dart';
-import 'announcements_screen.dart'; // <--- this import is very important
+import 'announcements_screen.dart';
+import 'complaints_screen.dart'; // 👈 Complaints screen import
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,10 +17,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // All pages that bottom nav can switch to
   final List<Widget> _pages = [
-    const _HomeDashboardContent(),           // Home tab (search + cards)
-    const Center(child: Text('Bookings - Coming soon')), // Bookings tab
-    const AnnouncementsScreen(),             // Updates tab → Announcements
-    const Center(child: Text('Chat - Coming soon')),     // Chat tab
+    const _HomeDashboardContent(),
+    const Center(child: Text('Bookings - Coming soon')),
+    const AnnouncementsScreen(),
+    const Center(child: Text('Chat - Coming soon')),
   ];
 
   void _onItemTapped(int index) {
@@ -55,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          // Bell icon now opens Announcements screen
           FadeInRight(
             duration: const Duration(milliseconds: 700),
             child: IconButton(
@@ -65,7 +64,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Icon(Icons.notifications_rounded, color: Color(0xFF1B5E20)),
               ),
               onPressed: () {
-                // This is the fix: open Announcements when tapping bell
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const AnnouncementsScreen()),
@@ -76,7 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
 
-      // Switch between pages when tapping bottom nav
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,
@@ -90,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.grey[600],
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped, // <--- this makes tabs switch
+        onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.calendar_month_rounded), label: 'Bookings'),
@@ -141,7 +138,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Cemetery Booking',
       'subtitle': 'Cemetery & crematorium',
       'color': const Color(0xFF7B1FA2),
-      'route': null,
+      'route': '/crematorium_booking',
     },
     {
       'icon': Icons.emergency_rounded,
@@ -155,7 +152,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Complaints',
       'subtitle': 'File & track complaints',
       'color': const Color(0xFF795548),
-      'route': null,
+      'route': 'complaints',
     },
   ];
 
@@ -190,8 +187,8 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha:0.06), blurRadius: 12, offset: const Offset(0, 4)),
-                  ], //updated
+                    BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 4)),
+                  ],
                 ),
                 child: TextField(
                   controller: _searchController,
@@ -245,13 +242,12 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: GridView.count(
-                key: ValueKey<int>(_filteredServices.length),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
-                childAspectRatio: 0.9, // Changed this from 1.05 to 0.9
+                childAspectRatio: 1.1,
                 children: _filteredServices.map((service) {
                   return FadeInUp(
                     duration: const Duration(milliseconds: 800),
@@ -278,9 +274,9 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.85)], begin: Alignment.topLeft, end: Alignment.bottomRight), //removed warning
+        gradient: LinearGradient(colors: [color, color.withOpacity(0.85)], begin: Alignment.topLeft, end: Alignment.bottomRight),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 8))], //removed warning
+        boxShadow: [BoxShadow(color: color.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 8))],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -319,55 +315,54 @@ class ServiceCard extends StatelessWidget {
       color: Colors.white,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
+        splashColor: color.withOpacity(0.15),
+        highlightColor: color.withOpacity(0.08),
         onTap: () {
-          debugPrint("Navigating to: $route");
-          if (route != null) {
+          if (title == 'Complaints') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ComplaintsScreen()),
+            );
+          } else if (route != null) {
             Navigator.pushNamed(context, route!);
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(12), // Reduced padding slightly
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min, // Added min size
             children: [
-              // Wrap the icon in Expanded so it shrinks if the text is too long
-              Expanded(
-                child: Container(
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        color.withValues(alpha: 0.15), // Updated
-                        color.withValues(alpha: 0.05)  // Updated
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Icon(icon, size: 40, color: color), // Reduced icon size from 48 to 40
+                  borderRadius: BorderRadius.circular(16),
                 ),
+                child: Icon(icon, size: 48, color: color),
               ),
-              const SizedBox(height: 8), // Reduced gap
+              const SizedBox(height: 12),
               Text(
                 title,
                 style: GoogleFonts.poppins(
-                  fontSize: 14, // Reduced font size slightly from 16 to 14
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF1A1A1A),
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(fontSize: 11, color: Colors.grey[700]), // Reduced from 13 to 11
-                textAlign: TextAlign.center,
-                maxLines: 1, // Restrict to 1 line to save space
-                overflow: TextOverflow.ellipsis,
+              const SizedBox(height: 8),
+              Flexible(
+                child: Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -376,5 +371,3 @@ class ServiceCard extends StatelessWidget {
     );
   }
 }
-
-//added the property booking route and fixed overflow conflict occured when rendering the deets page

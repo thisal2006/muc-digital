@@ -13,13 +13,13 @@ admin.initializeApp({
 
 const db = admin.database();
 
+// Seed dump points once
 seedDumpPoints();
 
 //--------------------------------------
 // TRACK ROUTE INDEX
 //--------------------------------------
 
-// Automatically build index object from routes
 const routeIndexes = {};
 
 Object.keys(truckRoutes).forEach(truckId => {
@@ -27,16 +27,16 @@ Object.keys(truckRoutes).forEach(truckId => {
 });
 
 //--------------------------------------
-// SIMULATE MOVEMENT
+// SIMULATE CONTINUOUS MOVEMENT
 //--------------------------------------
 
-setInterval(async () => {
+async function moveTrucks() {
+
   try {
 
     for (const truckId of Object.keys(truckRoutes)) {
 
       const route = truckRoutes[truckId];
-
       let index = routeIndexes[truckId];
 
       const position = route[index];
@@ -46,40 +46,48 @@ setInterval(async () => {
         lat: position.lat,
         lng: position.lng,
 
-        speed: Math.floor(Math.random() * 30) + 20, // realistic speed
+        speed: Math.floor(Math.random() * 20) + 25, // 25–45 realistic
+        speed: Math.floor(Math.random() * 20) + 25,
 
         status: "on_route",
         lastUpdate: Date.now(),
 
-        // randomize waste type for realism
         type: Math.random() > 0.5
-            ? "degradable"
-            : "non_degradable",
+          ? "degradable"
+          : "non_degradable",
       });
 
-      // move to next point
+      // Move to next coordinate
       routeIndexes[truckId] =
-          (index + 1) % route.length;
+        (index + 1) % route.length;
     }
 
-    console.log("🚛 Trucks moved successfully");
+    console.log("🚛 Trucks moved");
 
   } catch (err) {
-
     console.error("Simulator Error:", err);
   }
-
-}, 4000); // slightly faster → looks more real
-
+}
 
 //--------------------------------------
-// SEED DUMP POINTS (RUNS ONCE)
+// RUN EVERY 3 SECONDS (SMOOTH)
+//--------------------------------------
+
+setInterval(moveTrucks, 3000);
+
+//--------------------------------------
+// RUN EVERY 1 SECOND
+//--------------------------------------
+
+setInterval(moveTrucks, 1000);
+
+//--------------------------------------
+// SEED DUMP POINTS
 //--------------------------------------
 
 async function seedDumpPoints() {
 
   const dumpRef = db.ref("dump_points");
-
   const snapshot = await dumpRef.get();
 
   if (snapshot.exists()) {
