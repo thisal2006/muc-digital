@@ -1,10 +1,11 @@
 // Updated main.dart - with AuthWrapper integration
 
-import 'package:firebase_auth/firebase_auth.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'features/Garbage_tracking/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -48,7 +49,7 @@ void main() async {
     WidgetsFlutterBinding.ensureInitialized();
 
     // Initialize Stripe
-    Stripe.publishableKey = "your_publishable_key_here";
+    Stripe.publishableKey = "pk_test_51SzuZY0KRpwcO4zEHs47arkmOTryBOAhNWAgBo2nAHdd2bwvIkoaPhoHnTuJFMhj1B4aB6RqfMaIJkmBsL8R0ERW008fqqSwg4";
     await Stripe.instance.applySettings();
 
   }
@@ -77,11 +78,7 @@ class MUCdigitalApp extends StatelessWidget {
           foregroundColor: Colors.white,
         ),
       ),
-
-      // Use AuthWrapper as the home instead of initialRoute
-      home: const AuthWrapper(),
-
-      // Keep routes for named navigation
+      initialRoute: '/',
       routes: {
         '/onboarding': (context) => OnboardingScreen(),
         '/user_agreement': (context) => const UserAgreementScreen(),
