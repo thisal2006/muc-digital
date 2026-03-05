@@ -7,7 +7,7 @@ import 'features/Garbage_tracking/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
-import 'screens/splash_screen.dart';
+
 import 'screens/onboarding_screen.dart';
 import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
@@ -20,7 +20,6 @@ import 'screens/otp_verification_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
-import 'services/auth_service.dart';
 import 'package:muc_digital/features/crematorium%20booking/crematorium_booking_screen.dart';
 
 //import 'widgets/app_drawer.dart';
@@ -104,4 +103,4 @@ class MUCdigitalApp extends StatelessWidget {
 }
 
 //Added the routes for property booking
-//go
+//Added the stripe keys and initialized it
