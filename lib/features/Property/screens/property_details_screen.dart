@@ -183,5 +183,4 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     );
   }
 }
-
-//file is ready now
+//file is upto date
