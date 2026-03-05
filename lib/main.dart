@@ -44,14 +44,7 @@ void main() async {
       debugPrint('Firebase already initialized - skipping');
     }
   }
-  void main() async {
-    WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize Stripe
-    Stripe.publishableKey = "pk_test_51SzuZY0KRpwcO4zEHs47arkmOTryBOAhNWAgBo2nAHdd2bwvIkoaPhoHnTuJFMhj1B4aB6RqfMaIJkmBsL8R0ERW008fqqSwg4";
-    await Stripe.instance.applySettings();
-
-  }
   runApp(const MUCdigitalApp());
 }
 
