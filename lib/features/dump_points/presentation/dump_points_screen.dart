@@ -56,8 +56,11 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
   }
 
   Future<void> _initialize() async {
+
     await _loadIcons();
-    _getUserLocation();
+
+    await _getUserLocation();   // IMPORTANT
+
     _listenToDumps();
   }
 
@@ -119,18 +122,18 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
   //--------------------------------------------------
 
   void _listenToDumps() {
+
     dumpSubscription =
         repo.watchDumpPoints().listen((List<DumpPoint> dumps) {
 
           _calculateNearestDump(dumps);
 
           final markers = dumps.map((dump) {
+
             return Marker(
               markerId: MarkerId(dump.id),
               position: LatLng(dump.lat, dump.lng),
-              icon: dump.id == nearestDump?.id
-                  ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue)
-                  : dump.status == "active"
+              icon: dump.status == "active"
                   ? activeIcon ?? BitmapDescriptor.defaultMarker
                   : closedIcon ?? BitmapDescriptor.defaultMarker,
               infoWindow: InfoWindow(
@@ -141,17 +144,13 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
                 _showDumpDetails(dump);
               },
             );
+
           }).toSet();
 
           if (mounted) {
             setState(() {
               dumpMarkers = markers;
-              Future.delayed(const Duration(milliseconds: 100));
             });
-
-            if (nearestDump != null) {
-              _cardController.forward(from: 0);
-            }
           }
         });
   }
@@ -161,19 +160,17 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
   //--------------------------------------------------
 
   void _calculateNearestDump(List<DumpPoint> dumps) {
-    if (userPosition == null) {
-      return;
-    }
+
+    if (userPosition == null) return;
 
     double minDistance = double.infinity;
     DumpPoint? closest;
 
     for (var dump in dumps) {
+
       if (dump.status != "active") continue;
 
-
-      double meters =
-      Geolocator.distanceBetween(
+      double meters = Geolocator.distanceBetween(
         userPosition!.latitude,
         userPosition!.longitude,
         dump.lat,
@@ -186,28 +183,27 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       }
     }
 
-    if (closest != null) {
+    if (closest != null && nearestDump?.id != closest.id) {
+
       nearestDump = closest;
-      nearestDistanceKm =
-          minDistance / 1000;
+      nearestDistanceKm = minDistance / 1000;
+
+      _cardController.forward();
+
       print("Nearest Dump: ${nearestDump?.name}");
     }
-    if (closest == null) {
-      nearestDump = null;
-      nearestDistanceKm = 0;
-    }
-    if (mapController != null && !_hasFocusedNearest) {
+    if (closest != null && mapController != null && !_hasFocusedNearest) {
+
       _hasFocusedNearest = true;
 
       mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(
-          LatLng(closest!.lat, closest!.lng),
+          LatLng(closest.lat, closest.lng),
           15,
         ),
       );
     }
   }
-
 
   //--------------------------------------------------
   // NAVIGATION
@@ -255,7 +251,6 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       );
       distanceKm = meters / 1000;
     }
-
     showModalBottomSheet(
       isScrollControlled: true,
       context: context,
@@ -281,11 +276,9 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
               Text(
                 dump.name,
-                style:
-                const TextStyle(
-                  fontSize: 20,
-                  fontWeight:
-                  FontWeight.bold,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
 
@@ -347,7 +340,8 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
         Text(
         "${dump.currentLoad} / ${dump.capacityTons} tons",
         style: const TextStyle(
-        fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.3,
         ),
         ),
 
@@ -368,29 +362,20 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
                 width: double.infinity,
                 child:
                 ElevatedButton(
-                  style:
-                  ElevatedButton
-                      .styleFrom(
-                    padding:
-                    const EdgeInsets.symmetric(
-                        vertical:
-                        14),
-                    shape:
-                    RoundedRectangleBorder(
-                      borderRadius:
-                      BorderRadius
-                          .circular(
-                          12),
-                    ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    foregroundColor: Colors.white,   // FIX
                   ),
                   onPressed: () {
-                    _navigateToDump(
-                        dump);
+                    _navigateToDump(dump);
                   },
-                  child:
-                  const Text(
-                      "Navigate"),
-                ),
+                  child: const Text(
+                    "Navigate",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
               ),
             ],
           ),
@@ -407,82 +392,59 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     return FadeTransition(
       opacity: _cardController,
       child: SlideTransition(
-        position:
-        Tween<Offset>(
-          begin:
-          const Offset(0, -0.2),
-          end:
-          Offset.zero,
+        position: Tween<Offset>(
+          begin: const Offset(0, -0.2),
+          end: Offset.zero,
         ).animate(_cardController),
         child: Card(
           elevation: 8,
-          shape:
-          RoundedRectangleBorder(
-            borderRadius:
-            BorderRadius.circular(
-                16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
           ),
           child: Padding(
-            padding:
-            const EdgeInsets.all(
-                14),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
 
                 const Icon(
                   Icons.location_on,
-                  color:
-                  Colors.green,
+                  color: Colors.green,
                 ),
 
-                const SizedBox(
-                    width: 12),
+                const SizedBox(width: 12),
 
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                    CrossAxisAlignment
-                        .start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+
                       const Text(
                         "Nearest Dump",
-                        style:
-                        TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Colors
-                              .grey,
+                          color: Colors.grey,
                         ),
                       ),
+
                       Text(
-                        nearestDump!
-                            .name,
-                        style:
-                        const TextStyle(
-                          fontWeight:
-                          FontWeight
-                              .bold,
+                        nearestDump!.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
+
                       Text(
                         "${nearestDistanceKm.toStringAsFixed(2)} km away",
                       ),
                     ],
                   ),
                 ),
-                AnimatedScale(
-                  duration: const Duration(milliseconds: 400),
-                  scale: 1,
-                  child: _nearestDumpCard(),
-                ),
 
                 ElevatedButton(
                   onPressed: () {
-                    _navigateToDump(
-                        nearestDump!);
+                    _navigateToDump(nearestDump!);
                   },
-                  child:
-                  const Text(
-                      "Go"),
+                  child: const Text("Go"),
                 ),
               ],
             ),
@@ -490,9 +452,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
         ),
       ),
     );
-
   }
-
   //--------------------------------------------------
   // DISPOSE
   //--------------------------------------------------
@@ -519,7 +479,11 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       ),
       body: Stack(
         children: [
-
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.03),
+            ),
+          ),
           GoogleMap(
             initialCameraPosition:
             initialCamera,
