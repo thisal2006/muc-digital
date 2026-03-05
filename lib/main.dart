@@ -13,6 +13,8 @@ import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
 import 'features/Property/screens/property_booking_screen.dart';
 
+import 'package:flutter_stripe/flutter_stripe.dart';
+
 //import 'widgets/app_drawer.dart';
 
 bool _firebaseInitialized = false;  // Global flag to prevent duplicate calls
@@ -35,7 +37,14 @@ void main() async {
       debugPrint('Firebase already initialized - skipping');
     }
   }
+  void main() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
+    // Initialize Stripe
+    Stripe.publishableKey = "your_publishable_key_here";
+    await Stripe.instance.applySettings();
+
+  }
   runApp(const MUCdigitalApp());
 }
 
@@ -80,4 +89,4 @@ class MUCdigitalApp extends StatelessWidget {
 }
 
 //Added the routes for property booking
-//go
+//Imported stripe

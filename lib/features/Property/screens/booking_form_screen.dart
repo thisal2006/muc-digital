@@ -229,5 +229,3 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     );
   }
 }
-
-//updated to work with stripe
