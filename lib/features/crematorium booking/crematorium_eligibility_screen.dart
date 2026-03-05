@@ -45,18 +45,18 @@ class _CrematoriumEligibilityScreenState extends State<CrematoriumEligibilityScr
 
               const SizedBox(height: 16),
 
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Relation to deceased',
-                  border: OutlineInputBorder(),
-                ),
-                value: _relation,
-                items: ['Immediate family', 'Relative', 'Friend', 'Other']
-                    .map((rel) => DropdownMenuItem(value: rel, child: Text(rel)))
-                    .toList(),
-                onChanged: (value) => setState(() => _relation = value),
-                validator: (value) => value == null ? 'Required' : null,
+            DropdownButtonFormField<String>(
+              decoration: const InputDecoration(
+                labelText: 'Relation to deceased',
+                border: OutlineInputBorder(),
               ),
+              initialValue: _relation,  // ← FIXED HERE
+              items: ['Immediate family', 'Relative', 'Friend', 'Other']
+                  .map((rel) => DropdownMenuItem(value: rel, child: Text(rel)))
+                  .toList(),
+              onChanged: (value) => setState(() => _relation = value),
+              validator: (value) => value == null ? 'Required' : null,
+            ),
 
               const SizedBox(height: 24),
 
