@@ -5,10 +5,11 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:path/path.dart' as path;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'crematorium_booking_data.dart';
+import 'crematorium_booking_data.dart';  // Model for passed data
+import 'package:muc_digital/features/property/screens/payment_screen.dart';  // Your payment screen
 
 class CrematoriumDocumentUploadScreen extends StatefulWidget {
-  final CrematoriumBookingData bookingData;
+  final CrematoriumBookingData bookingData;  // Receives real data from previous screens
 
   const CrematoriumDocumentUploadScreen({
     super.key,
@@ -77,10 +78,15 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
         ),
       );
 
-      setState(() => _isUploading = false);
+      // Navigate to payment screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const PaymentScreen(),
+        ),
+      );
 
-      // TODO: Navigate to payment screen (add later)
-      // Navigator.push(context, MaterialPageRoute(builder: (context) => PaymentScreen()));
+      setState(() => _isUploading = false);
 
     } catch (e) {
       scaffoldMessenger.hideCurrentSnackBar();
