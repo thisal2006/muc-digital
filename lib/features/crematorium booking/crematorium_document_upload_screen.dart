@@ -4,9 +4,16 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:path/path.dart' as path;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'crematorium_booking_data.dart';
 
 class CrematoriumDocumentUploadScreen extends StatefulWidget {
-  const CrematoriumDocumentUploadScreen({super.key});
+  final CrematoriumBookingData bookingData;
+
+  const CrematoriumDocumentUploadScreen({
+    super.key,
+    required this.bookingData,
+  });
 
   @override
   State<CrematoriumDocumentUploadScreen> createState() => _CrematoriumDocumentUploadScreenState();
@@ -44,19 +51,21 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
       final ref = FirebaseStorage.instance.ref().child('crematorium_documents/$fileName');
       await ref.putFile(_image!);
 
-      // Get URL
+      // Get download URL
       String downloadUrl = await ref.getDownloadURL();
 
-      // Save booking to Firestore (basic - add real data later)
+      // Save real booking data to Firestore
       await FirebaseFirestore.instance.collection('crematorium_bookings').add({
-        'date': Timestamp.fromDate(DateTime.now()), // TODO: real date
-        'timeSlot': 'Morning (example)', // TODO: real time slot
-        'isResident': true, // TODO: from eligibility
-        'relation': 'Immediate family', // TODO: from eligibility
+        'date': widget.bookingData.selectedDate != null
+            ? Timestamp.fromDate(widget.bookingData.selectedDate!)
+            : FieldValue.serverTimestamp(),
+        'timeSlot': widget.bookingData.timeSlot ?? 'Unknown',
+        'isResident': widget.bookingData.isResident,
+        'relation': widget.bookingData.relation ?? 'Unknown',
         'documentUrl': downloadUrl,
         'status': 'pending',
         'createdAt': FieldValue.serverTimestamp(),
-        'userId': 'current_user_id', // TODO: FirebaseAuth.currentUser?.uid
+        'userId': FirebaseAuth.instance.currentUser?.uid ?? 'anonymous',
       });
 
       // Success
@@ -70,8 +79,8 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
 
       setState(() => _isUploading = false);
 
-      // TODO: Go to payment or confirmation
-      // Navigator.push(...);
+      // TODO: Navigate to payment screen (add later)
+      // Navigator.push(context, MaterialPageRoute(builder: (context) => PaymentScreen()));
 
     } catch (e) {
       scaffoldMessenger.hideCurrentSnackBar();
