@@ -56,8 +56,11 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
   }
 
   Future<void> _initialize() async {
+
     await _loadIcons();
-    _getUserLocation();
+
+    await _getUserLocation();   // IMPORTANT
+
     _listenToDumps();
   }
 
@@ -187,9 +190,11 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     }
 
     if (closest != null) {
-      nearestDump = closest;
-      nearestDistanceKm =
-          minDistance / 1000;
+      setState(() {
+        nearestDump = closest;
+        nearestDistanceKm = minDistance / 1000;
+      });
+
       print("Nearest Dump: ${nearestDump?.name}");
     }
     if (closest == null) {
@@ -366,23 +371,20 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
                 width: double.infinity,
                 child:
                 ElevatedButton(
-                  style:
-                  ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green.shade700,
-                    elevation: 6,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
+                    foregroundColor: Colors.white,   // FIX
                   ),
                   onPressed: () {
-                    _navigateToDump(
-                        dump);
+                    _navigateToDump(dump);
                   },
-                  child:
-                  const Text(
-                      "Navigate"),
-                ),
+                  child: const Text(
+                    "Navigate",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
               ),
             ],
           ),
