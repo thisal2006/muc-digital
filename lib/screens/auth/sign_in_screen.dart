@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'sign_up_screen.dart';
 import 'forgot_password_screen.dart';
-import 'admin_dashboard_screen.dart'; // new dashboard
+import '../admin_dashboard_screen.dart'; // new dashboard
 import '../../home_screen.dart'; // your user home
 
 class SignInScreen extends StatefulWidget {

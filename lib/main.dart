@@ -7,7 +7,7 @@ import 'features/Garbage_tracking/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
-
+import 'screens/admin_dashboard_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/user_agreement_screen.dart';
@@ -91,6 +91,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_in': (context) => const SignInScreen(),
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
+        '/admin_dashboard': (context) => const AdminDashboardScreen(),
       },
     );
   }
