@@ -23,6 +23,27 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   final TextEditingController _reasonController = TextEditingController();
 
+  // NEW: The magic math function that calculates the price dynamically
+  String get _calculatedPrice {
+    // If they haven't picked a slot yet, just show the base price
+    if (selectedSlot == null) return widget.property.price;
+
+    // 1. Strip out letters/commas to get raw math numbers (e.g., "15000")
+    String rawPriceString = widget.property.price.replaceAll(RegExp(r'[^0-9]'), '');
+    int basePrice = int.tryParse(rawPriceString) ?? 0;
+
+    // 2. Double it if "Full Day" is selected
+    int finalPrice = selectedSlot!.contains('Full Day') ? (basePrice * 2) : basePrice;
+
+    // 3. Put the commas back in
+    String formattedPrice = finalPrice.toString().replaceAllMapped(
+        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+            (Match m) => '${m[1]},'
+    );
+
+    return 'LKR $formattedPrice';
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -50,7 +71,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   }
 
   Future<void> _saveBooking() async {
-    // Check mounted before showing dialog
     if (!mounted) return;
 
     showDialog(
@@ -62,7 +82,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     try {
       final bookingData = {
         "property_name": widget.property.name,
-        "price": widget.property.price,
+        "price": _calculatedPrice, // NEW: Saves the dynamic price to Firestore!
         "date": selectedDate.toString().split(' ')[0],
         "slot": selectedSlot,
         "reason": _reasonController.text,
@@ -110,9 +130,8 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
     await StripeService.makePayment(
       context,
-      widget.property.price,
+      _calculatedPrice,
           () {
-        // Safe check for the callback execution
         if (mounted) _saveBooking();
       },
     );
@@ -150,7 +169,8 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.property.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        Text(widget.property.price, style: const TextStyle(color: Color(0xFFE67E22), fontWeight: FontWeight.bold)),
+                        // NEW: UI updates instantly when slot changes
+                        Text(_calculatedPrice, style: const TextStyle(color: Color(0xFFE67E22), fontWeight: FontWeight.bold, fontSize: 16)),
                       ],
                     ),
                   ),
@@ -191,13 +211,13 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               hint: const Text("Choose a slot"),
-              // Using initialValue instead of value to resolve deprecation
-              initialValue: selectedSlot,
+              value: selectedSlot, // NEW: Switched back to 'value' so it visually updates correctly on setState
               items: timeSlots.map((String slot) {
                 return DropdownMenuItem<String>(value: slot, child: Text(slot));
               }).toList(),
               onChanged: (newValue) => setState(() => selectedSlot = newValue),
             ),
+
             const SizedBox(height: 20),
             const Text("Purpose of Booking", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
@@ -223,7 +243,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             elevation: 2,
           ),
-          child: const Text("Pay & Book Now", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          child: Text(
+            // NEW: Shows exact price on the button!
+              selectedSlot == null ? "Select Date & Slot" : "Pay $_calculatedPrice",
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+          ),
         ),
       ),
     );
