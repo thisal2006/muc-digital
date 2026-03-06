@@ -267,7 +267,10 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
                 decoration: BoxDecoration(
                   borderRadius:
                   BorderRadius.circular(12),
-                  color: Colors.grey[200],
+                  color: Colors.grey.shade100,
+                  border: Border.all(
+                    color: Colors.grey.shade400,
+                  ),
                 ),
                 child: imageFile == null
                     ? const Column(
