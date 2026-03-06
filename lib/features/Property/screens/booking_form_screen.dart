@@ -18,6 +18,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   final List<String> timeSlots = [
     "Morning (8:00 AM - 12:00 PM)",
     "Evening (1:00 PM - 5:00 PM)",
+    "Night (6:00 PM - 11 PM)",
     "Full Day (8:00 AM - 5:00 PM)"
   ];
 
@@ -211,7 +212,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               hint: const Text("Choose a slot"),
-              value: selectedSlot, // NEW: Switched back to 'value' so it visually updates correctly on setState
+              initialValue: selectedSlot, // NEW: Switched back to 'value' so it visually updates correctly on setState
               items: timeSlots.map((String slot) {
                 return DropdownMenuItem<String>(value: slot, child: Text(slot));
               }).toList(),
