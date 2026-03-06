@@ -87,7 +87,7 @@ class MyBookingsScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.1),
+                              color: statusColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(color: statusColor),
                             ),
@@ -122,6 +122,29 @@ class MyBookingsScreen extends StatelessWidget {
                           const Icon(Icons.payments_outlined, size: 16, color: Colors.grey),
                           const SizedBox(width: 8),
                           Text(price, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+
+                          // THE MAGIC "PAY NOW" BUTTON
+                          // This only shows up IF the admin changes the status to 'Approved'!
+                          if (status == 'Approved') ...[
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  // We will connect Stripe here later!
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Stripe Payment Screen opening soon...")),
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Text("Pay Now to Confirm"),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ],
