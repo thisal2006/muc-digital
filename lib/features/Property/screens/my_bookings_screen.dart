@@ -45,7 +45,91 @@ class MyBookingsScreen extends StatelessWidget {
           }
 
 
-          return const Center(child: Text("Data loaded! Ready to build the list."));
+          // THE LIST OF BOOKINGS
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: bookings.length,
+            itemBuilder: (context, index) {
+              final data = bookings[index].data() as Map<String, dynamic>;
+
+              final propertyName = data['property_name'] ?? 'Unknown Property';
+              final date = data['date'] ?? 'No date';
+              final slot = data['slot'] ?? 'No slot';
+              final status = data['status'] ?? 'Pending';
+              final price = data['price'] ?? 'LKR 0';
+
+              // DYNAMIC STATUS COLORS
+              Color statusColor = Colors.orange; // Default for Pending
+              if (status == 'Approved') statusColor = Colors.blue;
+              if (status == 'Confirmed') statusColor = Colors.green;
+              if (status == 'Rejected') statusColor = Colors.red;
+
+              return Card(
+                elevation: 3,
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header: Property Name & Status Badge
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              propertyName,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: statusColor),
+                            ),
+                            child: Text(
+                              status,
+                              style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 24),
+
+                      // Details
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(date, style: const TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(slot, style: const TextStyle(fontSize: 14)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.payments_outlined, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text(price, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
         },
       ),
     );
