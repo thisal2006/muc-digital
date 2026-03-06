@@ -305,12 +305,12 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
               controller:
               descriptionController,
               maxLines: 4,
-              decoration:
-              const InputDecoration(
-                labelText:
-                "Describe the issue",
-                border:
-                OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: "Describe the issue",
+                hintText: "Example: Garbage bags dumped near road",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
 
