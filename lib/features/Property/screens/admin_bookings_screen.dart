@@ -71,7 +71,7 @@ class AdminBookingsScreen extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 16),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: statusColor.withOpacity(0.5), width: 2)
+                    side: BorderSide(color: statusColor.withValues(alpha: 0.5), width: 2)
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -107,7 +107,29 @@ class AdminBookingsScreen extends StatelessWidget {
                         ],
                       ),
 
-                      // CHUNK 5 BUTTONS WILL GO HERE
+                      // Action Buttons
+                      if (status == 'Pending') ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => _updateBookingStatus(context, docId, 'Rejected'),
+                                style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: const BorderSide(color: Colors.red)),
+                                child: const Text("Reject"),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () => _updateBookingStatus(context, docId, 'Approved'),
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                                child: const Text("Approve"),
+                              ),
+                            ),
+                          ],
+                        )
+                      ]
 
 
                     ],
