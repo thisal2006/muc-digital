@@ -12,6 +12,9 @@ class BookingFormScreen extends StatefulWidget {
   State<BookingFormScreen> createState() => _BookingFormScreenState();
 }
 
+// NEW: State for the Terms and Conditions checkbox
+bool _agreedToTerms = false;
+
 class _BookingFormScreenState extends State<BookingFormScreen> {
   DateTime? selectedDate;
   String? selectedSlot;
@@ -310,6 +313,33 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               ),
               maxLines: 3,
             ),
+
+            const SizedBox(height: 20),
+
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: CheckboxListTile(
+                value: _agreedToTerms,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _agreedToTerms = value ?? false;
+                  });
+                },
+                activeColor: const Color(0xFFE67E22),
+                title: const Text(
+                  "I agree to obey the venue rules, hand over the property at the promised time, and pay for any damages caused to the facilities.",
+                  style: TextStyle(fontSize: 13, color: Colors.black87),
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              ),
+            ),
+            const SizedBox(height: 20),
+
           ],
         ),
       ),
