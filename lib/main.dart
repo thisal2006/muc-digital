@@ -9,6 +9,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 
 
 import 'screens/onboarding_screen.dart';
+import 'screens/splash_screen.dart';
 import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
@@ -20,7 +21,7 @@ import 'screens/otp_verification_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
-import 'package:muc_digital/features/crematorium%20booking/crematorium_booking_screen.dart';
+
 
 //import 'widgets/app_drawer.dart';
 
@@ -72,6 +73,7 @@ class MUCdigitalApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
+        '/': (context) => const SplashScreen(),
         '/onboarding': (context) => OnboardingScreen(),
         '/user_agreement': (context) => const UserAgreementScreen(),
         '/home': (context) => const HomeScreen(),
@@ -89,7 +91,6 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_in': (context) => const SignInScreen(),
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
-        '/crematorium_booking': (context) => const CrematoriumBookingScreen(),
       },
     );
   }
