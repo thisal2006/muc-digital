@@ -21,8 +21,9 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     "Night (6:00 PM - 11:00 PM)",
     "Full Day (8:00 AM - 5:00 PM)"
   ];
-
   final TextEditingController _reasonController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   String get _calculatedPrice {
     if (selectedSlot == null) return widget.property.price;
