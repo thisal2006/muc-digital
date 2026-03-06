@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/stripe_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/property_model.dart';
 
 class BookingFormScreen extends StatefulWidget {
@@ -18,31 +18,34 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   final List<String> timeSlots = [
     "Morning (8:00 AM - 12:00 PM)",
     "Evening (1:00 PM - 5:00 PM)",
-    "Night (6:00 PM - 11 PM)",
+    "Night (6:00 PM - 11:00 PM)",
     "Full Day (8:00 AM - 5:00 PM)"
   ];
 
   final TextEditingController _reasonController = TextEditingController();
 
-  // NEW: The magic math function that calculates the price dynamically
   String get _calculatedPrice {
-    // If they haven't picked a slot yet, just show the base price
     if (selectedSlot == null) return widget.property.price;
-
-    // 1. Strip out letters/commas to get raw math numbers (e.g., "15000")
     String rawPriceString = widget.property.price.replaceAll(RegExp(r'[^0-9]'), '');
     int basePrice = int.tryParse(rawPriceString) ?? 0;
-
-    // 2. Double it if "Full Day" is selected
     int finalPrice = selectedSlot!.contains('Full Day') ? (basePrice * 2) : basePrice;
 
-    // 3. Put the commas back in
     String formattedPrice = finalPrice.toString().replaceAllMapped(
         RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
             (Match m) => '${m[1]},'
     );
-
     return 'LKR $formattedPrice';
+  }
+
+  Future<void> _callCouncil() async {
+    final Uri url = Uri.parse('tel:${widget.property.contactNumber.replaceAll(" ", "")}');
+    if (!await launchUrl(url)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Could not open phone dialer")),
+        );
+      }
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -71,7 +74,9 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     }
   }
 
-  Future<void> _saveBooking() async {
+  Future<void> _submitBookingRequest() async {
+    if (selectedDate == null || selectedSlot == null) return;
+
     if (!mounted) return;
 
     showDialog(
@@ -81,39 +86,61 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     );
 
     try {
+      final String formattedDate = selectedDate.toString().split(' ')[0];
+
+      final existingBookings = await FirebaseFirestore.instance
+          .collection('bookings')
+          .where('property_name', isEqualTo: widget.property.name)
+          .where('date', isEqualTo: formattedDate)
+          .where('slot', isEqualTo: selectedSlot)
+          .where('status', whereIn: ['Pending', 'Approved', 'Confirmed'])
+          .get();
+
+      if (existingBookings.docs.isNotEmpty) {
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Sorry, this time slot is already booked or pending approval."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       final bookingData = {
+        "user_id": "current_user_id",
         "property_name": widget.property.name,
-        "price": _calculatedPrice, // NEW: Saves the dynamic price to Firestore!
-        "date": selectedDate.toString().split(' ')[0],
+        "price": _calculatedPrice,
+        "date": formattedDate,
         "slot": selectedSlot,
         "reason": _reasonController.text,
-        "status": "Confirmed",
+        "status": "Pending",
         "timestamp": FieldValue.serverTimestamp(),
       };
 
       await FirebaseFirestore.instance.collection('bookings').add(bookingData);
 
-      // Async Gap Check
       if (!mounted) return;
-      Navigator.of(context).pop(); // Close loader
-      _showSuccessDialog();
+      Navigator.of(context).pop();
+      _showRequestSuccessDialog();
+
     } catch (e) {
-      // Async Gap Check
       if (!mounted) return;
-      Navigator.of(context).pop(); // Close loader
+      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to save: $e")),
+        SnackBar(content: Text("Failed to submit request: $e")),
       );
     }
   }
 
-  void _showSuccessDialog() {
+  void _showRequestSuccessDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        icon: const Icon(Icons.check_circle, color: Colors.green, size: 50),
-        title: const Text("Booking Confirmed!"),
-        content: const Text("Your booking has been paid for and saved to the Council database."),
+        icon: const Icon(Icons.access_time_filled, color: Colors.blue, size: 50),
+        title: const Text("Request Submitted!"),
+        content: const Text("Your booking request has been sent to the Admin. You will be notified once approved to make your payment."),
         actions: [
           TextButton(
             onPressed: () {
@@ -123,18 +150,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
           )
         ],
       ),
-    );
-  }
-
-  Future<void> _processPayment() async {
-    if (selectedDate == null || selectedSlot == null) return;
-
-    await StripeService.makePayment(
-      context,
-      _calculatedPrice,
-          () {
-        if (mounted) _saveBooking();
-      },
     );
   }
 
@@ -170,7 +185,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(widget.property.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        // NEW: UI updates instantly when slot changes
                         Text(_calculatedPrice, style: const TextStyle(color: Color(0xFFE67E22), fontWeight: FontWeight.bold, fontSize: 16)),
                       ],
                     ),
@@ -212,11 +226,43 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               hint: const Text("Choose a slot"),
-              initialValue: selectedSlot, // NEW: Switched back to 'value' so it visually updates correctly on setState
+              initialValue: selectedSlot,
               items: timeSlots.map((String slot) {
                 return DropdownMenuItem<String>(value: slot, child: Text(slot));
               }).toList(),
               onChanged: (newValue) => setState(() => selectedSlot = newValue),
+            ),
+
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Colors.blue),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      "Need a custom time slot? Call us to arrange:",
+                      style: TextStyle(color: Colors.blue.shade800, fontSize: 13),
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _callCouncil,
+                    icon: const Icon(Icons.phone, size: 16),
+                    label: Text(widget.property.contactNumber),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.blue.shade900,
+                      side: BorderSide(color: Colors.blue.shade300),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  )
+                ],
+              ),
             ),
 
             const SizedBox(height: 20),
@@ -236,7 +282,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton(
-          onPressed: (selectedDate != null && selectedSlot != null) ? _processPayment : null,
+          onPressed: (selectedDate != null && selectedSlot != null) ? _submitBookingRequest : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFE67E22),
             foregroundColor: Colors.white,
@@ -245,8 +291,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             elevation: 2,
           ),
           child: Text(
-            // NEW: Shows exact price on the button!
-              selectedSlot == null ? "Select Date & Slot" : "Pay $_calculatedPrice",
+              selectedSlot == null ? "Select Date & Slot" : "Request Booking",
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
           ),
         ),
@@ -254,5 +299,3 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     );
   }
 }
-//updated to work with stripe for payments
-//resolved errors
