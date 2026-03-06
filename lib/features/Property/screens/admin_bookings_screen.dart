@@ -4,6 +4,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AdminBookingsScreen extends StatelessWidget {
   const AdminBookingsScreen({super.key});
 
+  Future<void> _updateBookingStatus(BuildContext context, String docId, String newStatus) async {
+    try {
+      await FirebaseFirestore.instance.collection('bookings').doc(docId).update({'status': newStatus});
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Booking $newStatus!"), backgroundColor: newStatus == 'Approved' ? Colors.green : Colors.red),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
