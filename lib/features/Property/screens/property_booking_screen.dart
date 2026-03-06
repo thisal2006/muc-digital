@@ -113,9 +113,6 @@ class PropertyCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(width: 10),
-            // 3. Price stays safely on the right
-            Text(property.price, style: const TextStyle(color: Color(0xFFE67E22), fontWeight: FontWeight.bold)),
           ],
         ),
       ),
