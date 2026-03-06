@@ -232,10 +232,27 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
         ),
       ),
 
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            const Text(
+              "Help keep the city clean",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            const Text(
+              "Capture a photo and describe the illegal dumping site.",
+              style: TextStyle(
+                color: Colors.grey,
+              ),
+            ),
 
             //----------------------------------
             // IMAGE
