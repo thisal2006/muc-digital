@@ -79,7 +79,19 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   }
 
   Future<void> _submitBookingRequest() async {
-    if (selectedDate == null || selectedSlot == null) return;
+    // 1. NEW: VALIDATE TEXT FIELDS (Name & Phone)
+    if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter your Contact Name and Phone Number."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // 2. NEW: VALIDATE CHECKBOX & DROPDOWNS
+    if (selectedDate == null || selectedSlot == null || !_agreedToTerms) return;
 
     if (!mounted) return;
 
@@ -92,6 +104,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     try {
       final String formattedDate = selectedDate.toString().split(' ')[0];
 
+      // Check for conflicts
       final existingBookings = await FirebaseFirestore.instance
           .collection('bookings')
           .where('property_name', isEqualTo: widget.property.name)
@@ -112,13 +125,16 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         return;
       }
 
+      // 3. NEW: SAVE EVERYTHING TO FIRESTORE (including name and phone)
       final bookingData = {
         "user_id": "current_user_id",
         "property_name": widget.property.name,
         "price": _calculatedPrice,
         "date": formattedDate,
         "slot": selectedSlot,
-        "reason": _reasonController.text,
+        "contact_name": _nameController.text.trim(),     // Saves Name
+        "contact_number": _phoneController.text.trim(), // Saves Phone
+        "reason": _reasonController.text.trim(),
         "status": "Pending",
         "timestamp": FieldValue.serverTimestamp(),
       };
