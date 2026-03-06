@@ -30,7 +30,55 @@ class AdminBookingsScreen extends StatelessWidget {
             return const Center(child: Text("No bookings to manage."));
           }
 
-          return const Center(child: Text("Data loaded! Ready to build cards."));
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: bookings.length,
+            itemBuilder: (context, index) {
+              final doc = bookings[index];
+              final data = doc.data() as Map<String, dynamic>;
+              final docId = doc.id; // Needed later for updating!
+
+              final propertyName = data['property_name'] ?? 'Unknown';
+              final status = data['status'] ?? 'Pending';
+
+              // Dynamic colors for the badge
+              Color statusColor = Colors.orange;
+              if (status == 'Approved') statusColor = Colors.blue;
+              if (status == 'Rejected') statusColor = Colors.red;
+              if (status == 'Confirmed') statusColor = Colors.green;
+
+              return Card(
+                elevation: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: statusColor.withOpacity(0.5), width: 2)
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header: Property Name & Status
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: Text(propertyName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                          Chip(
+                            label: Text(status, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                            backgroundColor: statusColor,
+                          ),
+                        ],
+                      ),
+                      const Divider(),
+
+                      // CHUNK 4 DETAILS WILL GO HERE
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
         },
       ),
     );
