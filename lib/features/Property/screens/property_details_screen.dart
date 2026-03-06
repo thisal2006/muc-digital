@@ -50,6 +50,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
           // Expanded ensures the scrollable area takes up all space except the bottom bar
           Expanded(
             child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
