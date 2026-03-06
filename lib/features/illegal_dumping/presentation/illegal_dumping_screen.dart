@@ -337,20 +337,23 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed:
-                isUploading
-                    ? null
-                    : submitReport,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade700,
+                  elevation: 6,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: isUploading ? null : submitReport,
                 child: isUploading
                     ? Text(
                   "${(uploadProgress * 100).toStringAsFixed(0)}%",
                 )
                     : const Text(
                   "Submit Report",
-                  style:
-                  TextStyle(fontSize: 16),
+                  style: TextStyle(fontSize: 16),
                 ),
-              ),
+              )
             ),
           ],
         ),
