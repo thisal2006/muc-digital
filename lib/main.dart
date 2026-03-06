@@ -9,6 +9,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 
 
 import 'screens/onboarding_screen.dart';
+import 'screens/splash_screen.dart';
 import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
@@ -72,6 +73,7 @@ class MUCdigitalApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
+        '/': (context) => const SplashScreen(),
         '/onboarding': (context) => OnboardingScreen(),
         '/user_agreement': (context) => const UserAgreementScreen(),
         '/home': (context) => const HomeScreen(),
