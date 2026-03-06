@@ -362,7 +362,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton(
-          onPressed: (selectedDate != null && selectedSlot != null) ? _submitBookingRequest : null,
+          // NEW: Button is completely disabled if the checkbox is false
+          onPressed: (selectedDate != null && selectedSlot != null && _agreedToTerms)
+              ? _submitBookingRequest
+              : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFE67E22),
             foregroundColor: Colors.white,
@@ -371,7 +374,8 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             elevation: 2,
           ),
           child: Text(
-              selectedSlot == null ? "Select Date & Slot" : "Request Booking",
+            // NEW: Button text tells them exactly what to do!
+              _agreedToTerms ? "Request Booking" : "Agree to Terms to Proceed",
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
           ),
         ),
