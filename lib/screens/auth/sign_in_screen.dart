@@ -3,10 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'sign_up_screen.dart';
 import 'forgot_password_screen.dart';
-import '../admin_dashboard_screen.dart'; // new dashboard
-import '../../home_screen.dart'; // your user home
+import '../home_screen.dart'; // your user home
+import '../admin_dashboard_screen.dart'; // new admin dashboard
 
-class SignInScreen extends StatefulWidget {
+class SignInScreen extends StatefulWidget {  // Fixed: StatefulWidget (not StateFULWidget)
   const SignInScreen({super.key});
 
   @override
@@ -19,7 +19,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-  bool _isAdminMode = false; // User or Admin selection
+  bool _isAdminMode = false; // false = User, true = Admin
 
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
@@ -35,31 +35,53 @@ class _SignInScreenState extends State<SignInScreen> {
         password: _passwordController.text.trim(),
       );
 
-      // Check if admin
+      final user = credential.user;
+
       if (_isAdminMode) {
-        // Verify if this email is pre-defined admin in Firestore
+        // Check if admin in Firestore
         final adminDoc = await FirebaseFirestore.instance
             .collection('admins')
-            .doc(credential.user!.uid)
+            .doc(user!.uid)
             .get();
 
         if (adminDoc.exists) {
-          // Admin logged in → dashboard
-          if (mounted) Navigator.pushReplacementNamed(context, '/admin_dashboard');
-          return;
+          // Admin → dashboard
+          if (mounted) {
+            // Option 1: Use pushReplacement with MaterialPageRoute
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+            );
+
+            // Option 2: If you prefer named routes, make sure they're defined in your MaterialApp
+            // Navigator.pushReplacementNamed(context, '/admin_dashboard');
+          }
         } else {
-          throw Exception('Not an admin account');
+          throw Exception('Not an admin account. Please select User.');
         }
       } else {
-        // Normal user → home
-        if (mounted) Navigator.pushReplacementNamed(context, '/home');
+        // User → home
+        if (mounted) {
+          // Option 1: Use pushReplacement with MaterialPageRoute
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+
+          // Option 2: If you prefer named routes, make sure they're defined in your MaterialApp
+          // Navigator.pushReplacementNamed(context, '/home');
+        }
       }
     } on FirebaseAuthException catch (e) {
       _errorMessage = e.message ?? 'Login failed';
+      if (e.code == 'user-not-found') _errorMessage = 'No account found with this email';
+      if (e.code == 'wrong-password') _errorMessage = 'Incorrect password';
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -94,6 +116,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _isAdminMode ? Colors.grey[300] : const Color(0xFF1B5E20),
                           padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: const Text('User', style: TextStyle(color: Colors.white)),
                       ),
@@ -105,6 +128,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _isAdminMode ? const Color(0xFF1B5E20) : Colors.grey[300],
                           padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: const Text('Admin', style: TextStyle(color: Colors.white)),
                       ),
@@ -156,25 +180,34 @@ class _SignInScreenState extends State<SignInScreen> {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                const SizedSizedBox(height: 24),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1B5E20),
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Sign In', style: TextStyle(fontSize: 18, color: Colors.white)),
+                      ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                  )
+                      : const Text(
+                    'Sign In',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
                 ),
                 const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                if (!_isAdminMode) // Show Sign Up only for users
+                  TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                    ),
+                    child: const Text('Don\'t have an account? Sign Up'),
                   ),
-                  child: const Text('Don\'t have an account? Sign Up'),
-                ),
               ],
             ),
           ),
