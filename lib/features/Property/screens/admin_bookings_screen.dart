@@ -41,6 +41,12 @@ class AdminBookingsScreen extends StatelessWidget {
               final propertyName = data['property_name'] ?? 'Unknown';
               final status = data['status'] ?? 'Pending';
 
+              final contactName = data['contact_name'] ?? 'No Name';
+              final contactPhone = data['contact_number'] ?? 'No Phone';
+              final reason = data['reason'] ?? 'No Reason';
+              final date = data['date'] ?? '';
+              final slot = data['slot'] ?? '';
+
               // Dynamic colors for the badge
               Color statusColor = Colors.orange;
               if (status == 'Approved') statusColor = Colors.blue;
@@ -72,7 +78,25 @@ class AdminBookingsScreen extends StatelessWidget {
                       ),
                       const Divider(),
 
-                      // CHUNK 4 DETAILS WILL GO HERE
+                      // User Details & Reason
+                      Text("👤 $contactName", style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text("📞 $contactPhone", style: const TextStyle(color: Colors.blue)),
+                      const SizedBox(height: 8),
+                      Text("📝 Purpose: $reason", style: TextStyle(color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
+                      const SizedBox(height: 12),
+
+                      // Date and Time
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                          const SizedBox(width: 8),
+                          Text("$date | $slot", style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+
+                      // CHUNK 5 BUTTONS WILL GO HERE
+
+
                     ],
                   ),
                 ),
