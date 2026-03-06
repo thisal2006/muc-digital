@@ -153,6 +153,13 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       ),
     );
   }
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _reasonController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
