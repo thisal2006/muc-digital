@@ -323,6 +323,8 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
             if (isUploading)
               LinearProgressIndicator(
                 value: uploadProgress,
+                minHeight: 8,
+                borderRadius: BorderRadius.circular(8),
               ),
 
             const SizedBox(height: 20),
