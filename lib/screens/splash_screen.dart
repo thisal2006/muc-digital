@@ -52,12 +52,33 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 100),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (index) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: CircleAvatar(radius: 4, backgroundColor: Colors.white.withOpacity(0.5)),
-                )),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(3, (index) {
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 800),
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(128),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                      BoxShadow(
+                      color: Colors.white.withAlpha(80),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 800),
+                        opacity: (DateTime.now().millisecondsSinceEpoch ~/ 800 % 3) == index ? 1.0 : 0.3,
+                        child: Container(),
+                      ),
+                    );
+                  }),
               ),
+            },
             ],
           ),
         ),
