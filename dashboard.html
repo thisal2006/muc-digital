@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vehicle Booking Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 20px;
+            font-size: 22px;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f3f4f6;
+        }
+
+        .status {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .confirmed { background: #bbf7d0; }
+        .cancelled { background: #fecaca; }
+        .active { background: #bbf7d0; color: #166534; }
+        .inactive { background: #fecaca; color: #991b1b; }
+        .available { background: #bbf7d0; color: #166534; }
+        .unavailable { background: #fecaca; color: #991b1b; }
+
+        button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<header>🚗 Vehicle Booking Admin Dashboard</header>
+
+<div class="container">
+
+    <!-- Vehicle Types Section -->
+    <div class="card">
+        <h3>Vehicle Types</h3>
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <div style="flex: 1;">
+                <h4>Add New Vehicle Type</h4>
+                <form id="vehicleTypeForm">
+                    <input type="text" id="typeName" placeholder="Type Name (e.g., Sedan)" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <textarea id="typeDescription" placeholder="Description" style="width: 100%; padding: 8px; margin-bottom: 10px; height: 60px;"></textarea>
+                    <input type="text" id="typeImage" placeholder="Image URL" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <button type="submit" class="btn-primary">Add Vehicle Type</button>
+                </form>
+            </div>
+            <div style="flex: 2;">
+                <h4>Existing Vehicle Types</h4>
+                <button class="btn-primary" onclick="loadVehicleTypes()">Refresh</button>
+                <table style="margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Image</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vehicleTypesTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicles Section -->
+    <div class="card">
+        <h3>Vehicles</h3>
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <div style="flex: 1;">
+                <h4>Add New Vehicle</h4>
+                <form id="vehicleForm">
+                    <input type="text" id="vehicleName" placeholder="Vehicle Name (e.g., Toyota Camry 2023)" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <select id="vehicleType" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                        <option value="">Select Vehicle Type</option>
+                    </select>
+                    <textarea id="vehicleDescription" placeholder="Vehicle Description" style="width: 100%; padding: 8px; margin-bottom: 10px; height: 50px;"></textarea>
+                    <input type="number" id="pricePerDay" placeholder="Price per Day" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <input type="number" id="halfDayPrice" placeholder="Half Day Price" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                    <textarea id="vehicleImages" placeholder="Image URLs (comma separated)" style="width: 100%; padding: 8px; margin-bottom: 10px; height: 50px;"></textarea>
+                    <textarea id="includedServices" placeholder="Included Services (comma separated)" style="width: 100%; padding: 8px; margin-bottom: 10px; height: 50px;"></textarea>
+                    <button type="submit" class="btn-primary">Add Vehicle</button>
+                </form>
+            </div>
+            <div style="flex: 2;">
+                <h4>Existing Vehicles</h4>
+                <button class="btn-primary" onclick="loadVehicles()">Refresh</button>
+                <table style="margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Full Day Price</th>
+                            <th>Half Day Price</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vehiclesTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings Section -->
+    <div class="card">
+        <h3>All Bookings</h3>
+        <button class="btn-primary" onclick="loadBookings()">Refresh</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Vehicle</th>
+                    <th>Booking Type</th>
+                    <th>Date Range</th>
+                    <th>Status</th>
+                    <th>User</th>
+                    <th>phone</th>
+                    <th>Cancel Reason</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="bookingTable"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- Cancel Modal -->
+<div class="modal" id="cancelModal">
+    <div class="modal-content">
+        <h4>Cancel Booking</h4>
+        <textarea id="cancelReason" placeholder="Enter cancellation reason"></textarea>
+        <button class="btn-danger" onclick="confirmCancel()">Confirm Cancel</button>
+        <button onclick="closeModal()">Close</button>
+    </div>
+</div>
+
+<script>
+
+const BASE_URL = "http://localhost:3000/api";
+let selectedBookingId = null;
+
+// Vehicle Types Functions
+async function loadVehicleTypes() {
+    try {
+        const res = await fetch(`${BASE_URL}/admin/vehicle-types`);
+        const result = await res.json();
+
+        const table = document.getElementById("vehicleTypesTable");
+        const select = document.getElementById("vehicleType");
+        
+        table.innerHTML = "";
+        select.innerHTML = '<option value="">Select Vehicle Type</option>';
+
+        result.data.forEach(type => {
+            const statusClass = type.isActive ? "active" : "inactive";
+            const statusText = type.isActive ? "ACTIVE" : "INACTIVE";
+            const actionButton = type.isActive 
+                ? `<button class="btn-danger" onclick="toggleVehicleTypeStatus('${type._id}', false)">Disable</button>`
+                : `<button class="btn-primary" onclick="toggleVehicleTypeStatus('${type._id}', true)">Enable</button>`;
+
+            table.innerHTML += `
+                <tr>
+                    <td>${type.name}</td>
+                    <td>${type.description || "-"}</td>
+                    <td>${type.image ? `<img src="${type.image}" style="width: 50px; height: 30px; object-fit: cover;">` : "-"}</td>
+                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                    <td>${actionButton}</td>
+                </tr>
+            `;
+
+            // Only add active types to the dropdown
+            if (type.isActive) {
+                select.innerHTML += `<option value="${type._id}">${type.name}</option>`;
+            }
+        });
+    } catch (error) {
+        console.error("Error loading vehicle types:", error);
+    }
+}
+
+// Vehicles Functions
+async function loadVehicles() {
+    try {
+        const res = await fetch(`${BASE_URL}/admin/vehicles`);
+        const result = await res.json();
+
+        const table = document.getElementById("vehiclesTable");
+        table.innerHTML = "";
+
+        result.data.forEach(vehicle => {
+            const statusClass = vehicle.isAvailable ? "available" : "unavailable";
+            const statusText = vehicle.isAvailable ? "AVAILABLE" : "UNAVAILABLE";
+            const actionButton = vehicle.isAvailable 
+                ? `<button class="btn-danger" onclick="toggleVehicleStatus('${vehicle._id}', false)">Disable</button>`
+                : `<button class="btn-primary" onclick="toggleVehicleStatus('${vehicle._id}', true)">Enable</button>`;
+
+            table.innerHTML += `
+                <tr>
+                    <td>${vehicle.name}</td>
+                    <td>${vehicle.type?.name || "-"}</td>
+                    <td>$${vehicle.pricePerDay}</td>
+                    <td>$${vehicle.halfDayPrice}</td>
+                    <td>${vehicle.description || "-"}</td>
+                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                    <td>${actionButton}</td>
+                </tr>
+            `;
+        });
+    } catch (error) {
+        console.error("Error loading vehicles:", error);
+    }
+}
+
+// Form Handlers
+document.getElementById("vehicleTypeForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        name: document.getElementById("typeName").value,
+        description: document.getElementById("typeDescription").value,
+        image: document.getElementById("typeImage").value
+    };
+
+    try {
+        const res = await fetch(`${BASE_URL}/vehicle-types`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (res.ok) {
+            alert("Vehicle type added successfully!");
+            document.getElementById("vehicleTypeForm").reset();
+            loadVehicleTypes();
+        } else {
+            alert("Error adding vehicle type");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error adding vehicle type");
+    }
+});
+
+document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const images = document.getElementById("vehicleImages").value
+        .split(",")
+        .map(img => img.trim())
+        .filter(img => img);
+
+    const services = document.getElementById("includedServices").value
+        .split(",")
+        .map(service => service.trim())
+        .filter(service => service);
+
+    const formData = {
+        name: document.getElementById("vehicleName").value,
+        type: document.getElementById("vehicleType").value,
+        description: document.getElementById("vehicleDescription").value,
+        pricePerDay: parseFloat(document.getElementById("pricePerDay").value),
+        halfDayPrice: parseFloat(document.getElementById("halfDayPrice").value),
+        images: images,
+        includedServices: services
+    };
+
+    try {
+        const res = await fetch(`${BASE_URL}/vehicles`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (res.ok) {
+            alert("Vehicle added successfully!");
+            document.getElementById("vehicleForm").reset();
+            loadVehicles();
+        } else {
+            alert("Error adding vehicle");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error adding vehicle");
+    }
+});
+
+// Booking Functions
+async function loadBookings() {
+    const res = await fetch(`${BASE_URL}/bookings`);
+    const result = await res.json();
+
+    const table = document.getElementById("bookingTable");
+    table.innerHTML = "";
+
+    result.data.forEach(b => {
+        const statusClass = b.status === "CANCELLED" ? "cancelled" : "confirmed";
+
+        table.innerHTML += `
+            <tr>
+                <td>${b.vehicle?.name || "-"}</td>
+                <td>${b.bookingType}</td>
+                <td>
+                    ${new Date(b.startDate).toLocaleDateString()} -
+                    ${new Date(b.endDate).toLocaleDateString()}
+                </td>
+                <td><span class="status ${statusClass}">${b.status}</span></td>
+                <td>${b.userName || "-"}</td>
+                <td>${b.userPhone || "-"}</td>
+                <td>${b.cancellationReason || "-"}</td>
+                <td>
+                    ${
+                        b.status !== "CANCELLED"
+                        ? `<button class="btn-danger" onclick="openCancelModal('${b._id}')">Cancel</button>`
+                        : "—"
+                    }
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function openCancelModal(id) {
+    selectedBookingId = id;
+    document.getElementById("cancelModal").style.display = "flex";
+}
+
+function closeModal() {
+    document.getElementById("cancelModal").style.display = "none";
+    document.getElementById("cancelReason").value = "";
+}
+
+async function confirmCancel() {
+    const reason = document.getElementById("cancelReason").value;
+
+    if (!reason) {
+        alert("Cancellation reason required.");
+        return;
+    }
+
+    await fetch(`${BASE_URL}/bookings/${selectedBookingId}/cancel`, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ reason })
+    });
+
+    closeModal();
+    loadBookings();
+}
+
+// Vehicle Type Status Toggle
+async function toggleVehicleTypeStatus(typeId, isActive) {
+    try {
+        const res = await fetch(`${BASE_URL}/vehicle-types/${typeId}/status`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ isActive })
+        });
+
+        if (res.ok) {
+            const result = await res.json();
+            alert(result.message);
+            loadVehicleTypes(); // Refresh the table and dropdown
+        } else {
+            const error = await res.json();
+            alert(`Error: ${error.message}`);
+        }
+    } catch (error) {
+        console.error("Error toggling vehicle type status:", error);
+        alert("Error updating vehicle type status");
+    }
+}
+
+// Vehicle Status Toggle
+async function toggleVehicleStatus(vehicleId, isAvailable) {
+    try {
+        const res = await fetch(`${BASE_URL}/vehicles/${vehicleId}/status`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ isAvailable })
+        });
+
+        if (res.ok) {
+            const result = await res.json();
+            alert(result.message);
+            loadVehicles(); // Refresh the table
+        } else {
+            const error = await res.json();
+            alert(`Error: ${error.message}`);
+        }
+    } catch (error) {
+        console.error("Error toggling vehicle status:", error);
+        alert("Error updating vehicle status");
+    }
+}
+
+// Initialize page data
+loadVehicleTypes();
+loadVehicles();
+loadBookings();
+
+</script>
+
+</body>
+</html>

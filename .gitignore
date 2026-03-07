@@ -60,8 +60,9 @@ linux/build/
 macos/build/
 windows/build/
 fleet_simulator/serviceAccountKey.json
+vehicle_book_BE/.env
+vehicle_book_BE/.env
 /flask-chatbot/flask_session
 /flask-chatbot/muc_vector_db
 flask-chatbot/.env
 flask-chatbot/Dockerfile
-vehicle_book_BE/.env
