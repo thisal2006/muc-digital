@@ -50,6 +50,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
           // Expanded ensures the scrollable area takes up all space except the bottom bar
           Expanded(
             child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -132,13 +133,40 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             ),
                           ),
                         ),
+
+                        const SizedBox(height: 16),
+
+                        // NEW: CONTACT NUMBER ROW
+                        const Text("Contact", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () async {
+                            final Uri phoneUri = Uri.parse('tel:${widget.property.contactNumber.replaceAll(" ", "")}');
+                            if (!await launchUrl(phoneUri)) {
+                              if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not launch dialer")));
+                            }
+                          },
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE67E22).withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.phone, color: Color(0xFFE67E22), size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                widget.property.contactNumber,
+                                style: const TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        ),
+
                         const SizedBox(height: 20),
                         const Text("About Venue", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.property.description,
-                          style: const TextStyle(color: Colors.black54, height: 1.5),
-                        ),
                       ],
                     ),
                   ),
@@ -183,3 +211,4 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     );
   }
 }
+//file is upto date

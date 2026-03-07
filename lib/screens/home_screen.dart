@@ -1,9 +1,11 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../features/Property/screens/my_bookings_screen.dart';
 import '../widgets/app_drawer.dart';
 import 'announcements_screen.dart';
 import 'complaints_screen.dart'; // 👈 Complaints screen import
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // All pages that bottom nav can switch to
   final List<Widget> _pages = [
     const _HomeDashboardContent(),
-    const Center(child: Text('Bookings - Coming soon')),
+    const MyBookingsScreen(),  //My bookings page imported
     const AnnouncementsScreen(),
     const Center(child: Text('Chat - Coming soon')),
   ];
