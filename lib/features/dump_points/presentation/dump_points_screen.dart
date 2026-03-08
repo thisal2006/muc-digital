@@ -369,11 +369,12 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
               const SizedBox(height: 8),
 
-              Text(
-                "${dump.currentLoad} / ${dump.capacityTons} tons",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  const Icon(Icons.route, size: 18),
+                  const SizedBox(width: 6),
+                  Text("${distanceKm.toStringAsFixed(2)} km away"),
+                ],
               ),
 
               const SizedBox(height: 10),
