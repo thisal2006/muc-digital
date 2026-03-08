@@ -420,7 +420,8 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
         ).animate(_cardController),
 
         child: Card(
-          elevation: 8,
+          elevation: 10,
+          shadowColor: Colors.black26,
 
           shape: RoundedRectangleBorder(
             borderRadius:
