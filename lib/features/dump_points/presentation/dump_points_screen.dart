@@ -31,6 +31,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
   static const CameraPosition initialCamera = CameraPosition(
     target: LatLng(6.8480, 79.9260),
     zoom: 13,
+
   );
 
   Set<Marker> dumpMarkers = {};
