@@ -30,27 +30,47 @@ class _SplashScreenState extends State<SplashScreen> {
           ),
         ),
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.eco, size: 60, color: Color(0xFF2E7D32)),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'MUC Digital',
-                style: TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              const Text(
-                'Maharagama Urban Council',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-              const SizedBox(height: 100),
+            child: AnimatedOpacity(
+              opacity: 1.0, // starts at 0, fades to 1
+              duration: const Duration(milliseconds: 1200),
+              curve: Curves.easeIn,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(51),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.eco, size: 80, color: Color(0xFF2E7D32)),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'MUC Digital',
+                    style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Maharagama Urban Council',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white.withAlpha(229),
+                    ),
+                  ),
+                  const SizedBox(height: 80),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(3, (index) {
@@ -95,6 +115,6 @@ class _SplashScreenState extends State<SplashScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 }
