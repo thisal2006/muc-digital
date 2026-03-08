@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
 import 'sign_up_screen.dart';
 import 'forgot_password_screen.dart';
 import '../home_screen.dart'; // your user home
 import '../admin_dashboard_screen.dart'; // new admin dashboard
+import '../services/auth_service.dart'; // Import auth_service
 
-class SignInScreen extends StatefulWidget {  // Fixed: StatefulWidget (not StateFULWidget)
+class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 
   @override
@@ -20,6 +22,7 @@ class _SignInScreenState extends State<SignInScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   bool _isAdminMode = false; // false = User, true = Admin
+  final AuthService _authService = AuthService();
 
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
@@ -37,6 +40,9 @@ class _SignInScreenState extends State<SignInScreen> {
 
       final user = credential.user;
 
+      // Update last active
+      await _authService.updateLastActive();
+
       if (_isAdminMode) {
         // Check if admin in Firestore
         final adminDoc = await FirebaseFirestore.instance
@@ -47,14 +53,7 @@ class _SignInScreenState extends State<SignInScreen> {
         if (adminDoc.exists) {
           // Admin → dashboard
           if (mounted) {
-            // Option 1: Use pushReplacement with MaterialPageRoute
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
-            );
-
-            // Option 2: If you prefer named routes, make sure they're defined in your MaterialApp
-            // Navigator.pushReplacementNamed(context, '/admin_dashboard');
+            Navigator.pushReplacementNamed(context, '/admin_dashboard');
           }
         } else {
           throw Exception('Not an admin account. Please select User.');
@@ -62,14 +61,7 @@ class _SignInScreenState extends State<SignInScreen> {
       } else {
         // User → home
         if (mounted) {
-          // Option 1: Use pushReplacement with MaterialPageRoute
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-
-          // Option 2: If you prefer named routes, make sure they're defined in your MaterialApp
-          // Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushReplacementNamed(context, '/home');
         }
       }
     } on FirebaseAuthException catch (e) {
