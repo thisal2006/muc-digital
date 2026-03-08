@@ -22,10 +22,12 @@ import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 
+import 'vehicleBooking/vehicle_type_screen.dart';
+import 'chatbot.dart';
 
 //import 'widgets/app_drawer.dart';
 
-bool _firebaseInitialized = false;  // Global flag to prevent duplicate calls
+bool _firebaseInitialized = false; // Global flag to prevent duplicate calls
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -92,10 +94,13 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         '/admin_dashboard': (context) => const AdminDashboardScreen(),
+        '/vehicle_booking': (context) => const VehicleTypeScreen(),
+        '/chatbot': (context) => const ChatbotScreen(),
+        //'/cemetery_booking': (context) => PlaceholderScreen(title: 'Cemetery Booking'),
       },
     );
   }
 }
 
 //Added the routes for property booking
-//Added the stripe keys and initialized it
+//go
