@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'services/auth_service.dart'; // Import auth_service
 
 class OTPVerificationScreen extends StatefulWidget {
   final String verificationId;
@@ -20,6 +22,7 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
   String _otp = '';
   bool _isLoading = false;
   String _errorMessage = '';
+  final AuthService _authService = AuthService();
 
   Future<void> _verifyOTP() async {
     if (_otp.length != 6) {
@@ -42,10 +45,24 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
       );
 
       // Sign in
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final user = userCredential.user;
 
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+      if (user != null) {
+        // Update last active
+        await _authService.updateLastActive();
+
+        // Check if admin (assuming phone is for users; if admins can use phone, adjust)
+        final adminDoc = await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(user.uid)
+            .get();
+
+        if (adminDoc.exists) {
+          if (mounted) Navigator.pushReplacementNamed(context, '/admin_dashboard');
+        } else {
+          if (mounted) Navigator.pushReplacementNamed(context, '/home');
+        }
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
