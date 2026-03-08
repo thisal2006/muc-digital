@@ -205,9 +205,11 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
   //--------------------------------------------------
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(content: Text(message)),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
