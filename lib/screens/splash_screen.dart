@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:muc_digital/firebase_options.dart';  // Your Firebase config file
+import 'package:muc_digital/screens/home_screen.dart';  // Your home screen
+import 'package:muc_digital/screens/onboarding_screen.dart';  // Or login screen
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,11 +16,39 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/onboarding');
+    _initializeAndNavigate();
+  }
+
+  Future<void> _initializeAndNavigate() async {
+    try {
+      // 1. Initialize Firebase (connect to your project)
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // 2. Wait for auth state (check if user is logged in)
+      await FirebaseAuth.instance.authStateChanges().first;
+
+      // 3. Navigate based on login status
+      if (FirebaseAuth.instance.currentUser != null) {
+        // User is logged in → go to home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        // Not logged in → go to onboarding
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+        );
       }
-    });
+    } catch (e) {
+      // If error (rare), show message or retry
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('App loading error: $e')),
+      );
+    }
   }
 
   @override
