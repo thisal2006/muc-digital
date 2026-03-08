@@ -16,38 +16,42 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeAndNavigate();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeAndNavigate();
+    });
   }
 
   Future<void> _initializeAndNavigate() async {
     try {
-      // 1. Initialize Firebase (connect to your project)
+      // 1. Initialize Firebase
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
 
-      // 2. Wait for auth state (check if user is logged in)
+      // 2. Wait for auth state
       await FirebaseAuth.instance.authStateChanges().first;
+
+      // Store current context safely (before any await after this point)
+      if (!mounted) return;  // Prevent using context if widget is disposed
 
       // 3. Navigate based on login status
       if (FirebaseAuth.instance.currentUser != null) {
-        // User is logged in → go to home
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       } else {
-        // Not logged in → go to onboarding
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const OnboardingScreen()),
         );
       }
     } catch (e) {
-      // If error (rare), show message or retry
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('App loading error: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('App loading error: $e')),
+        );
+      }
     }
   }
 
