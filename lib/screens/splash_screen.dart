@@ -54,22 +54,40 @@ class _SplashScreenState extends State<SplashScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(3, (index) {
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 800),
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withAlpha(128),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withAlpha(80),
-                          blurRadius: 8,
-                          spreadRadius: 2,
-                        ),
-                      ],
+                  return AnimatedBuilder(
+                    animation: CurvedAnimation(
+                      parent: AlwaysStoppedAnimation(1.0),
+                      curve: Curves.easeInOut,
                     ),
+                    builder: (context, child) {
+                      final delay = index * 0.2; // stagger each dot
+                      final animationValue = (DateTime.now().millisecondsSinceEpoch / 1000 % 1.2 - delay) % 1.2;
+                      final opacity = (animationValue * 5).clamp(0.3, 1.0); // pulse from 0.3 to 1.0
+                      final scale = 1.0 + (animationValue * 0.4); // slight grow/shrink
+
+                      return Transform.scale(
+                        scale: scale,
+                        child: Opacity(
+                          opacity: opacity,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.white.withAlpha(120),
+                                  blurRadius: 12,
+                                  spreadRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 }),
               ),
