@@ -21,8 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _pages = [
     const _HomeDashboardContent(),
     const MyBookingsScreen(),  //My bookings page imported
-
-    const Center(child: Text('Bookings - Coming soon')), // Bookings tab
     const AnnouncementsScreen(), // Updates tab → Announcements
   ];
 
@@ -242,12 +240,12 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                     ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear, color: Colors.grey),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
+                      icon: const Icon(Icons.clear, color: Colors.grey),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    )
                         : null,
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -265,7 +263,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
               children: [
                 FadeInLeft(
                   duration: const Duration(milliseconds: 800),
-                  child: _StatCard(
+                  child: _statCard(
                     '3',
                     'Bookings',
                     Icons.book_online,
@@ -274,7 +272,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                 ),
                 FadeInUp(
                   duration: const Duration(milliseconds: 850),
-                  child: _StatCard(
+                  child: _statCard(
                     '1',
                     'Pending',
                     Icons.hourglass_empty,
@@ -283,7 +281,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                 ),
                 FadeInRight(
                   duration: const Duration(milliseconds: 900),
-                  child: _StatCard(
+                  child: _statCard(
                     '2',
                     'Complaints',
                     Icons.report_problem,
@@ -328,7 +326,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
     );
   }
 
-  Widget _StatCard(String number, String label, IconData icon, Color color) {
+  Widget _statCard(String number, String label, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -393,8 +391,8 @@ class ServiceCard extends StatelessWidget {
       color: Colors.white,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        splashColor: color.withOpacity(0.15),
-        highlightColor: color.withOpacity(0.08),
+        splashColor: color.withValues(alpha: 0.15),
+        highlightColor: color.withValues(alpha: 0.08),
         onTap: () {
           if (title == 'Complaints') {
             Navigator.push(
@@ -431,7 +429,6 @@ class ServiceCard extends StatelessWidget {
                     color: color,
                   ), // Reduced icon size from 48 to 40
                 ),
-                child: Icon(icon, size: 48, color: color),
               ),
               const SizedBox(height: 12),
               Text(
