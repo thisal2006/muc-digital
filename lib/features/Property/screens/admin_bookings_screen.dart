@@ -1,15 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class AdminBookingsScreen extends StatelessWidget {
   const AdminBookingsScreen({super.key});
 
-  Future<void> _updateBookingStatus(BuildContext context, String docId, String newStatus) async {
+  // --- 1. THE EMAILJS FUNCTION ---
+  Future<void> _sendApprovalEmail(Map<String, dynamic> data) async {
+    // ⚠️ IMPORTANT: This assumes you have a 'contact_email' field saved in Firestore!
+    final userEmail = data['contact_email'] ?? 'test@example.com';
+    final userName = data['contact_name'] ?? 'Citizen';
+    final propertyName = data['property_name'] ?? 'Property';
+    final date = data['date'] ?? 'a scheduled date';
+    final slot = data['slot'] ?? 'a scheduled time';
+
+    final url = Uri.parse('https://api.emailjs.com/api/v1.0/email/send');
+
     try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'service_id': 'service_a0wecoz',
+          'template_id': 'template_dbs6us5',
+          'user_id': '5H5N3VlVfcyVX3hbD',
+          'template_params': {
+            'user_name': userName,         // Matches {{user_name}} in your template
+            'user_email': userEmail,       // Matches {{user_email}} in your template
+            'property_name': propertyName, // Matches {{property_name}} in your template
+            'date': date,                  // Matches {{date}} in your template
+            'slot': slot,                  // Matches {{slot}} in your template
+          }
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('Email sent successfully!');
+      } else {
+        debugPrint('Failed to send email: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error sending email: $e');
+    }
+  }
+
+  // --- 2. Updated FIRESTORE FUNCTION ---
+
+  Future<void> _updateBookingStatus(BuildContext context, String docId, String newStatus, Map<String, dynamic> bookingData) async {
+    try {
+      // Update the database
       await FirebaseFirestore.instance.collection('bookings').doc(docId).update({'status': newStatus});
+
+      // If approved, trigger the email!
+      if (newStatus == 'Approved') {
+        await _sendApprovalEmail(bookingData);
+      }
+
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Booking $newStatus!"), backgroundColor: newStatus == 'Approved' ? Colors.green : Colors.red),
+        SnackBar(
+          content: Text("Booking $newStatus!"),
+          backgroundColor: newStatus == 'Approved' ? Colors.green : Colors.red,
+        ),
       );
     } catch (e) {
       if (!context.mounted) return;
@@ -114,7 +167,7 @@ class AdminBookingsScreen extends StatelessWidget {
                           children: [
                             Expanded(
                               child: OutlinedButton(
-                                onPressed: () => _updateBookingStatus(context, docId, 'Rejected'),
+                                onPressed: () => _updateBookingStatus(context, docId, 'Rejected', data),
                                 style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: const BorderSide(color: Colors.red)),
                                 child: const Text("Reject"),
                               ),
@@ -122,7 +175,7 @@ class AdminBookingsScreen extends StatelessWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: ElevatedButton(
-                                onPressed: () => _updateBookingStatus(context, docId, 'Approved'),
+                                onPressed: () => _updateBookingStatus(context, docId, 'Approved', data),
                                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                                 child: const Text("Approve"),
                               ),
