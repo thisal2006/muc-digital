@@ -10,6 +10,7 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  // Controllers for forms
   final _announcementTitleController = TextEditingController();
   final _announcementDescriptionController = TextEditingController();
   final _propertyNameController = TextEditingController();
@@ -18,6 +19,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   bool _isLoading = false;
 
+  // Add announcement
   Future<void> _addAnnouncement() async {
     if (_announcementTitleController.text.isEmpty || _announcementDescriptionController.text.isEmpty) return;
 
@@ -29,22 +31,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         'description': _announcementDescriptionController.text.trim(),
         'timestamp': FieldValue.serverTimestamp(),
       });
-
       _announcementTitleController.clear();
       _announcementDescriptionController.clear();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notification sent successfully!')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notification sent!')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending notification: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
+  // Add property
   Future<void> _addProperty() async {
     if (_propertyNameController.text.isEmpty || _propertyLocationController.text.isEmpty || _propertyPriceController.text.isEmpty) return;
 
@@ -58,217 +55,45 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         'available': true,
         'timestamp': FieldValue.serverTimestamp(),
       });
-
       _propertyNameController.clear();
       _propertyLocationController.clear();
       _propertyPriceController.clear();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Property added successfully!')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Property added!')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding property: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _approveBooking(String bookingId) async {
+  // Update booking status
+  Future<void> _updateBookingStatus(String bookingId, String newStatus) async {
     try {
-      await FirebaseFirestore.instance.collection('bookings').doc(bookingId).update({
-        'status': 'approved',
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Booking approved!')),
-      );
+      await FirebaseFirestore.instance.collection('bookings').doc(bookingId).update({'status': newStatus});
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Booking $newStatus!')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error approving booking: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Dashboard'),
-        backgroundColor: const Color(0xFF1B5E20),
-        foregroundColor: Colors.white,
-      ),
-      body: DefaultTabController(
-        length: 4,
-        child: Column(
-          children: [
-            const TabBar(
-              tabs: [
-                Tab(text: 'Notifications'),
-                Tab(text: 'Bookings'),
-                Tab(text: 'Dumping Reports'),
-                Tab(text: 'Add Properties'),
-              ],
-              indicatorColor: Color(0xFF1B5E20),
-            ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  // Notifications tab (add/send)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text('Send Notification', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _announcementTitleController,
-                          decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _announcementDescriptionController,
-                          decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
-                          maxLines: 5,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _isLoading ? null : _addAnnouncement,
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20)),
-                          child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Send'),
-                        ),
-                      ],
-                    ),
-                  ),
+  // Mark report resolved
+  Future<void> _markReportResolved(String reportId) async {
+    try {
+      await FirebaseFirestore.instance.collection('dumping_reports').doc(reportId).update({'status': 'resolved'});
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report resolved!')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
 
-                  // Bookings tab (view details + approve)
-                  StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance.collection('bookings').snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      if (snapshot.hasError) {
-                        return const Center(child: Text('Error loading bookings'));
-                      }
-
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return const Center(child: Text('No bookings available'));
-                      }
-
-                      final bookings = snapshot.data!.docs;
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: bookings.length,
-                        itemBuilder: (context, index) {
-                          final data = bookings[index].data() as Map<String, dynamic>;
-                          final name = data['name'] ?? 'Unknown';
-                          final address = data['address'] ?? 'No address';
-                          final date = data['date'] ?? 'No date';
-                          final slot = data['slot'] ?? 'No slot';
-                          final status = data['status'] ?? 'pending';
-
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              title: Text('Name: $name'),
-                              subtitle: Text('Address: $address\nDate: $date\nSlot: $slot\nStatus: $status'),
-                              trailing: status == 'pending' ? IconButton(
-                                icon: const Icon(Icons.check, color: Colors.green),
-                                onPressed: () => _approveBooking(bookings[index].id),
-                              ) : null,
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-
-                  // Dumping Reports tab (view with photos)
-                  StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance.collection('dumping_reports').snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      if (snapshot.hasError) {
-                        return const Center(child: Text('Error loading reports'));
-                      }
-
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return const Center(child: Text('No dumping reports available'));
-                      }
-
-                      final reports = snapshot.data!.docs;
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: reports.length,
-                        itemBuilder: (context, index) {
-                          final data = reports[index].data() as Map<String, dynamic>;
-                          final location = data['location'] ?? 'No location';
-                          final description = data['description'] ?? 'No description';
-                          final photoUrl = data['photo_url'] ?? '';
-
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              title: Text('Location: $location'),
-                              subtitle: Text('Description: $description'),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.image, color: Colors.green),
-                                onPressed: () => _viewPhoto(photoUrl),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-
-                  // Add Properties tab
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text('Add Property', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _propertyNameController,
-                          decoration: const InputDecoration(labelText: 'Name', border: OutlineInputBorder()),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _propertyLocationController,
-                          decoration: const InputDecoration(labelText: 'Location', border: OutlineInputBorder()),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _propertyPriceController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'Price (LKR)', border: OutlineInputBorder()),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _isLoading ? null : _addProperty,
-                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20)),
-                          child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Add'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  // Update property (example for edit)
+  Future<void> _updateProperty(String propertyId, Map<String, dynamic> updates) async {
+    try {
+      await FirebaseFirestore.instance.collection('properties').doc(propertyId).update(updates);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Property updated!')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
   }
 
   Future<void> _viewPhoto(String url) async {
@@ -277,5 +102,189 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open photo')));
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Admin Dashboard'), backgroundColor: const Color(0xFF1B5E20), foregroundColor: Colors.white),
+      body: DefaultTabController(
+        length: 5,
+        child: Column(
+          children: [
+            const TabBar(
+              isScrollable: true,
+              tabs: [
+                Tab(text: 'Notifications'),
+                Tab(text: 'Bookings'),
+                Tab(text: 'Dumping Reports'),
+                Tab(text: 'Properties'),
+                Tab(text: 'Users'),
+              ],
+              indicatorColor: Color(0xFF1B5E20),
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  // Notifications: Form + List
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        TextField(controller: _announcementTitleController, decoration: const InputDecoration(labelText: 'Title')),
+                        const SizedBox(height: 8),
+                        TextField(controller: _announcementDescriptionController, decoration: const InputDecoration(labelText: 'Description'), maxLines: 3),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _addAnnouncement,
+                          child: const Text('Send Notification'),
+                        ),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: StreamBuilder(
+                            stream: FirebaseFirestore.instance.collection('announcements').orderBy('timestamp', descending: true).snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                final docs = snapshot.data!.docs;
+                                return ListView.builder(
+                                  itemCount: docs.length,
+                                  itemBuilder: (ctx, i) => ListTile(title: Text(docs[i]['title']), subtitle: Text(docs[i]['description'])),
+                                );
+                              }
+                              return const Center(child: CircularProgressIndicator());
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Bookings: List with details + approve/reject
+                  StreamBuilder(
+                    stream: FirebaseFirestore.instance.collection('bookings').snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final docs = snapshot.data!.docs;
+                        return ListView.builder(
+                          itemCount: docs.length,
+                          itemBuilder: (ctx, i) {
+                            final data = docs[i].data();
+                            return Card(
+                              child: ListTile(
+                                title: Text(data['type'] ?? 'Booking'),
+                                subtitle: Text('User: ${data['user_id']} | Status: ${data['status']} | Details: ${data['details']}'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(icon: const Icon(Icons.check), onPressed: () => _updateBookingStatus(docs[i].id, 'approved')),
+                                    IconButton(icon: const Icon(Icons.close), onPressed: () => _updateBookingStatus(docs[i].id, 'rejected')),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                  ),
+                  // Dumping Reports: List + view photo + resolve
+                  StreamBuilder(
+                    stream: FirebaseFirestore.instance.collection('dumping_reports').snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final docs = snapshot.data!.docs;
+                        return ListView.builder(
+                          itemCount: docs.length,
+                          itemBuilder: (ctx, i) {
+                            final data = docs[i].data();
+                            return Card(
+                              child: ListTile(
+                                title: Text(data['location'] ?? 'Location'),
+                                subtitle: Text(data['description'] ?? 'Description'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(icon: const Icon(Icons.image), onPressed: () => _viewPhoto(data['photo_url'] ?? '')),
+                                    IconButton(icon: const Icon(Icons.done), onPressed: () => _markReportResolved(docs[i].id)),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                  ),
+                  // Properties: Form + List + Edit
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        TextField(controller: _propertyNameController, decoration: const InputDecoration(labelText: 'Name')),
+                        TextField(controller: _propertyLocationController, decoration: const InputDecoration(labelText: 'Location')),
+                        TextField(controller: _propertyPriceController, decoration: const InputDecoration(labelText: 'Price')),
+                        ElevatedButton(onPressed: _addProperty, child: const Text('Add Property')),
+                        Expanded(
+                          child: StreamBuilder(
+                            stream: FirebaseFirestore.instance.collection('properties').snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                final docs = snapshot.data!.docs;
+                                return ListView.builder(
+                                  itemCount: docs.length,
+                                  itemBuilder: (ctx, i) {
+                                    final data = docs[i].data();
+                                    return ListTile(
+                                      title: Text(data['name'] ?? 'Name'),
+                                      subtitle: Text('${data['location']} | Price: ${data['price']}'),
+                                      trailing: IconButton(
+                                        icon: const Icon(Icons.edit),
+                                        onPressed: () {
+                                          // Simple edit example - expand as needed
+                                          _updateProperty(docs[i].id, {'name': 'Updated Name'}); // Replace with form dialog
+                                        },
+                                      ),
+                                    );
+                                  },
+                                );
+                              }
+                              return const Center(child: CircularProgressIndicator());
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Users: List with details
+                  StreamBuilder(
+                    stream: FirebaseFirestore.instance.collection('users').snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final docs = snapshot.data!.docs;
+                        return ListView.builder(
+                          itemCount: docs.length,
+                          itemBuilder: (ctx, i) {
+                            final data = docs[i].data();
+                            return Card(
+                              child: ListTile(
+                                title: Text(data['name'] ?? 'Name'),
+                                subtitle: Text('Email: ${data['email']} | Phone: ${data['phone']}'),
+                              ),
+                            );
+                          },
+                        );
+                      }
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
