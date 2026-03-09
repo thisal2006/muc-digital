@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import '../services/auth_service.dart';
+import '../screens/services/auth_service.dart';
+import '../screens/auth/sign_in_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/admin_dashboard_screen.dart';
 import '../screens/onboarding_screen.dart'; // or SignInScreen if you prefer direct to login

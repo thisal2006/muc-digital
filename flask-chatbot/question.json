@@ -1,0 +1,209 @@
+{
+  "faq_version": "1.0",
+  "municipality": "Maharagama Urban Council",
+  "project": "MUC Digital",
+  "categories": [
+    {
+      "category": "Waste Management",
+      "questions": [
+        {
+          "id": 1,
+          "question": "How do I track the garbage truck today?",
+          "steps": [
+            "Open the MUC Digital platform on your mobile app or web browser.",
+            "Access the Real Time Garbage Collection System module.",
+            "View the live maps to track the garbage truck's exact location using its GPS hardware."
+          ]
+        },
+        {
+          "id": 2,
+          "question": "How will I know when the garbage truck is near my house?",
+          "steps": [
+            "Ensure you have the MUC Digital mobile application downloaded and installed.",
+            "Keep your app notifications enabled.",
+            "The system will automatically send you a notification when a garbage truck approaches your location."
+          ]
+        },
+        {
+          "id": 3,
+          "question": "How can I find out if today's collection is for degradable or non-degradable waste?",
+          "steps": [
+            "Open the MUC Digital app.",
+            "Navigate to the Real Time Garbage Collection System.",
+            "Check the truck's status, which will display whether it is currently collecting degradable or non-degradable waste."
+          ]
+        },
+        {
+          "id": 4,
+          "question": "How do I find the closest place to dump my waste?",
+          "steps": [
+            "Open the MUC Digital platform.",
+            "Select the nearest dumping point locator tool.",
+            "View the map integration to locate the exact dumping point closest to you."
+          ]
+        },
+        {
+          "id": 5,
+          "question": "How do I report illegal garbage dumping in my area?",
+          "steps": [
+            "Open the MUC Digital application.",
+            "Go to the illegal dumping point reporting system.",
+            "Take photos of the location and use the image upload feature to submit your report to the council."
+          ]
+        },
+        {
+          "id": 6,
+          "question": "How do I schedule a special waste pickup?",
+          "steps": [
+            "Open the MUC Digital platform.",
+            "Navigate to the waste pickup scheduling system.",
+            "Submit your request so the council can schedule your special waste pickup."
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Bookings & Payments",
+      "questions": [
+        {
+          "id": 7,
+          "question": "How do I book a public ground or hall?",
+          "steps": [
+            "Access the Online Booking System for Council Properties & Vehicles on the platform.",
+            "Select the specific public property you want to reserve, such as a ground or hall.",
+            "Submit your booking request online.",
+            "Wait for the council administrators to digitally approve or reject your booking."
+          ]
+        },
+        {
+          "id": 8,
+          "question": "How do I check if a council vehicle or equipment is available to rent?",
+          "steps": [
+            "Go to the Online Booking System section.",
+            "Choose the council vehicle or equipment you need.",
+            "View the screen to see real-time availability and pricing."
+          ]
+        },
+        {
+          "id": 9,
+          "question": "How do I make a payment for my public property booking?",
+          "steps": [
+            "Submit your booking request for the property or vehicle.",
+            "Review the real-time pricing displayed for your selection.",
+            "Proceed to checkout and make your payment online using the integrated payment gateway."
+          ]
+        },
+        {
+          "id": 10,
+          "question": "How do I book a crematorium or cemetery slot?",
+          "steps": [
+            "Go to the Cemetery & Crematorium Reservation System in the app.",
+            "Browse the available slots, dates, and times.",
+            "Submit your details for verification to check eligibility criteria.",
+            "Make your reservation payment directly through the system."
+          ]
+        },
+        {
+          "id": 11,
+          "question": "How will I know if my crematorium booking is confirmed?",
+          "steps": [
+            "Complete your reservation and payment in the Cemetery & Crematorium Reservation System.",
+            "The system will immediately provide an instant confirmation.",
+            "Download or view the digital receipt provided for your booking."
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Emergency Services",
+      "questions": [
+        {
+          "id": 12,
+          "question": "How do I quickly call the Police in an emergency?",
+          "steps": [
+            "Open the MUC Digital mobile application.",
+            "Go to the Emergency One Tap Access module.",
+            "Tap on the 'Police' option, and the system will instantly initiate the call with a single tap."
+          ]
+        },
+        {
+          "id": 13,
+          "question": "How do I request an Ambulance through the app?",
+          "steps": [
+            "Open the MUC Digital app.",
+            "Navigate to the Emergency One Tap Access section.",
+            "Tap the 'Ambulance' option to make an immediate call without needing to search for the phone number."
+          ]
+        },
+        {
+          "id": 14,
+          "question": "How do I contact the Fire Brigade?",
+          "steps": [
+            "Open the app and locate the Emergency One Tap Access feature.",
+            "Select the 'Firebrigade' option.",
+            "The call will be initiated immediately with just one tap."
+          ]
+        },
+        {
+          "id": 15,
+          "question": "How can I get help from Disaster Management?",
+          "steps": [
+            "Launch the MUC Digital application.",
+            "Access the Emergency One Tap Access module.",
+            "Choose 'Disaster Management' to make an instant emergency call."
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Alerts & General Support",
+      "questions": [
+        {
+          "id": 16,
+          "question": "How do I find out about scheduled water cuts?",
+          "steps": [
+            "Keep the MUC Digital app installed on your smartphone.",
+            "Council administrators will publish urgent alerts or announcements regarding water cuts.",
+            "You will instantly receive a push notification to your phone with the alert details."
+          ]
+        },
+        {
+          "id": 17,
+          "question": "How can I stay updated on dengue fogging schedules?",
+          "steps": [
+            "Ensure your device can receive notifications from the MUC Digital app.",
+            "The council administrators will publish general announcements about dengue fogging schedules.",
+            "The system will alert you via an instant push notification."
+          ]
+        },
+        {
+          "id": 18,
+          "question": "How do I get information on shramadhana campaigns or municipal events?",
+          "steps": [
+            "Check the unified Announcements section on the platform.",
+            "Look for general announcements published by the council.",
+            "You can also rely on instant push notifications sent to your phone about these events."
+          ]
+        },
+        {
+          "id": 19,
+          "question": "How do I submit a general complaint to the urban council?",
+          "steps": [
+            "Access the MUC Digital mobile or web application.",
+            "Navigate to the complaints and requests submission section.",
+            "Submit your complaint directly through the platform for the council to review."
+          ]
+        },
+        {
+          "id": 20,
+          "question": "What if I need fast help with navigating the app or reporting an issue?",
+          "steps": [
+            "Open the MUC Digital app.",
+            "Access the Smart Chatbot Assistance feature.",
+            "Interact with the 24/7 intelligent chatbot to get fast responses to FAQs or receive step-by-step guidance."
+          ]
+        }
+      ]
+    }
+  ]
+}
