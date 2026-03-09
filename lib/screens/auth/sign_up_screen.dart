@@ -1,88 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../profile_screen.dart';
 import 'sign_in_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  _ProfileScreenState createState() => _ProfileScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
 
-  final _formKey = GlobalKey<FormState>();
+class _ProfileScreenState extends State<ProfileScreen> {
 
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final User? user = FirebaseAuth.instance.currentUser;
 
-  bool _isLoading = false;
-  String? _errorMessage;
+  Future<Map<String, dynamic>?> getUserData() async {
 
-  Future<void> _signUp() async {
+    if (user == null) return null;
 
-    if (!_formKey.currentState!.validate()) return;
+    DocumentSnapshot doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user!.uid)
+        .get();
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-
-      // Create Firebase Auth User
-      UserCredential userCredential =
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      // Get user ID
-      String uid = userCredential.user!.uid;
-
-      // Save user to Firestore
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'email': _emailController.text.trim(),
-        'role': 'user',
-        'createdAt': Timestamp.now(),
-      });
-
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const SignInScreen()),
-        );
-      }
-
-    } on FirebaseAuthException catch (e) {
-
-      setState(() {
-        _errorMessage = e.message ?? 'Sign up failed';
-      });
-
-    } catch (e) {
-
-      setState(() {
-        _errorMessage = e.toString();
-      });
-
-    } finally {
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-
+    if (doc.exists) {
+      return doc.data() as Map<String, dynamic>;
     }
+
+    return null;
   }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
+  Future<void> logout() async {
+    await FirebaseAuth.instance.signOut();
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const SignInScreen(),
+        ),
+      );
+    }
   }
 
   @override
@@ -90,39 +50,100 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     return Scaffold(
 
-        appBar: AppBar(
-          title: const Text('Sign Up'),
-        ),
+      appBar: AppBar(
+        title: const Text("User Profile"),
+      ),
 
-        body: SafeArea(
-            child: SingleChildScrollView(
+      body: FutureBuilder<Map<String, dynamic>?>(
+        future: getUserData(),
 
-                padding: const EdgeInsets.all(24),
+        builder: (context, snapshot) {
 
-                child: Form(
-                    key: _formKey,
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(child: Text("User data not found"));
+          }
 
-                      children: [
+          final data = snapshot.data!;
 
-                      const Text(
-                      'Create Account',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+
+                children: [
+
+                  const Icon(
+                    Icons.person,
+                    size: 100,
+                    color: Colors.green,
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  Text(
+                    "Email",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+
+                  Text(
+                    data['email'] ?? '',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Text(
+                    "Role",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+
+                  Text(
+                    data['role'] ?? 'user',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  ElevatedButton(
+                    onPressed: logout,
+
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 40,
                       ),
                     ),
 
-                    const SizedBox(height: 32),
-
-                    TextFormField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Email required';
+                    child: const Text(
+                      "Logout",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
