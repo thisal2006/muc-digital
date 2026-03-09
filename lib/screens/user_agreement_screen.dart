@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Add this for AuthWrapper
-import '../main.dart'; // Import to access AuthWrapper
+import '../main.dart';
+import '../widgets/auth_wrapper.dart'; // Import to access AuthWrapper
 
 class UserAgreementScreen extends StatelessWidget {
   const UserAgreementScreen({super.key});
