@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'sign_in_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -13,6 +14,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -25,13 +27,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
+      UserCredential userCredential =
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
+      String uid = userCredential.user!.uid;
+
+      // Save user in Firestore
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'uid': uid,
+        'email': _emailController.text.trim(),
+        'role': 'user',
+        'createdAt': Timestamp.now(),
+      });
+
       if (mounted) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const SignInScreen()),
+        );
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
@@ -54,23 +70,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Create Account', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                const Text('Create Account',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 32),
+
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
-                  validator: (val) => val!.isEmpty || !val.contains('@') ? 'Valid email required' : null,
+                  decoration: const InputDecoration(
+                      labelText: 'Email', border: OutlineInputBorder()),
+                  validator: (val) =>
+                  val!.isEmpty || !val.contains('@')
+                      ? 'Valid email required'
+                      : null,
                 ),
+
                 const SizedBox(height: 16),
+
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
-                  validator: (val) => val!.length < 6 ? 'Password too short' : null,
+                  decoration: const InputDecoration(
+                      labelText: 'Password', border: OutlineInputBorder()),
+                  validator: (val) =>
+                  val!.length < 6 ? 'Password too short' : null,
                 ),
+
                 const SizedBox(height: 32),
+
                 if (_errorMessage != null)
-                  Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                  Text(_errorMessage!,
+                      style: const TextStyle(color: Colors.red)),
+
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signUp,
                   style: ElevatedButton.styleFrom(
@@ -79,9 +109,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Sign Up', style: TextStyle(fontSize: 18, color: Colors.white)),
+                      : const Text('Sign Up',
+                      style:
+                      TextStyle(fontSize: 18, color: Colors.white)),
                 ),
+
                 const SizedBox(height: 16),
+
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text('Already have an account? Sign In'),
