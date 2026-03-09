@@ -7,7 +7,6 @@ import 'package:muc_digital/widgets/auth_wrapper.dart';
 import 'features/Garbage_tracking/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-
 import 'screens/admin_dashboard_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
@@ -23,11 +22,6 @@ import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'widgets/app_drawer.dart';
-
-import 'vehicleBooking/vehicle_type_screen.dart';
-import 'chatbot.dart';
-
-//import 'widgets/app_drawer.dart';
 
 bool _firebaseInitialized = false; // Global flag to prevent duplicate calls
 
@@ -98,14 +92,3 @@ class MUCdigitalApp extends StatelessWidget {
     );
   }
 }
-        '/admin_dashboard': (context) => const AdminDashboardScreen(),
-        '/vehicle_booking': (context) => const VehicleTypeScreen(),
-        '/chatbot': (context) => const ChatbotScreen(),
-        //'/cemetery_booking': (context) => PlaceholderScreen(title: 'Cemetery Booking'),
-      },
-    );
-  }
-}
-
-//Added the routes for property booking
-//go
