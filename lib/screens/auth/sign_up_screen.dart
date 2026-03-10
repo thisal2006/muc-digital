@@ -1,149 +1,285 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../profile_screen.dart';
-import 'sign_in_screen.dart';
+import 'sign_in_screen.dart'; // adjust path if needed
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  _ProfileScreenState createState() => _ProfileScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
+class _SignUpScreenState extends State<SignUpScreen> {
+  final _formKey = GlobalKey<FormState>();
 
-class _ProfileScreenState extends State<ProfileScreen> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
-  final User? user = FirebaseAuth.instance.currentUser;
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  Future<Map<String, dynamic>?> getUserData() async {
+  Future<void> _signUp() async {
+    if (!_formKey.currentState!.validate()) return;
 
-    if (user == null) return null;
-
-    DocumentSnapshot doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user!.uid)
-        .get();
-
-    if (doc.exists) {
-      return doc.data() as Map<String, dynamic>;
+    if (_passwordController.text.trim() != _confirmPasswordController.text.trim()) {
+      setState(() {
+        _errorMessage = "Passwords do not match";
+      });
+      return;
     }
 
-    return null;
-  }
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-  Future<void> logout() async {
-    await FirebaseAuth.instance.signOut();
-
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const SignInScreen(),
-        ),
+    try {
+      // Create user in Firebase Auth
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
+
+      final user = credential.user;
+
+      if (user != null) {
+        // Save profile data to Firestore
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'name': _nameController.text.trim(),
+          'email': user.email,
+          'phone': _phoneController.text.trim(),
+          'address': _addressController.text.trim(),
+          'role': 'user',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        if (!mounted) return;
+
+        Navigator.pushReplacementNamed(context, '/home');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Account created successfully!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String msg = e.message ?? 'Sign up failed';
+      if (e.code == 'email-already-in-use') {
+        msg = 'This email is already registered';
+      } else if (e.code == 'weak-password') {
+        msg = 'Password is too weak (min 6 characters)';
+      } else if (e.code == 'invalid-email') {
+        msg = 'Invalid email format';
+      }
+      setState(() => _errorMessage = msg);
+    } catch (e) {
+      setState(() => _errorMessage = 'Something went wrong. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-
+      backgroundColor: const Color(0xFFF5F8F5),
       appBar: AppBar(
-        title: const Text("User Profile"),
+        title: const Text('Sign Up'),
+        backgroundColor: const Color(0xFF2E7D32),
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-
-      body: FutureBuilder<Map<String, dynamic>?>(
-        future: getUserData(),
-
-        builder: (context, snapshot) {
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text("User data not found"));
-          }
-
-          final data = snapshot.data!;
-
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-
-                children: [
-
-                  const Icon(
-                    Icons.person,
-                    size: 100,
-                    color: Colors.green,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 20),
+                const Text(
+                  'Create Account',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2E7D32),
                   ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
 
-                  const SizedBox(height: 30),
+                // Full Name
+                TextFormField(
+                  controller: _nameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: _inputDecoration('Full Name'),
+                  validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
 
-                  Text(
-                    "Email",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
+                // Email
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: _inputDecoration('Email'),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Required';
+                    if (!v.contains('@') || !v.contains('.')) return 'Invalid email';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Phone
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: _inputDecoration('Phone Number (e.g. +9477xxxxxxx)'),
+                  validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Address
+                TextFormField(
+                  controller: _addressController,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: _inputDecoration('Address'),
+                  validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Password
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: _inputDecoration('Password'),
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Required';
+                    if (v.length < 6) return 'At least 6 characters';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Confirm Password
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  obscureText: true,
+                  decoration: _inputDecoration('Confirm Password'),
+                  validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+                ),
+                const SizedBox(height: 24),
+
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontSize: 15),
+                      textAlign: TextAlign.center,
                     ),
                   ),
 
-                  Text(
-                    data['email'] ?? '',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                const SizedBox(height: 12),
+
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _signUp,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2E7D32),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    elevation: 2,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  Text(
-                    "Role",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
+                  child: _isLoading
+                      ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
                     ),
+                  )
+                      : const Text(
+                    'Create Account',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                   ),
+                ),
 
-                  Text(
-                    data['role'] ?? 'user',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                const SizedBox(height: 24),
 
-                  const SizedBox(height: 40),
-
-                  ElevatedButton(
-                    onPressed: logout,
-
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 14,
-                        horizontal: 40,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Already have an account? "),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SignInScreen()),
+                        );
+                      },
+                      child: const Text(
+                        'Sign In',
+                        style: TextStyle(
+                          color: Color(0xFF2E7D32),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-
-                    child: const Text(
-                      "Logout",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
+  }
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 }
