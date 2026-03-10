@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Add this for AuthWrapper
+import '../main.dart';
+import '../widgets/auth_wrapper.dart'; // Import to access AuthWrapper
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserAgreementScreen extends StatefulWidget {

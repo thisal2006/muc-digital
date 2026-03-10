@@ -21,6 +21,13 @@ import 'screens/otp_verification_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
+import 'package:muc_digital/features/crematorium%20booking/crematorium_booking_screen.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+
+//import 'widgets/app_drawer.dart';
 import 'widgets/app_drawer.dart';
 
 bool _firebaseInitialized = false; // Global flag to prevent duplicate calls
@@ -87,6 +94,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_in': (context) => const SignInScreen(),
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
+        /*'/crematorium_booking': (context) => const CrematoriumBookingScreen(),*/
         // Add any other non-auth routes here
       },
     );

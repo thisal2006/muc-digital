@@ -26,19 +26,12 @@ class DefaultFirebaseOptions {
         return ios;
       case TargetPlatform.macOS:
         return macos;
-      case TargetPlatform.windows:
-        return windows;
-      case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux.',
-        );
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
         );
     }
   }
-
   static  FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyAe4oeEmqgUTBRow6oGQg-lL86WGPxIM08',
     appId: '1:492466770104:web:d4a6d04761ef2fef74a44d',
