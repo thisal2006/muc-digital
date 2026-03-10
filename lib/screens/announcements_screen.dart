@@ -20,12 +20,17 @@ class AnnouncementsScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFF1B5E20)));
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFF1B5E20)),
+            );
           }
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)),
+              child: Text(
+                'Error: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
             );
           }
 
@@ -34,7 +39,11 @@ class AnnouncementsScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_off_rounded, size: 80, color: Colors.grey),
+                  Icon(
+                    Icons.notifications_off_rounded,
+                    size: 80,
+                    color: Colors.grey,
+                  ),
                   SizedBox(height: 16),
                   Text(
                     'No announcements yet',
@@ -57,23 +66,34 @@ class AnnouncementsScreen extends StatelessWidget {
               final description = data['description'] ?? '';
               final timestamp = data['timestamp'] as Timestamp?;
               final date = timestamp != null
-                  ? DateFormat('MMM dd, yyyy • hh:mm a').format(timestamp.toDate())
+                  ? DateFormat(
+                      'MMM dd, yyyy • hh:mm a',
+                    ).format(timestamp.toDate())
                   : 'No date';
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 elevation: 3,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
                   leading: CircleAvatar(
                     backgroundColor: const Color(0xFF1B5E20),
                     radius: 28,
-                    child: const Icon(Icons.campaign_rounded, color: Colors.white, size: 32),
+                    child: const Icon(
+                      Icons.campaign_rounded,
+                      color: Colors.white,
+                      size: 32,
+                    ),
                   ),
                   title: Text(
                     title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 17,
+                    ),
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +112,10 @@ class AnnouncementsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: Colors.grey,
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -163,27 +186,35 @@ class AnnouncementsScreen extends StatelessWidget {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1B5E20),
+              ),
               onPressed: () async {
                 final title = titleController.text.trim();
                 final description = descriptionController.text.trim();
 
                 if (title.isEmpty || description.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Title and description are required')),
+                    const SnackBar(
+                      content: Text('Title and description are required'),
+                    ),
                   );
                   return;
                 }
 
                 try {
-                  await FirebaseFirestore.instance.collection('announcements').add({
-                    'title': title,
-                    'description': description,
-                    'timestamp': FieldValue.serverTimestamp(),
-                  });
+                  await FirebaseFirestore.instance
+                      .collection('announcements')
+                      .add({
+                        'title': title,
+                        'description': description,
+                        'timestamp': FieldValue.serverTimestamp(),
+                      });
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Announcement added successfully')),
+                    const SnackBar(
+                      content: Text('Announcement added successfully'),
+                    ),
                   );
 
                   Navigator.pop(context);
@@ -229,7 +260,10 @@ class AnnouncementDetailScreen extends StatelessWidget {
           children: [
             Text(date, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
             const SizedBox(height: 16),
-            Text(description, style: const TextStyle(fontSize: 16, height: 1.6)),
+            Text(
+              description,
+              style: const TextStyle(fontSize: 16, height: 1.6),
+            ),
           ],
         ),
       ),

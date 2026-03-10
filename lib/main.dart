@@ -3,11 +3,11 @@
 //import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:muc_digital/widgets/auth_wrapper.dart';
 import 'features/Garbage_tracking/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-
-
+import 'screens/admin_dashboard_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/user_agreement_screen.dart';
@@ -28,8 +28,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 
 //import 'widgets/app_drawer.dart';
+import 'widgets/app_drawer.dart';
 
-bool _firebaseInitialized = false;  // Global flag to prevent duplicate calls
+bool _firebaseInitialized = false; // Global flag to prevent duplicate calls
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,16 +76,14 @@ class MUCdigitalApp extends StatelessWidget {
           foregroundColor: Colors.white,
         ),
       ),
-      initialRoute: '/',
+      home: const AuthWrapper(), // Set AuthWrapper as the home (handles splash + auth routing)
       routes: {
-        '/': (context) => const SplashScreen(),
+        // Secondary routes only (AuthWrapper handles main auth flow)
         '/onboarding': (context) => OnboardingScreen(),
         '/user_agreement': (context) => const UserAgreementScreen(),
-        '/home': (context) => const HomeScreen(),
         '/emergency': (context) => EmergencyScreen(),
         '/announcements': (context) => const AnnouncementsScreen(),
         '/garbage_tracker': (context) => const GarbageTrackingScreen(),
-
         '/property_booking': (context) => const PropertyBookingScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/phone_login': (context) => const PhoneLoginScreen(),
@@ -96,10 +95,8 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         /*'/crematorium_booking': (context) => const CrematoriumBookingScreen(),*/
+        // Add any other non-auth routes here
       },
     );
   }
 }
-
-//Added the routes for property booking
-//Added the stripe keys and initialized it
