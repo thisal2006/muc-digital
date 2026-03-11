@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'sign_in_screen.dart'; // adjust path if needed
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import '../services/auth_service.dart';
-import '../services/auth_service.dart'; // Import auth_service
 import 'sign_in_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -24,8 +22,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  final _nameController = TextEditingController();
-  final _addressController = TextEditingController();
   String _phoneNumber = '';
   bool _isLoading = false;
   String? _errorMessage;
@@ -60,11 +56,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'name': _nameController.text.trim(),
           'email': user.email,
-          'phone': _phoneController.text.trim(),
+          'phone': _phoneNumber.isNotEmpty ? _phoneNumber : _phoneController.text.trim(),
           'address': _addressController.text.trim(),
           'role': 'user',
           'createdAt': FieldValue.serverTimestamp(),
         });
+
+        // Update last active
+        await _authService.updateLastActive();
 
         if (!mounted) return;
 
@@ -88,31 +87,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       setState(() => _errorMessage = msg);
     } catch (e) {
       setState(() => _errorMessage = 'Something went wrong. Please try again.');
-      if (user != null) {
-        // Save additional details to Firestore
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'name': _nameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'address': _addressController.text.trim(),
-          'phone': _phoneNumber,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        // Update last active
-        await _authService.updateLastActive();
-
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/home'); // Go to home after sign-up
-        }
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message ?? 'Sign up failed';
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error saving details: $e';
-      });
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -161,12 +135,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                 // Email
                 TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder()),
-                  validator: (val) => val!.isEmpty ? 'Name required' : null,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: _inputDecoration('Email'),
@@ -179,11 +147,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 16),
 
                 // Phone
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: _inputDecoration('Phone Number (e.g. +9477xxxxxxx)'),
-                  validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
+                InternationalPhoneNumberInput(
+                  onInputChanged: (PhoneNumber number) {
+                    _phoneNumber = number.phoneNumber ?? '';
+                  },
+                  selectorConfig: const SelectorConfig(
+                    selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
+                    setSelectorButtonAsPrefixIcon: true,
+                  ),
+                  countries: const ['LK', 'IN', 'US'],
+                  initialValue: PhoneNumber(isoCode: 'LK'),
+                  textFieldController: _phoneController,
+                  inputDecoration: _inputDecoration('Phone Number'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Required';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
 
@@ -216,37 +197,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   decoration: _inputDecoration('Confirm Password'),
                   validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
                 ),
-                const SizedBox(height: 24),
-
-                const SizedBox(height: 16),
-                InternationalPhoneNumberInput(
-                  onInputChanged: (PhoneNumber number) {
-                    _phoneNumber = number.phoneNumber ?? '';
-                  },
-                  selectorConfig: const SelectorConfig(
-                    selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
-                    setSelectorButtonAsPrefixIcon: true,
-                  ),
-                  countries: const ['LK', 'IN', 'US'],
-                  initialValue: PhoneNumber(isoCode: 'LK'),
-                  inputDecoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.length < 9) {
-                      return 'Enter a valid phone number';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _addressController,
-                  decoration: const InputDecoration(labelText: 'Address', border: OutlineInputBorder()),
-                  validator: (val) => val!.isEmpty ? 'Address required' : null,
-                ),
                 const SizedBox(height: 32),
+
                 if (_errorMessage != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -307,10 +259,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
                   ],
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen())),
-                  child: const Text('Already have an account? Sign In'),
                 ),
               ],
             ),

@@ -230,6 +230,4 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
     );
   }
 }*/
-}
 
-*/
