@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'vehicle_models.dart';
-import 'vehicle_service.dart';
+import 'booking_service.dart';
 import 'booking_success_screen.dart';
 
 class ContactDetailsScreen extends StatefulWidget {
@@ -24,7 +24,7 @@ class ContactDetailsScreen extends StatefulWidget {
 }
 
 class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
-  final VehicleService _vehicleService = VehicleService();
+  final BookingService _bookingService = BookingService();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -42,7 +42,7 @@ class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
 
     setState(() => _isSubmitting = true);
 
-    final success = await _vehicleService.createBooking(
+    final success = await _bookingService.createBooking(
       vehicleId: widget.vehicle.id,
       bookingType: widget.bookingType,
       startDate: widget.startDate,
@@ -61,7 +61,10 @@ class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Booking failed. Please try again.')),
+        const SnackBar(
+          content: Text('Booking failed. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -145,6 +148,61 @@ class _ContactDetailsScreenState extends State<ContactDetailsScreen> {
                               style: GoogleFonts.poppins(
                                 fontSize: 13,
                                 color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Pending booking info card
+              FadeInUp(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3E5F5), // Light purple matching PENDING color
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF7B1FA2).withOpacity(0.3), // Dark purple border
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF7B1FA2), // Dark purple
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.info_outline,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Booking Approval Process',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF7B1FA2),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Your booking will be marked as PENDING and requires admin approval before confirmation.',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: const Color(0xFF7B1FA2),
                               ),
                             ),
                           ],
