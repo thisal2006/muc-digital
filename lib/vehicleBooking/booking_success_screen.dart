@@ -8,7 +8,7 @@ class BookingSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0FBFA),
+      backgroundColor: const Color(0xFFF8F4FF), // Light purple background
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -21,21 +21,21 @@ class BookingSuccessScreen extends StatelessWidget {
                   width: 120,
                   height: 120,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF00897B),
+                    color: Color(0xFF7B1FA2), // Purple for pending
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check, color: Colors.white, size: 60),
+                  child: const Icon(Icons.schedule_outlined, color: Colors.white, size: 60),
                 ),
               ),
               const SizedBox(height: 40),
               FadeInUp(
                 delay: const Duration(milliseconds: 200),
                 child: Text(
-                  'Booking Confirmed!',
+                  'Booking Submitted!',
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1A1A1A),
+                    color: const Color(0xFF7B1FA2),
                   ),
                 ),
               ),
@@ -43,7 +43,7 @@ class BookingSuccessScreen extends StatelessWidget {
               FadeInUp(
                 delay: const Duration(milliseconds: 400),
                 child: Text(
-                  'Your vehicle has been successfully booked',
+                  'Your booking is now PENDING approval.\nAn admin will review and confirm your booking shortly.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                     fontSize: 16,
@@ -66,7 +66,7 @@ class BookingSuccessScreen extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00897B),
+                      backgroundColor: const Color(0xFF7B1FA2), // Purple theme
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
