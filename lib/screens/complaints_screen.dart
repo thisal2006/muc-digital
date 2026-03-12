@@ -182,8 +182,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
           _descriptionController.clear();
           _attachedImage = null;
         });
-        
-        // Switch to history tab
+
         DefaultTabController.of(context).animateTo(1);
       }
     } catch (e) {
@@ -310,7 +309,6 @@ class MyComplaintsList extends StatefulWidget {
 
 class _MyComplaintsListState extends State<MyComplaintsList> {
   String _searchQuery = "";
-  String _selectedFilter = "All";
 
   @override
   Widget build(BuildContext context) {
@@ -322,36 +320,23 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: "Search issues...",
-                    prefixIcon: const Icon(Icons.search, size: 20),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
-                ),
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: "Search your complaints...",
+              prefixIcon: const Icon(Icons.search, color: Color(0xFF2E7D32)),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
               ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: DropdownButton<String>(
-                  value: _selectedFilter,
-                  underline: const SizedBox(),
-                  items: ["All", "Pending", "In Progress", "Resolved"]
-                      .map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 14))))
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedFilter = v!),
-                ),
-              ),
-            ],
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            ),
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value.toLowerCase();
+              });
+            },
           ),
         ),
         Expanded(
@@ -361,33 +346,27 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                 .where('userId', isEqualTo: user.uid)
                 .snapshots(),
             builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Center(child: Text("Error: ${snapshot.error}"));
-              }
+              if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
               if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
 
-              var docs = snapshot.data?.docs ?? [];
-              
-              // Local sort & filtering
-              var filteredDocs = docs.where((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                final category = (data['category'] ?? '').toString().toLowerCase();
-                final description = (data['description'] ?? '').toString().toLowerCase();
-                final status = data['status'] ?? 'Pending';
+              List<QueryDocumentSnapshot> docs = snapshot.data?.docs ?? [];
 
-                final matchesSearch = category.contains(_searchQuery) || description.contains(_searchQuery);
-                final matchesStatus = _selectedFilter == "All" || status == _selectedFilter;
-
-                return matchesSearch && matchesStatus;
-              }).toList();
-
-              filteredDocs.sort((a, b) {
+              // Sort by date manually
+              docs.sort((a, b) {
                 Timestamp? t1 = (a.data() as Map<String, dynamic>)['createdAt'];
                 Timestamp? t2 = (b.data() as Map<String, dynamic>)['createdAt'];
                 if (t1 == null) return -1;
                 if (t2 == null) return 1;
                 return t2.compareTo(t1);
               });
+
+              // Filter based on search query
+              var filteredDocs = docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final category = (data['category'] ?? '').toString().toLowerCase();
+                final description = (data['description'] ?? '').toString().toLowerCase();
+                return category.contains(_searchQuery) || description.contains(_searchQuery);
+              }).toList();
 
               if (filteredDocs.isEmpty) {
                 return Center(
@@ -396,7 +375,7 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                     children: [
                       Icon(Icons.search_off, size: 80, color: Colors.grey[300]),
                       const SizedBox(height: 16),
-                      const Text("No matching complaints", style: TextStyle(color: Colors.grey)),
+                      const Text("No matching complaints found", style: TextStyle(color: Colors.grey, fontSize: 16)),
                     ],
                   ),
                 );
@@ -407,30 +386,15 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                 itemCount: filteredDocs.length,
                 itemBuilder: (context, index) {
                   final data = filteredDocs[index].data() as Map<String, dynamic>;
-                  final docId = filteredDocs[index].id;
                   final timestamp = data['createdAt'] as Timestamp?;
-                  final date = timestamp != null ? DateFormat('dd MMM yyyy').format(timestamp.toDate()) : 'Recent';
+                  final date = timestamp != null ? DateFormat('dd MMM yyyy, hh:mm a').format(timestamp.toDate()) : 'Recent';
 
-                  return Dismissible(
-                    key: Key(docId),
-                    direction: data['status'] == 'Pending' ? DismissDirection.endToStart : DismissDirection.none,
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(16)),
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    onDismissed: (_) async {
-                      await FirebaseFirestore.instance.collection('complaints').doc(docId).delete();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Complaint deleted")));
-                    },
-                    child: _ComplaintHistoryCard(
-                      category: data['category'] ?? 'General',
-                      description: data['description'] ?? '',
-                      status: data['status'] ?? 'Pending',
-                      date: date,
-                      imageUrl: data['imageUrl'],
-                    ),
+                  return _ComplaintHistoryCard(
+                    category: data['category'] ?? 'General',
+                    description: data['description'] ?? '',
+                    status: data['status'] ?? 'Pending',
+                    date: date,
+                    imageUrl: data['imageUrl'],
                   );
                 },
               );
@@ -539,14 +503,14 @@ class _ComplaintHistoryCard extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
-                    imageUrl!, 
-                    height: 120, 
-                    width: double.infinity, 
+                    imageUrl!,
+                    height: 120,
+                    width: double.infinity,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
-                      height: 120, 
-                      color: Colors.grey[200], 
-                      child: const Icon(Icons.broken_image, color: Colors.grey)
+                        height: 120,
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.broken_image, color: Colors.grey)
                     ),
                   ),
                 ),
