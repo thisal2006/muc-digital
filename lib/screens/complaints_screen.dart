@@ -226,6 +226,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             TextFormField(
               controller: _descriptionController,
               maxLines: 4,
+              maxLength: 500,
               decoration: _inputDecoration("Provide details about the issue...", Icons.description_outlined),
               validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
             ),
@@ -256,7 +257,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
                   children: [
                     Icon(Icons.add_a_photo_outlined, size: 40, color: Colors.grey[400]),
                     const SizedBox(height: 8),
-                    Text("Attach a photo", style: TextStyle(color: Colors.grey[600])),
+                    const Text("Attach a photo", style: TextStyle(color: Colors.grey)),
                   ],
                 ),
               ),
@@ -300,8 +301,16 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
   }
 }
 
-class MyComplaintsList extends StatelessWidget {
+class MyComplaintsList extends StatefulWidget {
   const MyComplaintsList({super.key});
+
+  @override
+  State<MyComplaintsList> createState() => _MyComplaintsListState();
+}
+
+class _MyComplaintsListState extends State<MyComplaintsList> {
+  String _searchQuery = "";
+  String _selectedFilter = "All";
 
   @override
   Widget build(BuildContext context) {
@@ -309,64 +318,126 @@ class MyComplaintsList extends StatelessWidget {
 
     if (user == null) return const Center(child: Text("Please login to view history"));
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('complaints')
-          .where('userId', isEqualTo: user.uid)
-          .orderBy('createdAt', descending: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          debugPrint("Firestore Error: ${snapshot.error}");
-          if (snapshot.error.toString().contains("failed-precondition")) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Text(
-                  "This view requires a Firestore Index. Please check your Firebase console to enable it.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.red),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: "Search issues...",
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
                 ),
               ),
-            );
-          }
-          return Center(child: Text("Error: ${snapshot.error}"));
-        }
-        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: DropdownButton<String>(
+                  value: _selectedFilter,
+                  underline: const SizedBox(),
+                  items: ["All", "Pending", "In Progress", "Resolved"]
+                      .map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 14))))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedFilter = v!),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('complaints')
+                .where('userId', isEqualTo: user.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(child: Text("Error: ${snapshot.error}"));
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
 
-        final docs = snapshot.data?.docs ?? [];
+              var docs = snapshot.data?.docs ?? [];
+              
+              // Local sort & filtering
+              var filteredDocs = docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final category = (data['category'] ?? '').toString().toLowerCase();
+                final description = (data['description'] ?? '').toString().toLowerCase();
+                final status = data['status'] ?? 'Pending';
 
-        if (docs.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.history_toggle_off, size: 80, color: Colors.grey[300]),
-                const SizedBox(height: 16),
-                const Text("No complaint history found", style: TextStyle(color: Colors.grey, fontSize: 16)),
-              ],
-            ),
-          );
-        }
+                final matchesSearch = category.contains(_searchQuery) || description.contains(_searchQuery);
+                final matchesStatus = _selectedFilter == "All" || status == _selectedFilter;
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            final data = docs[index].data() as Map<String, dynamic>;
-            final timestamp = data['createdAt'] as Timestamp?;
-            final date = timestamp != null ? DateFormat('dd MMM yyyy, hh:mm a').format(timestamp.toDate()) : 'Recent';
+                return matchesSearch && matchesStatus;
+              }).toList();
 
-            return _ComplaintHistoryCard(
-              category: data['category'] ?? 'General',
-              description: data['description'] ?? '',
-              status: data['status'] ?? 'Pending',
-              date: date,
-              imageUrl: data['imageUrl'],
-            );
-          },
-        );
-      },
+              filteredDocs.sort((a, b) {
+                Timestamp? t1 = (a.data() as Map<String, dynamic>)['createdAt'];
+                Timestamp? t2 = (b.data() as Map<String, dynamic>)['createdAt'];
+                if (t1 == null) return -1;
+                if (t2 == null) return 1;
+                return t2.compareTo(t1);
+              });
+
+              if (filteredDocs.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off, size: 80, color: Colors.grey[300]),
+                      const SizedBox(height: 16),
+                      const Text("No matching complaints", style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: filteredDocs.length,
+                itemBuilder: (context, index) {
+                  final data = filteredDocs[index].data() as Map<String, dynamic>;
+                  final docId = filteredDocs[index].id;
+                  final timestamp = data['createdAt'] as Timestamp?;
+                  final date = timestamp != null ? DateFormat('dd MMM yyyy').format(timestamp.toDate()) : 'Recent';
+
+                  return Dismissible(
+                    key: Key(docId),
+                    direction: data['status'] == 'Pending' ? DismissDirection.endToStart : DismissDirection.none,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(16)),
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    onDismissed: (_) async {
+                      await FirebaseFirestore.instance.collection('complaints').doc(docId).delete();
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Complaint deleted")));
+                    },
+                    child: _ComplaintHistoryCard(
+                      category: data['category'] ?? 'General',
+                      description: data['description'] ?? '',
+                      status: data['status'] ?? 'Pending',
+                      date: date,
+                      imageUrl: data['imageUrl'],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
