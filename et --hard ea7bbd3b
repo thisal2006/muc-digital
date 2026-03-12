@@ -1,0 +1,125 @@
+[33m8364370c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mApproval-flow[m[33m)[m Merge remote-tracking branch 'origin/main' into Approval-flow
+[33mea7bbd3b[m[33m ([m[1;31morigin/Approval-flow[m[33m)[m Updated the approval flow
+[33m20d7e4f8[m feat: implement Firestore StreamBuilder for real-time updates
+[33m648beda2[m feat: initialize MyBookingsScreen scaffold
+[33mc4e7fe4a[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge pull request #96
+[33m124c4248[m Updated the approval flow
+[33m939dbd04[m[33m ([m[1;32msettings-page[m[33m)[m Updated the approval flow
+[33mfd18fd2b[m Merge pull request #95
+[33mc3f05d3f[m[33m ([m[1;31morigin/settings-page[m[33m)[m created booking model to handle reservation data separately from properties
+[33m9320aecd[m Merge pull request #94
+[33ma81b934d[m created booking model to handle reservation data separately from properties
+[33m056586a5[m Merge pull request #93
+[33me9df4064[m Settings screen fully done
+[33m793fb639[m Settings screen fully done
+[33m06b2fd8f[m Merge pull request #92
+[33m8c7f54dd[m implement safe logout confirmation dialog
+[33mbc59520f[m Merge pull request #91
+[33m0b766cec[m implement safe logout confirmation dialog
+[33m88be7a3a[m Merge pull request #90
+[33m89a01688[m added logout button ui to settings screen
+[33md905c168[m Merge pull request #89
+[33mf179bb67[m implemented support and legal section in settings
+[33m4bdfcfc9[m Merge pull request #88
+[33m90848850[m implemented  account preferences section in settings
+[33md36dcd23[m Merge pull request #87
+[33mfee57363[m created reusable ui helper widgets for settings tiles
+[33ma9cfd850[m Merge pull request #86
+[33m48aa20eb[m built user profile header UI with avatar in settings
+[33m741c06c0[m Merge pull request #85
+[33ma1fe1ef2[m added orange themed app bar and scrollable list to settings
+[33m4bcc4777[m Merge pull request #84
+[33me095e60a[m initialize empty settings screen scaffold
+[33mf2d66185[m[33m ([m[1;31morigin/feature/property-details-Stripe[m[33m, [m[1;32mfeature/property-details-Stripe[m[33m)[m Approval pending section created and added to the My Bookings page
+[33m7c81be97[m Merge pull request #83
+[33m825974f9[m Approval pending section created and added to the My Bookings page
+[33m98c4238c[m Merge pull request #82
+[33m976f1055[m Approval pending section created and added to the My Bookings page
+[33m8fe5eb54[m Update auth and crematorium screens and refresh dependencies
+[33m3c71deba[m Merge pull request #81 from thisal2006/profile
+[33m2309f245[m Merge branch 'main' into profile
+[33m23ac8570[m fix(auth_wrapper): correct import path for `auth_service.dart`
+[33m615aa962[m feat(profile): integrate Firebase for user profile management
+[33m1020a9bd[m feat(auth): implement full sign-up functionality and UI
+[33m3c4edafd[m feat: add image caching and update Android activity
+[33mcfc076d7[m build(macos): register `sqflite_darwin` plugin
+[33mff36d8d2[m update sign up
+[33m741b46a5[m Save User to Firestore
+[33m586d0fd9[m save user profile to Firestore during signup
+[33m657ffa30[m few firebased updates
+[33mf0c31b1c[m Update application routing and clean up unused imports in main.dart
+[33m565511c1[m Merge pull request #79 from thisal2006/admindashboard
+[33m05848729[m Merge branch 'main' into admindashboard
+[33medd21ab8[m Update admin dashboard with enhanced property management and UI refinements
+[33m333bdf49[m Refactor AuthWrapper to include a splash screen and role-based routing
+[33mc13a7067[m Update main application configuration to use AuthWrapper and streamline routing
+[33m86a790a0[m Refactor `lib/splash_screen.dart` formatting
+[33m3d7f3b2d[m Update User Agreement screen with persistent state and revised UI
+[33m791f3c75[m Merge pull request #80
+[33mb62626ce[m EmailJS connected to get an automatic email for the user if the booking is approved or not
+[33m5d11257d[m correct snackbar syntax and enable floating snackbar style
+[33mf61972b8[m adjust default zoom level for dump points map
+[33m64f75cd9[m style(ui): enhance nearest dump card shadow
+[33m82033220[m Update admin dashboard with enhanced booking management, report tracking, and a new users tab
+[33m7ad4343c[m ui(dumps): add route icon to distance display
+[33md07ea7b1[m Merge remote-tracking branch 'origin/main'
+[33mff1af61e[m Update authentication flow with enhanced user profiles and named routing
+[33m945a8bfc[m Update OTP verification with admin role routing and activity tracking
+[33m4444326e[m Update home screen UI and navigation
+[33m6d864353[m Update splash screen with authentication state routing and inactivity checks
+[33ma02e9a2a[m Merge remote-tracking branch 'origin/main'
+[33m7761adca[m fix: remove recursive nearest dump card and stabilize dump points screen
+[33mb82d45b2[m Added version number v1.0.0 and tagline to splash screen bottom
+[33m4610a56a[m Fixed 'BuildContext across async gaps' warning in splash loading
+[33m6b160d57[m Updated splash to wait for Firebase initialization and auth check (real loading)
+[33mf84cdf1f[m Added fade-in animation to splash screen content
+[33mf2378be8[m Merge remote-tracking branch 'origin/main'
+[33m77552f11[m Updated splash loading dots to animated pulsing sequence
+[33maa6df768[m Merge pull request #78
+[33m3c6d9b04[m EmailJS connected to get an automatic email for the user if the booking is approved or not
+[33m6ea3e7ba[m Merge branch 'kasun'
+[33mf85e559e[m gitignotr
+[33m1c3a8d1e[m fronend of chat bot
+[33mdce27519[m backend of chat bot
+[33m0ab610fc[m Merge remote-tracking branch 'origin/main'
+[33m12743aa6[m Fixed syntax errors, deprecated withOpacity, and cleaned up splash loading dots
+[33mfecbdc6a[m Animated pulsing loading dots in splash screen
+[33me18fe498[m Merge pull request #77
+[33m59212527[m implemented approve and reject actions with firestore update logic
+[33m2976a29d[m Merge pull request #76
+[33m9484ef72[m added contact details, purpose, and time to admin booking cards
+[33m3fc8af04[m Merge pull request #75
+[33m26d0d362[m added contact details, purpose, and time to admin booking cards
+[33m94c1ecd2[m Merge pull request #74
+[33m2f92dbf8[m built list view and basic booking cards for admin
+[33mddb20da0[m Merge pull request #73
+[33m8f3676b0[m connected admin screen to global bookings firestore stream
+[33m49a43f21[m Merge pull request #72
+[33maa755a53[m initialize empty admin bookings screen with app bar
+[33mb3ad4e30[m Merge pull request #71
+[33m33d3ccc5[m linked My Bookings screen to bottom navigation bar
+[33md6def11f[m Merge pull request #70
+[33med7bf2e4[m add conditional Pay Now button for approved bookings
+[33m2aba2c20[m Merge pull request #69
+[33m2327b820[m ui: build booking history cards with dynamic status badges
+[33ma1c40b5a[m Merge pull request #68
+[33m22772f8c[m setup My Bookings screen with Firestore stream and empty state
+[33ma8ab3414[m Merge pull request #67
+[33mef0ce5d6[m save user contact data and require agreement to proceed
+[33m264a45af[m Merge pull request #66
+[33md28a87db[m new validate fields added in the booking flow
+[33m26b9900f[m Merge pull request #65
+[33ma38dbede[m implemented Terms and Conditions agreement checkbox
+[33m3faef76d[m Merge pull request #64
+[33m5b7e053a[m save user contact data and require agreement to proceed
+[33md4493f71[m Merge pull request #63
+[33mbb341697[m Booking flow architecture upgraded with adding Contact Name and Phone Number fields
+[33m31783505[m Merge pull request #62
+[33m1cb390d2[m Booking flow architecture upgraded with adding Contact Name and Phone Number fields
+[33m434c34ea[m quections of chat bot
+[33m9c2142b7[m Merge pull request #61 from thisal2006/feature/dump-points
+[33m4f951d40[m Merge pull request #60
+[33m1f665737[m Booking flow architecture upgraded
+[33m1bcb6834[m fix(ui): correct ElevatedButton styling placement in illegal dumping screen
+[33mfd60fa94[m Merge pull request #59 from thisal2006/admindashboard
+[33m7d701dd4[m Update sign in screen with admin/user role routing and improved error handling

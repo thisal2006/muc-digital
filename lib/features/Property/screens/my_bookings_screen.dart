@@ -35,13 +35,57 @@ class MyBookingsScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             itemCount: bookings.length,
             itemBuilder: (context, index) {
-              return const SizedBox(); // Placeholder for now
+              final data = bookings[index].data() as Map<String, dynamic>;
+
+              final propertyName = data['property_name'] ?? 'Unknown Venue';
+              final date = data['date'] ?? 'No date';
+              final slot = data['slot'] ?? 'No slot';
+              final price = data['price'] ?? 'LKR 0';
+
+              return Card(
+                elevation: 3,
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                          propertyName,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                      ),
+                      const Divider(height: 24),
+                      _buildDetailRow(Icons.calendar_today, date),
+                      const SizedBox(height: 8),
+                      _buildDetailRow(Icons.access_time, slot),
+                      const SizedBox(height: 8),
+                      _buildDetailRow(Icons.payments_outlined, price, isBold: true),
+                    ],
+                  ),
+                ),
+              );
             },
           );
         },
       ),
     );
   }
-}
 
-//Go
+
+  Widget _buildDetailRow(IconData icon, String text, {bool isBold = false}) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: TextStyle(
+              fontSize: 14,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal
+          ),
+        ),
+      ],
+    );
+  }
+}
