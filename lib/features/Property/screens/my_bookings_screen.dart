@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_stripe/flutter_stripe.dart'; // Make sure this is in pubspec.yaml
+import 'package:flutter_stripe/flutter_stripe.dart' hide Card; // Make sure this is in pubspec.yaml
 
 class MyBookingsScreen extends StatelessWidget {
   const MyBookingsScreen({super.key});
