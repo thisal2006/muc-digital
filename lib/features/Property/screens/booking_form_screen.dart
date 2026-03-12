@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/property_model.dart';
 
+
 class BookingFormScreen extends StatefulWidget {
   final Property property;
 
@@ -79,22 +80,17 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   }
 
   Future<void> _submitBookingRequest() async {
-    // 1. NEW: VALIDATE TEXT FIELDS (Name & Phone)
+    // 1. Validation
     if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please enter your Contact Name and Phone Number."),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text("Please enter your Contact Name and Phone Number."), backgroundColor: Colors.red),
       );
       return;
     }
 
-    // 2. NEW: VALIDATE CHECKBOX & DROPDOWNS
     if (selectedDate == null || selectedSlot == null || !_agreedToTerms) return;
 
-    if (!mounted) return;
-
+    // Show Loading
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -104,45 +100,46 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     try {
       final String formattedDate = selectedDate.toString().split(' ')[0];
 
-      // Check for conflicts
+      // 2. LOGIC: Check if this slot is ALREADY TAKEN by an Approved/Paid user
       final existingBookings = await FirebaseFirestore.instance
           .collection('bookings')
           .where('property_name', isEqualTo: widget.property.name)
           .where('date', isEqualTo: formattedDate)
           .where('slot', isEqualTo: selectedSlot)
-          .where('status', whereIn: ['Pending', 'Approved', 'Confirmed'])
+      // If anyone is already Approved or has Paid, this slot is GONE.
+          .where('status', whereIn: ['Approved', 'Paid', 'Approved, Payment Pending'])
           .get();
 
       if (existingBookings.docs.isNotEmpty) {
         if (!mounted) return;
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(); // Close loading
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Sorry, this time slot is already booked or pending approval."),
+            content: Text("This slot is already officially booked by someone else."),
             backgroundColor: Colors.red,
           ),
         );
         return;
       }
 
-      // 3. NEW: SAVE EVERYTHING TO FIRESTORE (including name and phone)
+      // 3. LOGIC: Save with the correct Municipal Status
       final bookingData = {
-        "user_id": "current_user_id",
+        "user_id": "current_user_id", // Replace with actual Auth ID later
         "property_name": widget.property.name,
         "price": _calculatedPrice,
         "date": formattedDate,
         "slot": selectedSlot,
-        "contact_name": _nameController.text.trim(),     // Saves Name
-        "contact_number": _phoneController.text.trim(), // Saves Phone
+        "contact_name": _nameController.text.trim(),
+        "contact_number": _phoneController.text.trim(),
         "reason": _reasonController.text.trim(),
-        "status": "Pending",
+        "status": "Approval Pending", // <--- CORRECT STATUS
         "timestamp": FieldValue.serverTimestamp(),
       };
 
       await FirebaseFirestore.instance.collection('bookings').add(bookingData);
 
       if (!mounted) return;
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(); // Close loading
       _showRequestSuccessDialog();
 
     } catch (e) {
