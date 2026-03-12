@@ -28,7 +28,19 @@ class MyBookingsScreen extends StatelessWidget {
           final bookings = snapshot.data!.docs;
 
           if (bookings.isEmpty) {
-            return const Center(child: Text("No bookings found."));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.account_balance_wallet_outlined, size: 64, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "No pending or active bookings",
+                    style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
+            );
           }
 
           return ListView.builder(
