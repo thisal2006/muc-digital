@@ -64,16 +64,16 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
   bool _isSubmitting = false;
   final _picker = ImagePicker();
 
-  final categories = [
-    "Illegal Dumping",
-    "Missed Garbage Collection",
-    "Street Light Issue",
-    "Road Damage",
-    "Water Leakage",
-    "Drainage Blockage",
-    "Public Nuisance",
-    "Other"
-  ];
+  final Map<String, String> categoryHints = {
+    "Illegal Dumping": "Typically reviewed within 24 hours.",
+    "Missed Garbage Collection": "Collection usually rescheduled for next working day.",
+    "Street Light Issue": "Repairs are normally batch-processed weekly.",
+    "Road Damage": "Inspection occurs within 3-5 business days.",
+    "Water Leakage": "Emergency teams are dispatched within 4-8 hours.",
+    "Drainage Blockage": "Manual cleaning scheduled within 48 hours.",
+    "Public Nuisance": "Officer investigation within 2 business days.",
+    "Other": "Response time varies by issue type."
+  };
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -213,19 +213,27 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: _selectedCategory,
-              items: categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
+              items: categoryHints.keys.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
               onChanged: (value) => setState(() => _selectedCategory = value),
               decoration: _inputDecoration("Select issue type", Icons.category_outlined),
               validator: (v) => v == null ? "Required" : null,
             ),
+            if (_selectedCategory != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8, left: 4),
+                child: Text(
+                  "Notice: ${categoryHints[_selectedCategory]}",
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF2E7D32), fontWeight: FontWeight.w500),
+                ),
+              ),
             const SizedBox(height: 24),
 
             _sectionLabel("Description"),
             const SizedBox(height: 8),
             TextFormField(
               controller: _descriptionController,
-              maxLines: 4,
-              maxLength: 500,
+              maxLines: 5,
+              maxLength: 500, // --- COMMIT 6 Feature
               decoration: _inputDecoration("Provide details about the issue...", Icons.description_outlined),
               validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
             ),
@@ -419,7 +427,6 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                   final timestamp = data['createdAt'] as Timestamp?;
                   final date = timestamp != null ? DateFormat('dd MMM yyyy, hh:mm a').format(timestamp.toDate()) : 'Recent';
 
-                  // --- COMMIT 5: Wrap with Animation ---
                   return TweenAnimationBuilder(
                     duration: Duration(milliseconds: 400 + (index * 100).clamp(0, 600)),
                     tween: Tween<double>(begin: 0, end: 1),
