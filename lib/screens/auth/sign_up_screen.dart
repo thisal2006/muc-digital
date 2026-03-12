@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'sign_in_screen.dart';
+import 'package:muc_digital/screens//services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -22,6 +22,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   bool _isLoading = false;
   String? _errorMessage;
+  final _authService = AuthService();
 
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
@@ -38,12 +39,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       // 1. Create Auth User
-      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      final user = await _authService.signUp(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
-
-      final user = credential.user;
 
       if (user != null) {
         // 2. Save Additional Info to Firestore
@@ -54,7 +53,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'phone': _phoneController.text.trim(),
           'address': _addressController.text.trim(),
           'createdAt': FieldValue.serverTimestamp(),
-          'photoUrl': null, // Placeholder for profile image
+          'lastActive': FieldValue.serverTimestamp(),
+          'photoUrl': null,
         });
 
         if (mounted) {
