@@ -5,8 +5,19 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text("Settings Loading...")),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Settings"),
+        backgroundColor: const Color(0xFFE67E22),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: const [
+          // We will add the profile here next!
+        ],
+      ),
     );
   }
 }
