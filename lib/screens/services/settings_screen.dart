@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '/screens/auth/sign_in_screen.dart';
+import '../auth/sign_in_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -55,6 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     bool isDeleting = false;
+    bool obscurePassword = true;
 
     showDialog(
       context: context,
@@ -74,10 +75,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: passwordController,
-                  obscureText: true,
+                  obscureText: obscurePassword,
                   decoration: InputDecoration(
                     labelText: "Password",
                     prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setDialogState(() => obscurePassword = !obscurePassword);
+                      },
+                    ),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   validator: (v) => v == null || v.isEmpty ? "Password required" : null,
