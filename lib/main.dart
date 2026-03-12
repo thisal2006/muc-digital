@@ -19,7 +19,7 @@ import 'features/Property/screens/property_booking_screen.dart';
 import 'screens/phone_login_screen.dart';
 import 'screens/otp_verification_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
-import 'screens/auth/sign_up_screen.dart';
+import 'screens/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'package:muc_digital/features/crematorium%20booking/crematorium_booking_screen.dart';
 
