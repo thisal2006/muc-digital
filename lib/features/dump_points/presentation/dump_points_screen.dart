@@ -524,7 +524,6 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
             markers: dumpMarkers,
             myLocationEnabled: true,
             trafficEnabled: true,
-            MapType _mapType = MapType.normal;
             onMapCreated: (controller) {
               mapController = controller;
             },
