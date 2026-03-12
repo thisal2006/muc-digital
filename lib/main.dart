@@ -91,7 +91,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_in': (context) => const SignInScreen(),
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
-        '/crematorium_booking': (context) => const CrematoriumBookingScreen(),
+
       },
     );
   }
