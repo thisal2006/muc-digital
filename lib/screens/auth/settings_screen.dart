@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  @override
-
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -27,6 +25,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
