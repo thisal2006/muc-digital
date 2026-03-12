@@ -73,6 +73,29 @@ class MyBookingsScreen extends StatelessWidget {
                       _buildDetailRow(Icons.access_time, slot),
                       const SizedBox(height: 8),
                       _buildDetailRow(Icons.payments_outlined, price, isBold: true),
+                      const Divider(height: 32, thickness: 0.5),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "BOOKING REF",
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade500,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          Text(
+                            bookings[index].id.substring(0, 8).toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontFamily: 'monospace', // Gives it that digital receipt look
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
