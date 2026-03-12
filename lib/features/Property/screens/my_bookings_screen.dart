@@ -19,8 +19,9 @@ class MyBookingsScreen extends StatelessWidget {
 
       await Stripe.instance.presentPaymentSheet();
 
+      // Inside makePayment function:
       await FirebaseFirestore.instance
-          .collection('bookings')
+          .collection('property_bookings') // Change 'bookings' to 'property_bookings'
           .doc(bookingId)
           .update({'status': 'Paid'});
 
@@ -84,9 +85,10 @@ class MyBookingsScreen extends StatelessWidget {
               final String docId = bookings[index].id; // Reference for payment
 
               final propertyName = data['property_name'] ?? 'Unknown Venue';
-              final date = data['date'] ?? 'No date';
-              final slot = data['slot'] ?? 'No slot';
+              final date = data['booking_date'] ?? 'No date';
+              final slot = data['time_slot'] ?? 'No slot';
               final price = data['price'] ?? 'LKR 0';
+
 
               final String status = data['status'] ?? 'Approval Pending';
               Color statusColor = Colors.orange;
