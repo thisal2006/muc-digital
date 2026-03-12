@@ -5,6 +5,38 @@ import 'package:flutter_stripe/flutter_stripe.dart' hide Card;
 class MyBookingsScreen extends StatelessWidget {
   const MyBookingsScreen({super.key});
 
+  // --- STRIPE PAYMENT LOGIC ---
+  Future<void> makePayment(BuildContext context, String priceStr, String bookingId) async {
+    try {
+      // 1. Initialize the Payment Sheet
+      // Note: In production, 'paymentIntentClientSecret' must come from your server/cloud function
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: const SetupPaymentSheetParameters(
+          paymentIntentClientSecret: "pi_test_placeholder_secret", // Dummy for now
+          merchantDisplayName: 'MUC Digital',
+          style: ThemeMode.light,
+        ),
+      );
+
+      // 2. Display the Stripe UI
+      await Stripe.instance.presentPaymentSheet();
+
+      // 3. Update Firestore if successful
+      await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(bookingId)
+          .update({'status': 'Paid'});
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Payment Successful!"), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      debugPrint("Payment Error: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
