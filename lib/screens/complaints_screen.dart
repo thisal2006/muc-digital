@@ -376,7 +376,6 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
 
               List<QueryDocumentSnapshot> docs = snapshot.data?.docs ?? [];
 
-              // Sort by date manually
               docs.sort((a, b) {
                 Timestamp? t1 = (a.data() as Map<String, dynamic>)['createdAt'];
                 Timestamp? t2 = (b.data() as Map<String, dynamic>)['createdAt'];
@@ -385,7 +384,6 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                 return t2.compareTo(t1);
               });
 
-              // Filter based on search query AND status
               var filteredDocs = docs.where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 final category = (data['category'] ?? '').toString().toLowerCase();
@@ -421,42 +419,55 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                   final timestamp = data['createdAt'] as Timestamp?;
                   final date = timestamp != null ? DateFormat('dd MMM yyyy, hh:mm a').format(timestamp.toDate()) : 'Recent';
 
-                  // --- COMMIT 4: Added Dismissible logic ---
-                  return Dismissible(
-                    key: Key(docId),
-                    direction: data['status'] == 'Pending' ? DismissDirection.endToStart : DismissDirection.none,
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(16)),
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    confirmDismiss: (direction) async {
-                      return await showDialog(
-                        context: context,
-                        builder: (BuildContext context) => AlertDialog(
-                          title: const Text("Confirm Delete"),
-                          content: const Text("Are you sure you want to remove this report?"),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("CANCEL")),
-                            TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text("DELETE", style: TextStyle(color: Colors.red))),
-                          ],
+                  // --- COMMIT 5: Wrap with Animation ---
+                  return TweenAnimationBuilder(
+                    duration: Duration(milliseconds: 400 + (index * 100).clamp(0, 600)),
+                    tween: Tween<double>(begin: 0, end: 1),
+                    builder: (context, double value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Transform.translate(
+                          offset: Offset(0, 30 * (1 - value)),
+                          child: child,
                         ),
                       );
                     },
-                    onDismissed: (direction) async {
-                      await FirebaseFirestore.instance.collection('complaints').doc(docId).delete();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Report deleted successfully")));
-                      }
-                    },
-                    child: _ComplaintHistoryCard(
-                      category: data['category'] ?? 'General',
-                      description: data['description'] ?? '',
-                      status: data['status'] ?? 'Pending',
-                      date: date,
-                      imageUrl: data['imageUrl'],
+                    child: Dismissible(
+                      key: Key(docId),
+                      direction: data['status'] == 'Pending' ? DismissDirection.endToStart : DismissDirection.none,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(16)),
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      confirmDismiss: (direction) async {
+                        return await showDialog(
+                          context: context,
+                          builder: (BuildContext context) => AlertDialog(
+                            title: const Text("Confirm Delete"),
+                            content: const Text("Are you sure you want to remove this report?"),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("CANCEL")),
+                              TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text("DELETE", style: TextStyle(color: Colors.red))),
+                            ],
+                          ),
+                        );
+                      },
+                      onDismissed: (direction) async {
+                        await FirebaseFirestore.instance.collection('complaints').doc(docId).delete();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Report deleted successfully")));
+                        }
+                      },
+                      child: _ComplaintHistoryCard(
+                        category: data['category'] ?? 'General',
+                        description: data['description'] ?? '',
+                        status: data['status'] ?? 'Pending',
+                        date: date,
+                        imageUrl: data['imageUrl'],
+                      ),
                     ),
                   );
                 },
