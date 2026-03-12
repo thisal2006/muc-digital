@@ -1,7 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../screens/services/auth_service.dart';
 import '../screens/auth/sign_in_screen.dart';
-import '../screens/complaints_screen.dart';
+import '../screens/home_screen.dart'; // your home screen
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -22,7 +23,7 @@ class AppDrawer extends StatelessWidget {
                 colors: [
                   Color(0xFF2E7D32), // dark green
                   Color(0xFF388E3C), // medium green
-                  Color(0xFF66BB6A), // lighter green
+                  Color(0xFF66BB6A), // lighter green-orange transition
                 ],
               ),
             ),
@@ -52,7 +53,7 @@ class AppDrawer extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withAlpha(38),
+                                color: Colors.black.withOpacity(0.15),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -97,7 +98,7 @@ class AppDrawer extends StatelessWidget {
                   leading: const Icon(Icons.person_outline, color: Color(0xFF2E7D32)),
                   title: const Text('Profile'),
                   onTap: () {
-                    Navigator.pop(context);
+                    Navigator.pop(context); // Close drawer first
                     Navigator.pushNamed(context, '/profile');
                   },
                 ),
@@ -106,21 +107,31 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Booking History'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Handle booking history
+                    // FIXED: Now navigates directly to booking history screen
+                    Navigator.pushNamed(context, '/booking-history');
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.report_problem_outlined, color: Color(0xFF2E7D32)),
                   title: const Text('My Complaints'),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Text(
+                      '2',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                   onTap: () {
                     Navigator.pop(context);
-                    // Navigate to complaints history tab (index 1)
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ComplaintsScreen(initialTabIndex: 1),
-                      ),
-                    );
+                    Navigator.pushNamed(context, '/complaints');
                   },
                 ),
                 ListTile(
@@ -136,7 +147,13 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Settings'),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, '/settings');
+                    // Navigator.pushNamed(context, '/settings');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Settings screen coming soon!'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
                   },
                 ),
 
