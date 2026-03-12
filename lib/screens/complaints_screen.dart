@@ -6,13 +6,20 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
-class ComplaintsScreen extends StatelessWidget {
-  const ComplaintsScreen({super.key});
+class ComplaintsScreen extends StatefulWidget {
+  final int initialTabIndex;
+  const ComplaintsScreen({super.key, this.initialTabIndex = 0});
 
+  @override
+  State<ComplaintsScreen> createState() => _ComplaintsScreenState();
+}
+
+class _ComplaintsScreenState extends State<ComplaintsScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
+      initialIndex: widget.initialTabIndex,
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAF8),
         appBar: AppBar(
@@ -175,6 +182,9 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
           _descriptionController.clear();
           _attachedImage = null;
         });
+        
+        // Switch to history tab
+        DefaultTabController.of(context).animateTo(1);
       }
     } catch (e) {
       if (mounted) {
@@ -203,7 +213,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             _sectionLabel("Complaint Category"),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              initialValue: _selectedCategory,
+              value: _selectedCategory,
               items: categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
               onChanged: (value) => setState(() => _selectedCategory = value),
               decoration: _inputDecoration("Select issue type", Icons.category_outlined),
@@ -306,7 +316,22 @@ class MyComplaintsList extends StatelessWidget {
           .orderBy('createdAt', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
+        if (snapshot.hasError) {
+          debugPrint("Firestore Error: ${snapshot.error}");
+          if (snapshot.error.toString().contains("failed-precondition")) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text(
+                  "This view requires a Firestore Index. Please check your Firebase console to enable it.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            );
+          }
+          return Center(child: Text("Error: ${snapshot.error}"));
+        }
         if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
 
         final docs = snapshot.data?.docs ?? [];
@@ -361,6 +386,46 @@ class _ComplaintHistoryCard extends StatelessWidget {
     this.imageUrl,
   });
 
+  void _showDetails(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(category),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Status: $status", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+              const SizedBox(height: 4),
+              Text("Date: $date", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              const Divider(height: 24),
+              const Text("Description:", style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text(description),
+              if (imageUrl != null) ...[
+                const SizedBox(height: 16),
+                const Text("Evidence:", style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                  ),
+                ),
+              ]
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close")),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Color statusColor;
@@ -370,42 +435,53 @@ class _ComplaintHistoryCard extends StatelessWidget {
       default: statusColor = Colors.blue;
     }
 
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      child: InkWell(
+        onTap: () => _showDetails(context),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: statusColor.withAlpha(26),
-              child: Icon(Icons.report_problem_outlined, color: statusColor, size: 20),
-            ),
-            title: Text(category, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            subtitle: Text(date, style: const TextStyle(fontSize: 12)),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(color: statusColor.withAlpha(26), borderRadius: BorderRadius.circular(20)),
-              child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 11)),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Text(description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.black54)),
-          ),
-          if (imageUrl != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(imageUrl!, height: 120, width: double.infinity, fit: BoxFit.cover),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: statusColor.withAlpha(26),
+                child: Icon(Icons.report_problem_outlined, color: statusColor, size: 20),
+              ),
+              title: Text(category, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              subtitle: Text(date, style: const TextStyle(fontSize: 12)),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: statusColor.withAlpha(26), borderRadius: BorderRadius.circular(20)),
+                child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 11)),
               ),
             ),
-        ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Text(description, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.black54)),
+            ),
+            if (imageUrl != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    imageUrl!, 
+                    height: 120, 
+                    width: double.infinity, 
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 120, 
+                      color: Colors.grey[200], 
+                      child: const Icon(Icons.broken_image, color: Colors.grey)
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
