@@ -1,8 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../screens/services/auth_service.dart';
 import '../screens/auth/sign_in_screen.dart';
-import '../screens/home_screen.dart'; // your home screen
+import '../screens/complaints_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -23,7 +22,7 @@ class AppDrawer extends StatelessWidget {
                 colors: [
                   Color(0xFF2E7D32), // dark green
                   Color(0xFF388E3C), // medium green
-                  Color(0xFF66BB6A), // lighter green-orange transition
+                  Color(0xFF66BB6A), // lighter green
                 ],
               ),
             ),
@@ -53,7 +52,7 @@ class AppDrawer extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
+                                color: Colors.black.withAlpha(38),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -98,7 +97,7 @@ class AppDrawer extends StatelessWidget {
                   leading: const Icon(Icons.person_outline, color: Color(0xFF2E7D32)),
                   title: const Text('Profile'),
                   onTap: () {
-                    Navigator.pop(context); // Close drawer first
+                    Navigator.pop(context);
                     Navigator.pushNamed(context, '/profile');
                   },
                 ),
@@ -107,37 +106,21 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Booking History'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Navigate to profile screen with tab or open booking history directly
-                    // Option 1: Navigate to profile with booking history tab
-                    Navigator.pushNamed(context, '/profile').then((_) {
-                      // You can add logic here if needed
-                    });
-
-                    // Option 2: If you want a separate booking history screen (uncomment below)
-                    // Navigator.pushNamed(context, '/booking-history');
+                    // Handle booking history
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.report_problem_outlined, color: Color(0xFF2E7D32)),
                   title: const Text('My Complaints'),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      '2',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, '/complaints');
+                    // Navigate to complaints history tab (index 1)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ComplaintsScreen(initialTabIndex: 1),
+                      ),
+                    );
                   },
                 ),
                 ListTile(
@@ -153,13 +136,7 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Settings'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Navigator.pushNamed(context, '/settings');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Settings screen coming soon!'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    Navigator.pushNamed(context, '/settings');
                   },
                 ),
 
