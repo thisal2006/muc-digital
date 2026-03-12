@@ -519,11 +519,11 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
         children: [
 
           GoogleMap(
-            initialCameraPosition:
-            initialCamera,
+            initialCameraPosition: initialCamera,
             markers: dumpMarkers,
             myLocationEnabled: true,
             trafficEnabled: true,
+            mapType: _mapType,
             onMapCreated: (controller) {
               mapController = controller;
             },
@@ -536,6 +536,24 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
               right: 16,
               child: _nearestDumpCard(),
             ),
+
+          Positioned(
+            bottom: 100,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: "mapTypeToggle",
+              mini: true,
+              onPressed: () {
+                setState(() {
+                  _mapType = _mapType == MapType.normal
+                      ? MapType.satellite
+                      : MapType.normal;
+                });
+              },
+              child: const Icon(Icons.layers),
+            ),
+          ),
+
         ],
       ),
     );
