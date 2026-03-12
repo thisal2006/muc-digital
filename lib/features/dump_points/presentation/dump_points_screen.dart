@@ -223,8 +223,8 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(
           LatLng(closest.lat, closest.lng),
-          15,
-        ),
+          12,
+      ),
       );
     }
   }
