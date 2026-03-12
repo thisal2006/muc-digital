@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Added for Haptics
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'auth/sign_in_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -20,6 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isLoading = true;
   bool _isSaving = false;
   int _complaintCount = 0;
+  String _memberSince = "---";
 
   final _formKey = GlobalKey<FormState>();
 
@@ -93,6 +96,11 @@ class _ProfileScreenState extends State<ProfileScreen>
           _addressController.text = data['address'] ?? '';
           _emailController.text = data['email'] ?? currentUser!.email ?? '';
           _photoUrl = data['photoUrl'];
+
+          final createdAt = data['createdAt'] as Timestamp?;
+          if (createdAt != null) {
+            _memberSince = DateFormat('MMM yyyy').format(createdAt.toDate());
+          }
         });
       } else {
         _emailController.text = currentUser!.email ?? '';
@@ -108,6 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
+    HapticFeedback.mediumImpact(); // --- COMMIT 10: Feedback
     setState(() => _isSaving = true);
     try {
       String? newUrl = _photoUrl;
@@ -161,23 +170,36 @@ class _ProfileScreenState extends State<ProfileScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 40),
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: _getProfileImage(),
-                      child: _getProfileImage() == null ? const Icon(Icons.person, size: 50, color: Colors.white) : null,
+                    Tooltip( // --- COMMIT 10: Tooltip
+                      message: "Profile Photo",
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundImage: _getProfileImage(),
+                        child: _getProfileImage() == null ? const Icon(Icons.person, size: 50, color: Colors.white) : null,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(_nameController.text, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text("Member Since: $_memberSince", style: const TextStyle(color: Colors.white70, fontSize: 12)),
                   ],
                 ),
               ),
             ),
             actions: [
               IconButton(
+                tooltip: _isEditing ? "Cancel" : "Edit Profile", // --- COMMIT 10: Tooltip
                 icon: Icon(_isEditing ? Icons.close : Icons.edit),
-                onPressed: () => setState(() => _isEditing = !_isEditing),
+                onPressed: () {
+                  HapticFeedback.lightImpact(); // --- COMMIT 10: Feedback
+                  setState(() => _isEditing = !_isEditing);
+                },
               ),
-              if (_isEditing) IconButton(icon: const Icon(Icons.check), onPressed: _saveProfile),
+              if (_isEditing)
+                IconButton(
+                    tooltip: "Save Changes",
+                    icon: const Icon(Icons.check),
+                    onPressed: _saveProfile
+                ),
             ],
           ),
           SliverToBoxAdapter(
@@ -187,7 +209,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   children: [
-                    // --- STATISTICS SECTION (Commit 1) ---
                     Row(
                       children: [
                         _buildStatCard("Complaints", _complaintCount.toString(), Icons.report_problem, Colors.orange),
@@ -271,6 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _logout() async {
+    HapticFeedback.heavyImpact(); // --- COMMIT 10: Feedback
     await _auth.signOut();
     if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
   }
