@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:muc_digital/screens/auth/sign_in_screen.dart'; // adjust path if needed
+import 'auth/sign_in_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -25,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
+  late TextEditingController _emailController;
 
   File? _tempImageFile; // local file preview
   String? _photoUrl;    // remote URL from Firestore
@@ -46,6 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
+    _emailController = TextEditingController();
 
     _animationController = AnimationController(
       vsync: this,
@@ -74,8 +76,12 @@ class _ProfileScreenState extends State<ProfileScreen>
           _nameController.text = data['name'] ?? '';
           _phoneController.text = data['phone'] ?? '';
           _addressController.text = data['address'] ?? '';
+          _emailController.text = data['email'] ?? currentUser!.email ?? '';
           _photoUrl = data['photoUrl'];
         });
+      } else {
+        // Fallback for email if doc doesn't exist yet
+        _emailController.text = currentUser!.email ?? '';
       }
     } catch (e) {
       if (mounted) {
@@ -93,41 +99,78 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _pickImage() async {
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text("Choose from Gallery"),
-              onTap: () async {
-                Navigator.pop(context);
-                final file = await _picker.pickImage(
-                  source: ImageSource.gallery,
-                  imageQuality: 70,
-                );
-                if (file != null && mounted) {
-                  setState(() => _tempImageFile = File(file.path));
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text("Take Photo"),
-              onTap: () async {
-                Navigator.pop(context);
-                final file = await _picker.pickImage(
-                  source: ImageSource.camera,
-                  imageQuality: 70,
-                );
-                if (file != null && mounted) {
-                  setState(() => _tempImageFile = File(file.path));
-                }
-              },
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Profile Photo",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _imagePickerAction(
+                    icon: Icons.photo_library,
+                    label: "Gallery",
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final file = await _picker.pickImage(
+                        source: ImageSource.gallery,
+                        imageQuality: 70,
+                      );
+                      if (file != null && mounted) {
+                        setState(() => _tempImageFile = File(file.path));
+                      }
+                    },
+                  ),
+                  _imagePickerAction(
+                    icon: Icons.camera_alt,
+                    label: "Camera",
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final file = await _picker.pickImage(
+                        source: ImageSource.camera,
+                        imageQuality: 70,
+                      );
+                      if (file != null && mounted) {
+                        setState(() => _tempImageFile = File(file.path));
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _imagePickerAction({required IconData icon, required String label, required VoidCallback onTap}) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(50),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: const Color(0xFF2E7D32), size: 30),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(label),
+      ],
     );
   }
 
@@ -186,7 +229,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile updated successfully")),
+          const SnackBar(
+            content: Text("Profile updated successfully"),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
@@ -201,16 +247,147 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _logout() async {
-    await FirebaseAuth.instance.signOut();
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const SignInScreen()),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Logged out")),
-      );
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to logout?"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("No", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _auth.signOut();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const SignInScreen()),
+          (route) => false,
+        );
+      }
     }
+  }
+
+  void _showDeleteAccountDialog() {
+    final passwordController = TextEditingController();
+    final deleteFormKey = GlobalKey<FormState>();
+    bool isDeleting = false;
+    bool obscurePassword = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Delete Account", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          content: Form(
+            key: deleteFormKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "This action is permanent and cannot be undone. Please enter your password to confirm.",
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
+                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  validator: (v) => v == null || v.isEmpty ? "Password required" : null,
+                ),
+              ],
+            ),
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          actions: [
+            TextButton(
+              onPressed: isDeleting ? null : () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: isDeleting
+                  ? null
+                  : () async {
+                if (!deleteFormKey.currentState!.validate()) return;
+
+                setDialogState(() => isDeleting = true);
+
+                try {
+                  // Re-authenticate
+                  AuthCredential credential = EmailAuthProvider.credential(
+                    email: currentUser!.email!,
+                    password: passwordController.text.trim(),
+                  );
+                  await currentUser!.reauthenticateWithCredential(credential);
+
+                  // Delete from Firestore
+                  await _firestore.collection('users').doc(currentUser!.uid).delete();
+
+                  // Delete from Auth
+                  await currentUser!.delete();
+
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SignInScreen()),
+                          (route) => false,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Account deleted successfully")),
+                    );
+                  }
+                } on FirebaseAuthException catch (e) {
+                  setDialogState(() => isDeleting = false);
+                  String msg = e.message ?? "Error deleting account";
+                  if (e.code == 'wrong-password') msg = "Incorrect password";
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(msg), backgroundColor: Colors.red),
+                  );
+                } catch (e) {
+                  setDialogState(() => isDeleting = false);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: isDeleting
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text("Delete Forever"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -221,144 +398,188 @@ class _ProfileScreenState extends State<ProfileScreen>
       );
     }
 
-    if (currentUser == null) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text("Not logged in"),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => Navigator.pushReplacementNamed(context, '/sign_in'),
-                child: const Text("Go to Sign In"),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8F5),
-      appBar: AppBar(
-        title: const Text("My Profile"),
-        backgroundColor: const Color(0xFF2E7D32),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          if (!_isEditing)
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => setState(() => _isEditing = true),
-            )
-          else
-            IconButton(
-              icon: _isSaving
-                  ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-              )
-                  : const Icon(Icons.save),
-              onPressed: _isSaving ? null : _saveProfile,
-            ),
-        ],
-      ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-
-                    // Profile Picture
-                    GestureDetector(
-                      onTap: _isEditing ? _pickImage : null,
-                      child: Stack(
-                        alignment: Alignment.bottomRight,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 400),
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [Colors.green[700]!, Colors.green[400]!],
+      backgroundColor: const Color(0xFFF8FAF8),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 220.0,
+            floating: false,
+            pinned: true,
+            backgroundColor: const Color(0xFF2E7D32),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                  ),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
+                      GestureDetector(
+                        onTap: _isEditing ? _pickImage : null,
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
                               ),
-                            ),
-                            child: CircleAvatar(
-                              radius: 70,
-                              backgroundColor: Colors.white,
                               child: CircleAvatar(
-                                radius: 66,
+                                radius: 55,
                                 backgroundColor: Colors.grey[200],
                                 backgroundImage: _getProfileImage(),
                                 child: _getProfileImage() == null
-                                    ? const Icon(
-                                  Icons.person,
-                                  size: 70,
-                                  color: Color(0xFF2E7D32),
-                                )
+                                    ? const Icon(Icons.person, size: 60, color: Color(0xFF2E7D32))
                                     : null,
                               ),
                             ),
-                          ),
-                          if (_isEditing)
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF2E7D32),
-                                shape: BoxShape.circle,
+                            if (_isEditing)
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [BoxShadow(blurRadius: 5, color: Colors.black26)],
+                                ),
+                                child: const Icon(Icons.camera_alt, color: Color(0xFF2E7D32), size: 18),
                               ),
-                              child: const Icon(
-                                Icons.camera_alt,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // Fields
-                    _buildField("Full Name", _nameController, TextInputType.name),
-                    const SizedBox(height: 20),
-                    _buildField("Phone Number", _phoneController, TextInputType.phone),
-                    const SizedBox(height: 20),
-                    _buildField("Address", _addressController, TextInputType.streetAddress),
-
-                    const SizedBox(height: 40),
-
-                    // Logout Button
-                    OutlinedButton.icon(
-                      onPressed: _logout,
-                      icon: const Icon(Icons.logout, color: Colors.red),
-                      label: const Text(
-                        "Log Out",
-                        style: TextStyle(color: Colors.red, fontSize: 16),
+                      const SizedBox(height: 10),
+                      Text(
+                        _nameController.text.isNotEmpty ? _nameController.text : "User Name",
+                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red),
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      Text(
+                        _emailController.text,
+                        style: const TextStyle(color: Colors.white70, fontSize: 14),
                       ),
-                    ),
-
-                    const SizedBox(height: 60),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
+            actions: [
+              if (!_isEditing)
+                IconButton(
+                  icon: const Icon(Icons.edit_note),
+                  onPressed: () => setState(() => _isEditing = true),
+                )
+              else
+                TextButton(
+                  onPressed: _isSaving ? null : _saveProfile,
+                  child: _isSaving
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Text("SAVE", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionTitle("Personal Information"),
+                      const SizedBox(height: 15),
+                      _buildModernField(
+                        label: "Full Name",
+                        controller: _nameController,
+                        icon: Icons.person_outline,
+                        type: TextInputType.name,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildModernField(
+                        label: "Email Address",
+                        controller: _emailController,
+                        icon: Icons.email_outlined,
+                        type: TextInputType.emailAddress,
+                        enabled: false, // Email usually handled separately in Firebase
+                      ),
+                      const SizedBox(height: 20),
+                      _buildModernField(
+                        label: "Phone Number",
+                        controller: _phoneController,
+                        icon: Icons.phone_android_outlined,
+                        type: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildModernField(
+                        label: "Residential Address",
+                        controller: _addressController,
+                        icon: Icons.location_on_outlined,
+                        type: TextInputType.streetAddress,
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 40),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _logout,
+                          icon: const Icon(Icons.logout),
+                          label: const Text("Logout"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF2E7D32),
+                            elevation: 0,
+                            side: const BorderSide(color: Color(0xFF2E7D32)),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _showDeleteAccountDialog,
+                          icon: const Icon(Icons.delete_forever),
+                          label: const Text("Delete Account"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.red,
+                            elevation: 0,
+                            side: const BorderSide(color: Colors.red),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 50),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: Colors.grey[600],
+        letterSpacing: 1.2,
       ),
     );
   }
@@ -371,34 +592,55 @@ class _ProfileScreenState extends State<ProfileScreen>
     return null;
   }
 
-  Widget _buildField(String label, TextEditingController controller, TextInputType type) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      child: TextFormField(
-        controller: controller,
-        enabled: _isEditing,
-        keyboardType: type,
-        validator: _isEditing
-            ? (value) => value == null || value.trim().isEmpty ? '$label is required' : null
-            : null,
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: _isEditing ? Colors.white : Colors.grey[100],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+  Widget _buildModernField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    required TextInputType type,
+    bool enabled = true,
+    int maxLines = 1,
+  }) {
+    bool isActuallyEnabled = _isEditing && enabled;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black54),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          enabled: isActuallyEnabled,
+          keyboardType: type,
+          maxLines: maxLines,
+          style: const TextStyle(fontSize: 16, color: Colors.black87),
+          validator: (value) => value == null || value.trim().isEmpty ? '$label is required' : null,
+          decoration: InputDecoration(
+            prefixIcon: Icon(icon, color: isActuallyEnabled ? const Color(0xFF2E7D32) : Colors.grey),
+            filled: true,
+            fillColor: isActuallyEnabled ? Colors.white : Colors.grey[50],
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[300]!),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[100]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5),
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -407,6 +649,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _nameController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _emailController.dispose();
     _animationController.dispose();
     super.dispose();
   }
