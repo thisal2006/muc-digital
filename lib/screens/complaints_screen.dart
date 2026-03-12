@@ -233,7 +233,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             TextFormField(
               controller: _descriptionController,
               maxLines: 5,
-              maxLength: 500, // --- COMMIT 6 Feature
+              maxLength: 500,
               decoration: _inputDecoration("Provide details about the issue...", Icons.description_outlined),
               validator: (v) => (v == null || v.isEmpty) ? "Required" : null,
             ),
@@ -412,72 +412,83 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                       Icon(Icons.search_off, size: 80, color: Colors.grey[300]),
                       const SizedBox(height: 16),
                       const Text("No matching complaints found", style: TextStyle(color: Colors.grey, fontSize: 16)),
+                      const SizedBox(height: 24),
+                      TextButton.icon(
+                        onPressed: () => DefaultTabController.of(context).animateTo(0),
+                        icon: const Icon(Icons.add, color: Color(0xFF2E7D32)),
+                        label: const Text("Submit New Report", style: TextStyle(color: Color(0xFF2E7D32))),
+                      )
                     ],
                   ),
                 );
               }
 
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: filteredDocs.length,
-                itemBuilder: (context, index) {
-                  final doc = filteredDocs[index];
-                  final data = doc.data() as Map<String, dynamic>;
-                  final docId = doc.id;
-                  final timestamp = data['createdAt'] as Timestamp?;
-                  final date = timestamp != null ? DateFormat('dd MMM yyyy, hh:mm a').format(timestamp.toDate()) : 'Recent';
+              return RefreshIndicator(
+                onRefresh: () async {
+                  setState(() {}); // Trigger rebuild
+                },
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: filteredDocs.length,
+                  itemBuilder: (context, index) {
+                    final doc = filteredDocs[index];
+                    final data = doc.data() as Map<String, dynamic>;
+                    final docId = doc.id;
+                    final timestamp = data['createdAt'] as Timestamp?;
+                    final date = timestamp != null ? DateFormat('dd MMM yyyy, hh:mm a').format(timestamp.toDate()) : 'Recent';
 
-                  return TweenAnimationBuilder(
-                    duration: Duration(milliseconds: 400 + (index * 100).clamp(0, 600)),
-                    tween: Tween<double>(begin: 0, end: 1),
-                    builder: (context, double value, child) {
-                      return Opacity(
-                        opacity: value,
-                        child: Transform.translate(
-                          offset: Offset(0, 30 * (1 - value)),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Dismissible(
-                      key: Key(docId),
-                      direction: data['status'] == 'Pending' ? DismissDirection.endToStart : DismissDirection.none,
-                      background: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(16)),
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      confirmDismiss: (direction) async {
-                        return await showDialog(
-                          context: context,
-                          builder: (BuildContext context) => AlertDialog(
-                            title: const Text("Confirm Delete"),
-                            content: const Text("Are you sure you want to remove this report?"),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("CANCEL")),
-                              TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text("DELETE", style: TextStyle(color: Colors.red))),
-                            ],
+                    return TweenAnimationBuilder(
+                      duration: Duration(milliseconds: 400 + (index * 100).clamp(0, 600)),
+                      tween: Tween<double>(begin: 0, end: 1),
+                      builder: (context, double value, child) {
+                        return Opacity(
+                          opacity: value,
+                          child: Transform.translate(
+                            offset: Offset(0, 30 * (1 - value)),
+                            child: child,
                           ),
                         );
                       },
-                      onDismissed: (direction) async {
-                        await FirebaseFirestore.instance.collection('complaints').doc(docId).delete();
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Report deleted successfully")));
-                        }
-                      },
-                      child: _ComplaintHistoryCard(
-                        category: data['category'] ?? 'General',
-                        description: data['description'] ?? '',
-                        status: data['status'] ?? 'Pending',
-                        date: date,
-                        imageUrl: data['imageUrl'],
+                      child: Dismissible(
+                        key: Key(docId),
+                        direction: data['status'] == 'Pending' ? DismissDirection.endToStart : DismissDirection.none,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(16)),
+                          child: const Icon(Icons.delete, color: Colors.white),
+                        ),
+                        confirmDismiss: (direction) async {
+                          return await showDialog(
+                            context: context,
+                            builder: (BuildContext context) => AlertDialog(
+                              title: const Text("Confirm Delete"),
+                              content: const Text("Are you sure you want to remove this report?"),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("CANCEL")),
+                                TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text("DELETE", style: TextStyle(color: Colors.red))),
+                              ],
+                            ),
+                          );
+                        },
+                        onDismissed: (direction) async {
+                          await FirebaseFirestore.instance.collection('complaints').doc(docId).delete();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Report deleted successfully")));
+                          }
+                        },
+                        child: _ComplaintHistoryCard(
+                          category: data['category'] ?? 'General',
+                          description: data['description'] ?? '',
+                          status: data['status'] ?? 'Pending',
+                          date: date,
+                          imageUrl: data['imageUrl'],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               );
             },
           ),
