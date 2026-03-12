@@ -309,7 +309,7 @@ class MyComplaintsList extends StatefulWidget {
 
 class _MyComplaintsListState extends State<MyComplaintsList> {
   String _searchQuery = "";
-  String _selectedFilter = "All"; // Commit 3 Addition
+  String _selectedFilter = "All";
 
   @override
   Widget build(BuildContext context) {
@@ -321,7 +321,7 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Row( // Commit 3: Added Row for Filter
+          child: Row(
             children: [
               Expanded(
                 child: TextField(
@@ -344,7 +344,7 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                 ),
               ),
               const SizedBox(width: 10),
-              Container( // Commit 3: Status Filter
+              Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -385,7 +385,7 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                 return t2.compareTo(t1);
               });
 
-              // Filter based on search query AND status (Commit 3 Logic)
+              // Filter based on search query AND status
               var filteredDocs = docs.where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 final category = (data['category'] ?? '').toString().toLowerCase();
@@ -415,16 +415,49 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: filteredDocs.length,
                 itemBuilder: (context, index) {
-                  final data = filteredDocs[index].data() as Map<String, dynamic>;
+                  final doc = filteredDocs[index];
+                  final data = doc.data() as Map<String, dynamic>;
+                  final docId = doc.id;
                   final timestamp = data['createdAt'] as Timestamp?;
                   final date = timestamp != null ? DateFormat('dd MMM yyyy, hh:mm a').format(timestamp.toDate()) : 'Recent';
 
-                  return _ComplaintHistoryCard(
-                    category: data['category'] ?? 'General',
-                    description: data['description'] ?? '',
-                    status: data['status'] ?? 'Pending',
-                    date: date,
-                    imageUrl: data['imageUrl'],
+                  // --- COMMIT 4: Added Dismissible logic ---
+                  return Dismissible(
+                    key: Key(docId),
+                    direction: data['status'] == 'Pending' ? DismissDirection.endToStart : DismissDirection.none,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(16)),
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    confirmDismiss: (direction) async {
+                      return await showDialog(
+                        context: context,
+                        builder: (BuildContext context) => AlertDialog(
+                          title: const Text("Confirm Delete"),
+                          content: const Text("Are you sure you want to remove this report?"),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("CANCEL")),
+                            TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text("DELETE", style: TextStyle(color: Colors.red))),
+                          ],
+                        ),
+                      );
+                    },
+                    onDismissed: (direction) async {
+                      await FirebaseFirestore.instance.collection('complaints').doc(docId).delete();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Report deleted successfully")));
+                      }
+                    },
+                    child: _ComplaintHistoryCard(
+                      category: data['category'] ?? 'General',
+                      description: data['description'] ?? '',
+                      status: data['status'] ?? 'Pending',
+                      date: date,
+                      imageUrl: data['imageUrl'],
+                    ),
                   );
                 },
               );
