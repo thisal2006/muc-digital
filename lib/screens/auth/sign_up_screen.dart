@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'sign_in_screen.dart';
+import 'package:muc_digital/screens//services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -21,9 +21,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
   String? _errorMessage;
+  final _authService = AuthService();
 
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
@@ -39,14 +38,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      // 1. Create Auth User
+      final user = await _authService.signUp(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
 
-      final user = credential.user;
-
       if (user != null) {
+        // 2. Save Additional Info to Firestore
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'uid': user.uid,
           'name': _nameController.text.trim(),
@@ -54,6 +53,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'phone': _phoneController.text.trim(),
           'address': _addressController.text.trim(),
           'createdAt': FieldValue.serverTimestamp(),
+          'lastActive': FieldValue.serverTimestamp(),
           'photoUrl': null,
         });
 
@@ -146,8 +146,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   controller: _passwordController,
                   icon: Icons.lock_outline,
                   type: TextInputType.visiblePassword,
-                  obscure: _obscurePassword,
-                  onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
+                  obscure: true,
                   validator: (v) => v!.length < 6 ? 'Min 6 characters' : null,
                 ),
                 const SizedBox(height: 20),
@@ -157,8 +156,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   controller: _confirmPasswordController,
                   icon: Icons.lock_clock_outlined,
                   type: TextInputType.visiblePassword,
-                  obscure: _obscureConfirmPassword,
-                  onToggleObscure: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                  obscure: true,
                 ),
 
                 if (_errorMessage != null) ...[
@@ -213,7 +211,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     required IconData icon,
     required TextInputType type,
     bool obscure = false,
-    VoidCallback? onToggleObscure,
     int maxLines = 1,
     String? Function(String?)? validator,
   }) {
@@ -226,15 +223,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF2E7D32)),
-        suffixIcon: onToggleObscure != null
-            ? IconButton(
-          icon: Icon(
-            obscure ? Icons.visibility_off : Icons.visibility,
-            color: Colors.grey,
-          ),
-          onPressed: onToggleObscure,
-        )
-            : null,
         filled: true,
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
