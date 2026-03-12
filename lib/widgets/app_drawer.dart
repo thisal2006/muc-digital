@@ -107,14 +107,8 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Booking History'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Navigate to profile screen with tab or open booking history directly
-                    // Option 1: Navigate to profile with booking history tab
-                    Navigator.pushNamed(context, '/profile').then((_) {
-                      // You can add logic here if needed
-                    });
-
-                    // Option 2: If you want a separate booking history screen (uncomment below)
-                    // Navigator.pushNamed(context, '/booking-history');
+                    // FIXED: Now navigates directly to booking history screen
+                    Navigator.pushNamed(context, '/booking-history');
                   },
                 ),
                 ListTile(
