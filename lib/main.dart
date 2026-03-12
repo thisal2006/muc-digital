@@ -19,8 +19,9 @@ import 'features/Property/screens/property_booking_screen.dart';
 import 'screens/phone_login_screen.dart';
 import 'screens/otp_verification_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
-import 'screens/sign_up_screen.dart';
+import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
+import 'screens/services/settings_screen.dart';
 import 'package:muc_digital/features/crematorium%20booking/crematorium_booking_screen.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -98,11 +99,9 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_in': (context) => const SignInScreen(),
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
+        '/settings': (context) => const SettingsScreen(),
 
       },
     );
   }
 }
-
-//Added the routes for property booking
-//Added the stripe keys and initialized it
