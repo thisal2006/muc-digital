@@ -1,139 +1,295 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
-import 'otp_verification_screen.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart'; // Added for Date formatting
+import 'auth/sign_in_screen.dart';
 
-class PhoneLoginScreen extends StatefulWidget {
-  const PhoneLoginScreen({super.key});
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
-  State<PhoneLoginScreen> createState() => _PhoneLoginScreenState();
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
+  bool _isEditing = false;
+  bool _isLoading = true;
+  bool _isSaving = false;
+  int _complaintCount = 0;
+  String _memberSince = "---"; // --- COMMIT 9 Feature
+
   final _formKey = GlobalKey<FormState>();
-  String _phoneNumber = '';
-  bool _isLoading = false;
-  String _initialCountryCode = 'LK'; // Sri Lanka
 
-  Future<void> _sendOTP() async {
-    if (!_formKey.currentState!.validate()) return;
+  late TextEditingController _nameController;
+  late TextEditingController _phoneController;
+  late TextEditingController _addressController;
+  late TextEditingController _emailController;
 
-    setState(() => _isLoading = true);
+  File? _tempImageFile;
+  String? _photoUrl;
 
+  final ImagePicker _picker = ImagePicker();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  User? get currentUser => _auth.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _phoneController = TextEditingController();
+    _addressController = TextEditingController();
+    _emailController = TextEditingController();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+
+    _animationController.forward();
+    _loadUserData();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    if (currentUser == null) return;
     try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: _phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await FirebaseAuth.instance.signInWithCredential(credential);
-          _goToHome();
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Verification failed: ${e.message}')),
-          );
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          setState(() => _isLoading = false);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => OTPVerificationScreen(
-                verificationId: verificationId,
-                phoneNumber: _phoneNumber,
-              ),
-            ),
-          );
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {},
-      );
+      final snapshot = await _firestore
+          .collection('complaints')
+          .where('userId', isEqualTo: currentUser!.uid)
+          .get();
+      if (mounted) {
+        setState(() => _complaintCount = snapshot.docs.length);
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      debugPrint("Error loading stats: $e");
     }
   }
 
-  void _goToHome() {
-    Navigator.pushReplacementNamed(context, '/home');
+  Future<void> _loadUserData() async {
+    if (currentUser == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+    try {
+      final doc = await _firestore.collection('users').doc(currentUser!.uid).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        setState(() {
+          _nameController.text = data['name'] ?? '';
+          _phoneController.text = data['phone'] ?? '';
+          _addressController.text = data['address'] ?? '';
+          _emailController.text = data['email'] ?? currentUser!.email ?? '';
+          _photoUrl = data['photoUrl'];
+
+          // --- COMMIT 9 logic
+          final createdAt = data['createdAt'] as Timestamp?;
+          if (createdAt != null) {
+            _memberSince = DateFormat('MMM yyyy').format(createdAt.toDate());
+          }
+        });
+      } else {
+        _emailController.text = currentUser!.email ?? '';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
+    try {
+      String? newUrl = _photoUrl;
+      if (_tempImageFile != null) {
+        final ref = _storage.ref().child('profiles/${currentUser!.uid}.jpg');
+        await ref.putFile(_tempImageFile!);
+        newUrl = await ref.getDownloadURL();
+      }
+
+      await _firestore.collection('users').doc(currentUser!.uid).set({
+        'name': _nameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'address': _addressController.text.trim(),
+        'photoUrl': newUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      setState(() {
+        _photoUrl = newUrl;
+        _tempImageFile = null;
+        _isEditing = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profile Updated")));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Save Error: $e")));
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Phone Login'),
-        backgroundColor: const Color(0xFF1B5E20),
-        foregroundColor: Colors.white,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 40),
-                const Text(
-                  'Enter your phone number',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
+      backgroundColor: const Color(0xFFF8FAF8),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 200.0,
+            pinned: true,
+            backgroundColor: const Color(0xFF2E7D32),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)]),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'We will send a one-time password (OTP)',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                  textAlign: TextAlign.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 40),
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundImage: _getProfileImage(),
+                      child: _getProfileImage() == null ? const Icon(Icons.person, size: 50, color: Colors.white) : null,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(_nameController.text, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text("Member Since: $_memberSince", style: const TextStyle(color: Colors.white70, fontSize: 12)), // --- Subtitle Added
+                  ],
                 ),
-                const SizedBox(height: 40),
-                InternationalPhoneNumberInput(
-                  onInputChanged: (PhoneNumber number) {
-                    _phoneNumber = number.phoneNumber ?? '';
-                  },
-                  selectorConfig: const SelectorConfig(
-                    selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
-                    setSelectorButtonAsPrefixIcon: true,
-                  ),
-                  countries: const ['LK', 'IN', 'US'],
-                  initialValue: PhoneNumber(isoCode: _initialCountryCode),
-                  inputDecoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.length < 9) {
-                      return 'Enter a valid phone number';
-                    }
-                    return null;
-                  },
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(_isEditing ? Icons.close : Icons.edit),
+                onPressed: () => setState(() => _isEditing = !_isEditing),
+              ),
+              if (_isEditing) IconButton(icon: const Icon(Icons.check), onPressed: _saveProfile),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        _buildStatCard("Complaints", _complaintCount.toString(), Icons.report_problem, Colors.orange),
+                        const SizedBox(width: 15),
+                        _buildStatCard("Bookings", "0", Icons.calendar_today, Colors.blue),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          _buildModernField("Full Name", _nameController, Icons.person_outline),
+                          const SizedBox(height: 16),
+                          _buildModernField("Phone", _phoneController, Icons.phone_android),
+                          const SizedBox(height: 16),
+                          _buildModernField("Address", _addressController, Icons.location_on_outlined, maxLines: 2),
+                          const SizedBox(height: 30),
+                          ElevatedButton.icon(
+                            onPressed: _logout,
+                            icon: const Icon(Icons.logout),
+                            label: const Text("Logout"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.red,
+                              minimumSize: const Size(double.infinity, 50),
+                              side: const BorderSide(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _sendOTP,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B5E20),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
-                  )
-                      : const Text(
-                    'Send OTP',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withAlpha(15), blurRadius: 10)],
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(height: 8),
+            Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _buildModernField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+    return TextFormField(
+      controller: controller,
+      enabled: _isEditing,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFF2E7D32)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  ImageProvider? _getProfileImage() {
+    if (_tempImageFile != null) return FileImage(_tempImageFile!);
+    if (_photoUrl != null && _photoUrl!.isNotEmpty) return CachedNetworkImageProvider(_photoUrl!);
+    return null;
+  }
+
+  Future<void> _logout() async {
+    await _auth.signOut();
+    if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _emailController.dispose();
+    _animationController.dispose();
+    super.dispose();
   }
 }
