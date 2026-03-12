@@ -41,6 +41,11 @@ class SettingsScreen extends StatelessWidget {
           _SettingsTile(icon: Icons.lock_outline, title: "Change Password", onTap: () {}),
           _SettingsTile(icon: Icons.notifications_none, title: "Push Notifications", onTap: () {}),
           const Divider(height: 32),
+
+          const _SectionHeader(title: "Support & Legal"),
+          _SettingsTile(icon: Icons.help_outline, title: "Help Center & FAQ", onTap: () {}),
+          _SettingsTile(icon: Icons.privacy_tip_outlined, title: "Privacy Policy", onTap: () {}),
+          const SizedBox(height: 32),
         ],
       ),
     );
