@@ -507,7 +507,12 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Dump Points"),
+        title: const Text(
+          "Dump Points",
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
+        elevation: 2,
       ),
 
       body: Stack(
