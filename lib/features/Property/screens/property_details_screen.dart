@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/property_model.dart';
@@ -179,6 +181,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
 
 
           // SafeArea prevents the button from being cut off by the phone's "home bar"
+          // Corrected Bottom Bar with Firebase Logic
           SafeArea(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -186,7 +189,6 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-         
                     color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
@@ -199,11 +201,37 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => BookingFormScreen(property: widget.property))
-                  );
+                onPressed: () async {
+                  // 1. Logic for Firebase
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user != null) {
+                    await FirebaseFirestore.instance.collection('property_bookings').add({
+                      'user_id': user.uid,
+                      'property_name': widget.property.name,
+                      'price': widget.property.price,
+                      'status': 'pending',
+                      'timestamp': FieldValue.serverTimestamp(),
+                    });
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Booking request submitted!')),
+                      );
+                    }
+
+                    // 2. Navigate to the Form Screen if you still want the user to fill details
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => BookingFormScreen(property: widget.property)
+                        )
+                    );
+                  } else {
+                    // Handle case where user isn't logged in
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please log in to book')),
+                    );
+                  }
                 },
                 child: const Text("BOOK NOW", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               ),
@@ -214,4 +242,3 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     );
   }
 }
-//file is upto date
