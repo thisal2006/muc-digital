@@ -382,7 +382,7 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                   value: _selectedFilter,
                   underline: const SizedBox(),
                   icon: const Icon(Icons.filter_list, color: Color(0xFF2E7D32)),
-                  items: ["All", "Pending", "In Progress", "Resolved"]
+                  items: ["All", "Pending", "In Progress", "Completed"]
                       .map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 13))))
                       .toList(),
                   onChanged: (v) => setState(() => _selectedFilter = v!),
@@ -576,7 +576,7 @@ class _ComplaintHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Color statusColor;
     switch (status) {
-      case 'Resolved': statusColor = Colors.green; break;
+      case 'Completed': statusColor = Colors.green; break;
       case 'In Progress': statusColor = Colors.orange; break;
       default: statusColor = Colors.blue;
     }
