@@ -48,8 +48,8 @@ class MyBookingsScreen extends StatelessWidget {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('bookings')
-            .where('user_id', isEqualTo: userId) // Using the dynamic userId
+            .collection('property_bookings') // Double check if it's 'bookings' or 'property_bookings'
+            .where('user_id', isEqualTo: FirebaseAuth.instance.currentUser?.uid) // Match the index name!
             .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
