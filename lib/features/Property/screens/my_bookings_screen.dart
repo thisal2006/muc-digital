@@ -1,8 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_stripe/flutter_stripe.dart'; // Make sure this is in pubspec.yaml
 
 class MyBookingsScreen extends StatelessWidget {
   const MyBookingsScreen({super.key});
+
+  // --- STRIPE PAYMENT FUNCTION ---
+  Future<void> makePayment(BuildContext context, String priceStr) async {
+    try {
+      // STEP 1: You must create a PaymentIntent on your server/backend here!
+      // Example: final paymentIntent = await callYourCloudFunction(priceStr);
+
+      // FOR NOW: This is placeholder data that your backend WOULD return
+      final clientSecret = "pi_YOUR_SECRET_FROM_BACKEND";
+
+      // STEP 2: Initialize the Payment Sheet
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'MUC Digital',
+          // Add your Stripe publishable key in your main.dart!
+        ),
+      );
+
+      // STEP 3: Display the Payment Sheet
+      await Stripe.instance.presentPaymentSheet();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Payment Successful!", style: TextStyle(color: Colors.green))),
+      );
+
+      // STEP 4: Update the Firestore document to 'Confirmed' here!
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Payment failed or canceled: $e")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +48,9 @@ class MyBookingsScreen extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Connect directly to the user's booking history
         stream: FirebaseFirestore.instance
             .collection('bookings')
-            .where('user_id', isEqualTo: 'current_user_id')
+            .where('user_id', isEqualTo: 'current_user_id') // Make sure this matches your actual auth ID!
             .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
@@ -30,7 +64,6 @@ class MyBookingsScreen extends StatelessWidget {
 
           final bookings = snapshot.data!.docs;
 
-          // EMPTY STATE: If they have no bookings at all
           if (bookings.isEmpty) {
             return Center(
               child: Column(
@@ -44,8 +77,6 @@ class MyBookingsScreen extends StatelessWidget {
             );
           }
 
-
-          // THE LIST OF BOOKINGS
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: bookings.length,
@@ -55,14 +86,16 @@ class MyBookingsScreen extends StatelessWidget {
               final propertyName = data['property_name'] ?? 'Unknown Property';
               final date = data['date'] ?? 'No date';
               final slot = data['slot'] ?? 'No slot';
-              final status = data['status'] ?? 'Pending';
               final price = data['price'] ?? 'LKR 0';
 
-              // DYNAMIC STATUS COLORS
-              Color statusColor = Colors.orange; // Default for Pending
-              if (status == 'Approved') statusColor = Colors.blue;
-              if (status == 'Confirmed') statusColor = Colors.green;
-              if (status == 'Rejected') statusColor = Colors.red;
+              // FIX 1: Normalize status to lowercase so it always matches
+              final rawStatus = data['status'] ?? 'pending';
+              final status = rawStatus.toString().toLowerCase();
+
+              Color statusColor = Colors.orange;
+              if (status == 'approved') statusColor = Colors.blue;
+              if (status == 'confirmed') statusColor = Colors.green;
+              if (status == 'rejected') statusColor = Colors.red;
 
               return Card(
                 elevation: 3,
@@ -73,7 +106,6 @@ class MyBookingsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header: Property Name & Status Badge
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -92,15 +124,14 @@ class MyBookingsScreen extends StatelessWidget {
                               border: Border.all(color: statusColor),
                             ),
                             child: Text(
-                              status,
+                              // Capitalize the first letter for the UI
+                              status[0].toUpperCase() + status.substring(1),
                               style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
                             ),
                           ),
                         ],
                       ),
                       const Divider(height: 24),
-
-                      // Details
                       Row(
                         children: [
                           const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
@@ -117,36 +148,31 @@ class MyBookingsScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
+                      // FIX 2: Close the Row here!
                       Row(
                         children: [
                           const Icon(Icons.payments_outlined, size: 16, color: Colors.grey),
                           const SizedBox(width: 8),
                           Text(price, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-
-                          // THE MAGIC "PAY NOW" BUTTON
-                          // This only shows up IF the admin changes the status to 'Approved'!
-                          if (status == 'Approval Pending') ...[
-                            const SizedBox(height: 16),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  // We will connect Stripe here later!
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Stripe Payment Screen opening soon...")),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                ),
-                                child: const Text("Pay Now to Confirm"),
-                              ),
-                            ),
-                          ],
                         ],
                       ),
+
+                      // FIX 2: Move the button OUTSIDE the Row so it doesn't cause a RenderFlex overflow
+                      if (status == 'approved') ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => makePayment(context, price),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: const Text("Pay Now to Confirm"),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
