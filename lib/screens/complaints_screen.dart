@@ -148,6 +148,25 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
       return;
     }
 
+    // --- COMMIT 8: Added Confirmation Dialog ---
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirm Submission"),
+        content: Text("Are you sure you want to submit this '$_selectedCategory' report?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("REVIEW")),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32), foregroundColor: Colors.white),
+            child: const Text("CONFIRM"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     setState(() => _isSubmitting = true);
 
     try {
