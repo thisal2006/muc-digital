@@ -1,14 +1,18 @@
+/*
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:path/path.dart' as path;
+// Remove the path import if not needed, or add path to pubspec.yaml
+// import 'package:path/path.dart' as path;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'crematorium_booking_data.dart';
+import 'crematorium_booking_data.dart';  // Model for passed data
+// Update this import path to match your actual payment screen location
+import '../property/screens/payment_screen.dart';  // Adjust path as needed
 
 class CrematoriumDocumentUploadScreen extends StatefulWidget {
-  final CrematoriumBookingData bookingData;
+  final CrematoriumBookingData bookingData;  // Receives real data from previous screens
 
   const CrematoriumDocumentUploadScreen({
     super.key,
@@ -26,11 +30,18 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
 
   Future<void> pickImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    setState(() {
-      if (pickedFile != null) {
-        _image = File(pickedFile.path);
-      }
-    });
+    if (mounted) {
+      setState(() {
+        if (pickedFile != null) {
+          _image = File(pickedFile.path);
+        }
+      });
+    }
+  }
+
+  String _getFileName(String path) {
+    // Manual implementation instead of using path.basename
+    return path.split('/').last;
   }
 
   Future<void> uploadAndSaveBooking() async {
@@ -38,14 +49,17 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
 
     setState(() => _isUploading = true);
 
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    // Store context reference before async gap
+    final currentContext = context;
+    final scaffoldMessenger = ScaffoldMessenger.of(currentContext);
+
     scaffoldMessenger.showSnackBar(
       const SnackBar(content: Text('Uploading document...')),
     );
 
     try {
-      // Unique filename
-      String fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(_image!.path)}';
+      // Unique filename - manual basename implementation
+      String fileName = '${DateTime.now().millisecondsSinceEpoch}_${_getFileName(_image!.path)}';
 
       // Upload to Firebase Storage
       final ref = FirebaseStorage.instance.ref().child('crematorium_documents/$fileName');
@@ -68,7 +82,9 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
         'userId': FirebaseAuth.instance.currentUser?.uid ?? 'anonymous',
       });
 
-      // Success
+      // Check if widget is still mounted before using context
+      if (!mounted) return;
+
       scaffoldMessenger.hideCurrentSnackBar();
       scaffoldMessenger.showSnackBar(
         const SnackBar(
@@ -77,17 +93,26 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
         ),
       );
 
-      setState(() => _isUploading = false);
+      // Navigate to payment screen
+      Navigator.push(
+        currentContext,
+        MaterialPageRoute(
+          builder: (context) => const PaymentScreen(),
+        ),
+      );
 
-      // TODO: Navigate to payment screen (add later)
-      // Navigator.push(context, MaterialPageRoute(builder: (context) => PaymentScreen()));
+      if (mounted) {
+        setState(() => _isUploading = false);
+      }
 
     } catch (e) {
-      scaffoldMessenger.hideCurrentSnackBar();
-      scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-      );
-      setState(() => _isUploading = false);
+      if (mounted) {
+        scaffoldMessenger.hideCurrentSnackBar();
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+        setState(() => _isUploading = false);
+      }
     }
   }
 
@@ -204,4 +229,5 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
       ),
     );
   }
-}
+}*/
+
