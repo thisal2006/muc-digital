@@ -125,7 +125,7 @@ class MyBookingsScreen extends StatelessWidget {
 
                           // THE MAGIC "PAY NOW" BUTTON
                           // This only shows up IF the admin changes the status to 'Approved'!
-                          if (status == 'Approved') ...[
+                          if (status == 'Approval Pending') ...[
                             const SizedBox(height: 16),
                             SizedBox(
                               width: double.infinity,
