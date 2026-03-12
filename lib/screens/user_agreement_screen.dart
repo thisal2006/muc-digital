@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Add this for AuthWrapper
-import '../main.dart'; // Import to access AuthWrapper
+import 'package:muc_digital/main.dart';
+
+import '../widgets/auth_wrapper.dart';
 
 class UserAgreementScreen extends StatelessWidget {
   const UserAgreementScreen({super.key});
@@ -117,7 +119,7 @@ class UserAgreementScreen extends StatelessWidget {
                       // After agreement → go to auth flow (AuthWrapper will handle the rest)
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const AuthWrapper()),
+                        MaterialPageRoute(builder: (_) => AuthWrapper()),
                       );
                     },
                     child: const Text(
