@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:muc_digital/screens//services/auth_service.dart';
 import 'sign_up_screen.dart';
-import 'forgot_password_screen.dart'; // ← Make sure this import exists
+import 'forgot_password_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -16,6 +17,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  final _authService = AuthService();
 
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
@@ -26,9 +28,9 @@ class _SignInScreenState extends State<SignInScreen> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      await _authService.signIn(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
 
       if (mounted) {
@@ -91,7 +93,6 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 const SizedBox(height: 8),
 
-                // Forgot Password link - RIGHT HERE
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -154,5 +155,12 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }
