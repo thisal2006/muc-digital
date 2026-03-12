@@ -46,8 +46,25 @@ class SettingsScreen extends StatelessWidget {
           _SettingsTile(icon: Icons.help_outline, title: "Help Center & FAQ", onTap: () {}),
           _SettingsTile(icon: Icons.privacy_tip_outlined, title: "Privacy Policy", onTap: () {}),
           const SizedBox(height: 32),
+
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                // Dialog coming in next commit!
+              },
+              icon: const Icon(Icons.logout, color: Colors.red),
+              label: const Text("Log Out", style: TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.bold)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.red, width: 2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
         ],
       ),
+
     );
   }
 }
