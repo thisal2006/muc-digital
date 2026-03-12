@@ -3,11 +3,11 @@
 //import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:muc_digital/widgets/auth_wrapper.dart';
 import 'features/Garbage_tracking/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-
-
+import 'screens/admin_dashboard_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/user_agreement_screen.dart';
@@ -23,12 +23,19 @@ import 'screens/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'package:muc_digital/features/crematorium%20booking/crematorium_booking_screen.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+
 //import 'widgets/app_drawer.dart';
+import 'widgets/app_drawer.dart';
 
 bool _firebaseInitialized = false;  // Global flag to prevent duplicate calls
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  Stripe.publishableKey = "pk_test_51SzuZY0KRpwcO4zEHs47arkmOTryBOAhNWAgBo2nAHdd2bwvIkoaPhoHnTuJFMhj1B4aB6RqfMaIJkmBsL8R0ERW008fqqSwg4";
 
   if (!_firebaseInitialized) {
     if (Firebase.apps.isEmpty) {

@@ -123,7 +123,7 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
       UploadTask uploadTask =
       ref.putFile(imageFile!);
 
-      /// 🔥 TRACK PROGRESS
+      ///TRACK PROGRESS
       uploadTask.snapshotEvents.listen((event) {
 
         final progress =
@@ -135,7 +135,7 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
         });
       });
 
-      /// 🔥 FORCE TIMEOUT (NO MORE INFINITE SPINNER)
+      /// FORCE TIMEOUT (NO MORE INFINITE SPINNER)
       TaskSnapshot snapshot =
       await uploadTask.timeout(
         const Duration(seconds: 30),
@@ -155,7 +155,7 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
         "description": description,
         "imageUrl": imageUrl,
 
-        // ⭐ USE GEOPPOINT (VERY IMPORTANT FOR FUTURE MAP QUERIES)
+        //USED GEOPPOINT (VERY IMPORTANT FOR FUTURE MAP QUERIES)
         "location": GeoPoint(
           position.latitude,
           position.longitude,
@@ -205,9 +205,11 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
   //--------------------------------------------------
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(content: Text(message)),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -220,14 +222,39 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title:
-        const Text("Report Illegal Dumping"),
+        elevation: 0,
+        centerTitle: true,
+        backgroundColor: Colors.green.shade700,
+        title: const Text(
+          "Report Illegal Dumping",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
+
 
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            const Text(
+              "Help keep the city clean",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            const Text(
+              "Capture a photo and describe the illegal dumping site.",
+              style: TextStyle(
+                color: Colors.grey,
+              ),
+            ),
 
             //----------------------------------
             // IMAGE
@@ -242,7 +269,10 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
                 decoration: BoxDecoration(
                   borderRadius:
                   BorderRadius.circular(12),
-                  color: Colors.grey[200],
+                  color: Colors.grey.shade100,
+                  border: Border.all(
+                    color: Colors.grey.shade400,
+                  ),
                 ),
                 child: imageFile == null
                     ? const Column(
@@ -277,12 +307,12 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
               controller:
               descriptionController,
               maxLines: 4,
-              decoration:
-              const InputDecoration(
-                labelText:
-                "Describe the issue",
-                border:
-                OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: "Describe the issue",
+                hintText: "Example: Garbage bags dumped near road",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
 
@@ -295,6 +325,8 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
             if (isUploading)
               LinearProgressIndicator(
                 value: uploadProgress,
+                minHeight: 8,
+                borderRadius: BorderRadius.circular(8),
               ),
 
             const SizedBox(height: 20),
@@ -307,20 +339,23 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed:
-                isUploading
-                    ? null
-                    : submitReport,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade700,
+                  elevation: 6,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: isUploading ? null : submitReport,
                 child: isUploading
                     ? Text(
                   "${(uploadProgress * 100).toStringAsFixed(0)}%",
                 )
                     : const Text(
                   "Submit Report",
-                  style:
-                  TextStyle(fontSize: 16),
+                  style: TextStyle(fontSize: 16),
                 ),
-              ),
+              )
             ),
           ],
         ),
