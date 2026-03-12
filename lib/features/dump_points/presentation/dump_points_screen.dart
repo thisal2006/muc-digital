@@ -22,7 +22,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
   GoogleMapController? mapController;
   StreamSubscription? dumpSubscription;
-
+  MapType _mapType = MapType.normal;
   Position? userPosition;
 
   DumpPoint? nearestDump;
