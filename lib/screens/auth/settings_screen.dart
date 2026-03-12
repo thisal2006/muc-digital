@@ -74,9 +74,7 @@ class SettingsScreen extends StatelessWidget {
             width: double.infinity,
             height: 50,
             child: OutlinedButton.icon(
-              onPressed: () {
-                // Dialog coming in next commit!
-              },
+              onPressed: () => _showLogoutDialog(context),
               icon: const Icon(Icons.logout, color: Colors.red),
               label: const Text("Log Out", style: TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.bold)),
               style: OutlinedButton.styleFrom(
