@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
-import '../screens/services/auth_service.dart';
-import '../screens/services/auth_service.dart';
+import '../screens/services/auth_service.dart'; // Fixed import path
 import '../screens/auth/sign_in_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/admin_dashboard_screen.dart';
-import '../screens/onboarding_screen.dart'; // or SignInScreen if you prefer direct to login
+import '../screens/onboarding_screen.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
@@ -22,38 +21,55 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-    _showSplashAndCheckAuth();
+    _checkAuthStatus();
   }
 
-  Future<void> _showSplashAndCheckAuth() async {
-    // Show splash for 3 seconds
-    await Future.delayed(const Duration(seconds: 3));
+  Future<void> _checkAuthStatus() async {
+    // Show splash for 2 seconds
+    await Future.delayed(const Duration(seconds: 2));
 
-    if (mounted) {
-      // Now check auth
-      User? user = FirebaseAuth.instance.currentUser;
+    if (!mounted) return;
 
-      if (user != null) {
-        bool mustReLogin = await _authService.mustReLoginDueToInactivity();
-        if (mustReLogin) {
-          await _authService.signOut();
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingScreen())); // or SignInScreen
-        } else {
-          await _authService.updateLastActive();
+    User? user = FirebaseAuth.instance.currentUser;
 
-          final adminDoc = await FirebaseFirestore.instance
-              .collection('admins')
-              .doc(user.uid)
-              .get();
-
-          if (adminDoc.exists) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminDashboardScreen()));
-          } else {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
-          }
+    if (user != null) {
+      bool mustReLogin = await _authService.mustReLoginDueToInactivity();
+      if (mustReLogin) {
+        await _authService.signOut();
+        if (mounted) {
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const OnboardingScreen())
+          );
         }
       } else {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => OnboardingScreen())); // Not logged in
+        await _authService.updateLastActive();
+
+        final adminDoc = await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(user.uid)
+            .get();
+
+        if (mounted) {
+          if (adminDoc.exists) {
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const AdminDashboardScreen())
+            );
+          } else {
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const HomeScreen())
+            );
+          }
+        }
+      }
+    } else {
+      if (mounted) {
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const OnboardingScreen())
+        );
       }
     }
   }
@@ -69,6 +85,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
             Image.asset(
               'assets/images/logo.png',
               width: 200,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 200,
+                  height: 200,
+                  color: Colors.white,
+                  child: const Icon(
+                    Icons.apartment,
+                    size: 100,
+                    color: Colors.white,
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 20),
             const Text(
