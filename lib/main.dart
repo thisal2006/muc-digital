@@ -35,6 +35,8 @@ bool _firebaseInitialized = false; // Global flag to prevent duplicate calls
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  Stripe.publishableKey = "pk_test_51SzuZY0KRpwcO4zEHs47arkmOTryBOAhNWAgBo2nAHdd2bwvIkoaPhoHnTuJFMhj1B4aB6RqfMaIJkmBsL8R0ERW008fqqSwg4";
+
   if (!_firebaseInitialized) {
     if (Firebase.apps.isEmpty) {
       try {
