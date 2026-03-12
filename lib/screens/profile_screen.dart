@@ -247,14 +247,147 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _logout() async {
-    await FirebaseAuth.instance.signOut();
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const SignInScreen()),
-            (route) => false,
-      );
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to logout?"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("No", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _auth.signOut();
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const SignInScreen()),
+          (route) => false,
+        );
+      }
     }
+  }
+
+  void _showDeleteAccountDialog() {
+    final passwordController = TextEditingController();
+    final deleteFormKey = GlobalKey<FormState>();
+    bool isDeleting = false;
+    bool obscurePassword = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Delete Account", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          content: Form(
+            key: deleteFormKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "This action is permanent and cannot be undone. Please enter your password to confirm.",
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
+                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  validator: (v) => v == null || v.isEmpty ? "Password required" : null,
+                ),
+              ],
+            ),
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          actions: [
+            TextButton(
+              onPressed: isDeleting ? null : () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: isDeleting
+                  ? null
+                  : () async {
+                if (!deleteFormKey.currentState!.validate()) return;
+
+                setDialogState(() => isDeleting = true);
+
+                try {
+                  // Re-authenticate
+                  AuthCredential credential = EmailAuthProvider.credential(
+                    email: currentUser!.email!,
+                    password: passwordController.text.trim(),
+                  );
+                  await currentUser!.reauthenticateWithCredential(credential);
+
+                  // Delete from Firestore
+                  await _firestore.collection('users').doc(currentUser!.uid).delete();
+
+                  // Delete from Auth
+                  await currentUser!.delete();
+
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SignInScreen()),
+                          (route) => false,
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Account deleted successfully")),
+                    );
+                  }
+                } on FirebaseAuthException catch (e) {
+                  setDialogState(() => isDeleting = false);
+                  String msg = e.message ?? "Error deleting account";
+                  if (e.code == 'wrong-password') msg = "Incorrect password";
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(msg), backgroundColor: Colors.red),
+                  );
+                } catch (e) {
+                  setDialogState(() => isDeleting = false);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: isDeleting
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text("Delete Forever"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -400,6 +533,23 @@ class _ProfileScreenState extends State<ProfileScreen>
                           onPressed: _logout,
                           icon: const Icon(Icons.logout),
                           label: const Text("Logout"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF2E7D32),
+                            elevation: 0,
+                            side: const BorderSide(color: Color(0xFF2E7D32)),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _showDeleteAccountDialog,
+                          icon: const Icon(Icons.delete_forever),
+                          label: const Text("Delete Account"),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: Colors.red,
