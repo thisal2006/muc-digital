@@ -209,8 +209,11 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       'user_id': user.uid,
                       'property_name': widget.property.name,
                       'price': widget.property.price,
-                      'status': 'pending',
+                      'status': 'Approval Pending',
                       'timestamp': FieldValue.serverTimestamp(),
+                      // ADD THESE TWO LINES:
+                      'booking_date': 'March 20, 2026', // Replace with your date variable
+                      'time_slot': '09:00 AM - 05:00 PM', // Replace with your slot variable
                     });
 
                     if (mounted) {
