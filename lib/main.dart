@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:muc_digital/widgets/auth_wrapper.dart';
+import 'chatbot.dart';
 import 'features/Garbage_tracking/garbage_tracking_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -73,7 +74,7 @@ class MUCdigitalApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => const AuthWrapper(), // CHANGED: from SplashScreen to AuthWrapper
+        '/': (context) => const AuthWrapper(),
         '/onboarding': (context) => OnboardingScreen(),
         '/user_agreement': (context) => const UserAgreementScreen(),
         '/home': (context) => const HomeScreen(),
@@ -92,6 +93,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/booking-history': (context) => const BookingHistoryScreen(),
+        '/chatbot': (context) => const ChatbotScreen(), // ADD THIS LINE
       },
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
