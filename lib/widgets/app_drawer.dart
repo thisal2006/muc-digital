@@ -2,7 +2,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/services/auth_service.dart';
 import '../screens/auth/sign_in_screen.dart';
-import '../screens/home_screen.dart'; // your home screen
+import '../screens/home_screen.dart';
+import '../screens/settings_screen.dart'; // Add this import
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -107,7 +108,6 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Booking History'),
                   onTap: () {
                     Navigator.pop(context);
-                    // FIXED: Now navigates directly to booking history screen
                     Navigator.pushNamed(context, '/booking-history');
                   },
                 ),
@@ -147,13 +147,13 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Settings'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Navigator.pushNamed(context, '/settings');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Settings screen coming soon!'),
-                        duration: Duration(seconds: 2),
-                      ),
+                    // FIXED: Navigate to settings screen instead of showing snackbar
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
                     );
+                    // OR if you want to use named route (uncomment below and use consistent method)
+                    // Navigator.pushNamed(context, '/settings');
                   },
                 ),
 
