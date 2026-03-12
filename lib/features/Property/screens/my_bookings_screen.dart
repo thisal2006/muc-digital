@@ -54,6 +54,19 @@ class MyBookingsScreen extends StatelessWidget {
               final slot = data['slot'] ?? 'No slot';
               final price = data['price'] ?? 'LKR 0';
 
+              final String status = data['status'] ?? 'Approval Pending';
+              Color statusColor = Colors.orange;
+              String displayStatus = status;
+
+              if (status == 'Approved, Payment Pending') {
+                statusColor = Colors.blue;
+              } else if (status == 'Paid' || status == 'Confirmed') {
+                statusColor = Colors.green;
+                displayStatus = "Paid & Confirmed";
+              } else if (status == 'Rejected') {
+                statusColor = Colors.red;
+              }
+
               return Card(
                 elevation: 3,
                 margin: const EdgeInsets.only(bottom: 16),
@@ -63,9 +76,33 @@ class MyBookingsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                          propertyName,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              propertyName,
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          // The Status Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: statusColor, width: 1),
+                            ),
+                            child: Text(
+                              displayStatus.toUpperCase(),
+                              style: TextStyle(
+                                color: statusColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const Divider(height: 24),
                       _buildDetailRow(Icons.calendar_today, date),
