@@ -16,7 +16,10 @@ class UserAgreementScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // FIX: Just go back to the previous screen (Onboarding)
+            Navigator.pop(context);
+          },
         ),
       ),
       body: Container(
@@ -116,12 +119,15 @@ class UserAgreementScreen extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () {
-                      // After agreement → go to auth flow (AuthWrapper will handle the rest)
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => AuthWrapper()),
-                      );
+                      // FIX: Go to Sign In to let the user authenticate.
+                      // pushReplacementNamed ensures they can't come back here.
+                      Navigator.pushReplacementNamed(context, '/sign_in');
                     },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF2E7D32),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
                     child: const Text(
                       'I Agree',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
