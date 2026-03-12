@@ -309,6 +309,7 @@ class MyComplaintsList extends StatefulWidget {
 
 class _MyComplaintsListState extends State<MyComplaintsList> {
   String _searchQuery = "";
+  String _selectedFilter = "All"; // Commit 3 Addition
 
   @override
   Widget build(BuildContext context) {
@@ -320,23 +321,47 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: "Search your complaints...",
-              prefixIcon: const Icon(Icons.search, color: Color(0xFF2E7D32)),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
+          child: Row( // Commit 3: Added Row for Filter
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: "Search issues...",
+                    prefixIcon: const Icon(Icons.search, color: Color(0xFF2E7D32)),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
+                  },
+                ),
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0),
-            ),
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value.toLowerCase();
-              });
-            },
+              const SizedBox(width: 10),
+              Container( // Commit 3: Status Filter
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: DropdownButton<String>(
+                  value: _selectedFilter,
+                  underline: const SizedBox(),
+                  icon: const Icon(Icons.filter_list, color: Color(0xFF2E7D32)),
+                  items: ["All", "Pending", "In Progress", "Resolved"]
+                      .map((s) => DropdownMenuItem(value: s, child: Text(s, style: const TextStyle(fontSize: 13))))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedFilter = v!),
+                ),
+              ),
+            ],
           ),
         ),
         Expanded(
@@ -360,12 +385,17 @@ class _MyComplaintsListState extends State<MyComplaintsList> {
                 return t2.compareTo(t1);
               });
 
-              // Filter based on search query
+              // Filter based on search query AND status (Commit 3 Logic)
               var filteredDocs = docs.where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
                 final category = (data['category'] ?? '').toString().toLowerCase();
                 final description = (data['description'] ?? '').toString().toLowerCase();
-                return category.contains(_searchQuery) || description.contains(_searchQuery);
+                final status = data['status'] ?? 'Pending';
+
+                final matchesSearch = category.contains(_searchQuery) || description.contains(_searchQuery);
+                final matchesFilter = _selectedFilter == "All" || status == _selectedFilter;
+
+                return matchesSearch && matchesFilter;
               }).toList();
 
               if (filteredDocs.isEmpty) {
