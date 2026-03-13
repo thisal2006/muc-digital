@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/services/auth_service.dart';
 import '../screens/auth/sign_in_screen.dart';
 import '../screens/home_screen.dart';
-import '../screens/settings_screen.dart'; // Add this import
+import '../screens/complaints_screen.dart'; // Import for ComplaintsScreen
+import '../screens/services/settings_screen.dart'; // Correct import for SettingsScreen
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -54,7 +55,7 @@ class AppDrawer extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
+                                color: Colors.black.withAlpha(38),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -108,30 +109,21 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Booking History'),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, '/booking-history');
+                    // Navigator.pushNamed(context, '/booking-history');
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.report_problem_outlined, color: Color(0xFF2E7D32)),
                   title: const Text('My Complaints'),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      '2',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, '/complaints');
+                    // Navigate to complaints history tab (index 1)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ComplaintsScreen(initialTabIndex: 1),
+                      ),
+                    );
                   },
                 ),
                 ListTile(
@@ -147,13 +139,7 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Settings'),
                   onTap: () {
                     Navigator.pop(context);
-                    // FIXED: Navigate to settings screen instead of showing snackbar
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                    );
-                    // OR if you want to use named route (uncomment below and use consistent method)
-                    // Navigator.pushNamed(context, '/settings');
+                    Navigator.pushNamed(context, '/settings');
                   },
                 ),
 
