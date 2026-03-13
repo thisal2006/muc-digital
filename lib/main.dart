@@ -1,5 +1,7 @@
 // Updated main.dart - with AuthWrapper integration
 
+import 'package:flutter_stripe/flutter_stripe.dart';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:muc_digital/widgets/auth_wrapper.dart';
@@ -24,6 +26,8 @@ bool _firebaseInitialized = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = 'pk_test_51SzuZY0KRpwcO4zEHs47arkmOTryBOAhNWAgBo2nAHdd2bwvIkoaPhoHnTuJFMhj1B4aB6RqfMaIJkmBsL8R0ERW008fqqSwg4'; // <-- Put your real test key here
+  await Stripe.instance.applySettings();
 
   if (!_firebaseInitialized) {
     if (Firebase.apps.isEmpty) {
@@ -84,7 +88,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_in': (context) => const SignInScreen(),
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
-        '/my_bookings': (context) => const MyBookingsScreen(), // Un-commented and fixed
+        '/my_bookings': (context) => const MyBookingsScreen(),
       },
     );
   }
