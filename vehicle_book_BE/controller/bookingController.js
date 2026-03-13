@@ -16,7 +16,7 @@ export const createBooking = async (req, res, next) => {
       userName,
       userPhone,
     } = req.body;
-    
+
     console.log("Received booking request:", req.body);
 
     if (!isValidObjectId(vehicleId)) {
@@ -49,10 +49,11 @@ export const createBooking = async (req, res, next) => {
     }
     // For other types or if times are provided, preserve as-is
 
-    // Check availability
+    // Check availability against both CONFIRMED and PENDING bookings
+    // (PENDING bookings also block new bookings — slot is held until admin decides)
     const existingBookings = await Booking.find({
       vehicle: vehicleId,
-      status: "CONFIRMED",
+      status: { $in: ["CONFIRMED", "PENDING"] },
       $or: [{ startDate: { $lte: end }, endDate: { $gte: start } }],
     });
 
@@ -112,7 +113,7 @@ export const createBooking = async (req, res, next) => {
       totalAmount,
       userName,
       userPhone,
-      status: "CONFIRMED",
+      status: "PENDING",
     });
 
     res.status(201).json({
@@ -143,33 +144,49 @@ export const getVehicleAvailability = async (req, res, next) => {
     const startOfMonth = parseISO(`${year}-${String(month).padStart(2, '0')}-01`);
     const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    const bookings = await Booking.find({
+    const dateRange = { $or: [{ startDate: { $lte: endOfMonth }, endDate: { $gte: startOfMonth } }] };
+
+    // CONFIRMED bookings hard-block slots
+    const confirmedBookings = await Booking.find({
       vehicle: vehicleId,
       status: "CONFIRMED",
-      $or: [
-        { startDate: { $lte: endOfMonth }, endDate: { $gte: startOfMonth } },
-      ],
+      ...dateRange,
+    });
+
+    // PENDING bookings are shown as a visual indicator only — they do NOT block new bookings
+    const pendingBookings = await Booking.find({
+      vehicle: vehicleId,
+      status: "PENDING",
+      ...dateRange,
     });
 
     const daysInMonth = endOfMonth.getDate();
     const availability = [];
 
+    // Helper: check if booking b falls on currentDay
+    const isOnDay = (b, currentDay) => {
+      const bStart = new Date(b.startDate);
+      const bEnd = new Date(b.endDate);
+      return (
+        currentDay >= new Date(bStart.getFullYear(), bStart.getMonth(), bStart.getDate()) &&
+        currentDay <= new Date(bEnd.getFullYear(), bEnd.getMonth(), bEnd.getDate(), 23, 59, 59, 999)
+      );
+    };
+
     for (let i = 1; i <= daysInMonth; i++) {
       const currentDay = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth(), i);
-      const dayBookings = bookings.filter((b) => {
-        const bStart = new Date(b.startDate);
-        const bEnd = new Date(b.endDate);
-        return (
-          currentDay >= new Date(bStart.getFullYear(), bStart.getMonth(), bStart.getDate()) &&
-          currentDay <= new Date(bEnd.getFullYear(), bEnd.getMonth(), bEnd.getDate(), 23, 59, 59, 999)
-        );
-      });
+
+      const dayConfirmed = confirmedBookings.filter((b) => isOnDay(b, currentDay));
+      const dayPending = pendingBookings.filter((b) => isOnDay(b, currentDay));
 
       let amBooked = false;
       let pmBooked = false;
+      let pendingAmBooked = false;
+      let pendingPmBooked = false;
       let specificTimeBookings = [];
 
-      dayBookings.forEach((b) => {
+      // Process CONFIRMED bookings (these block the slot)
+      dayConfirmed.forEach((b) => {
         if (b.bookingType === "FULL_DAY" || b.bookingType === "MULTIPLE_DAYS") {
           amBooked = true;
           pmBooked = true;
@@ -178,53 +195,65 @@ export const getVehicleAvailability = async (req, res, next) => {
         } else if (b.bookingType === "HALF_DAY_PM") {
           pmBooked = true;
         }
-        
-        // Add specific time information
         specificTimeBookings.push({
-          startTime: new Date(b.startDate).toLocaleTimeString('en-US', {
-            hour12: false,
-            hour: '2-digit', 
-            minute: '2-digit'
-          }),
-          endTime: new Date(b.endDate).toLocaleTimeString('en-US', {
-            hour12: false, 
-            hour: '2-digit',
-            minute: '2-digit'
-          }),
-          type: b.bookingType
+          startTime: new Date(b.startDate).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+          endTime: new Date(b.endDate).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+          type: b.bookingType,
+          status: 'CONFIRMED',
         });
       });
 
-      let status = "AVAILABLE";
-      if (amBooked && pmBooked) status = "FULLY_BOOKED";
-      else if (amBooked) status = "PARTIALLY_BOOKED_AM";
-      else if (pmBooked) status = "PARTIALLY_BOOKED_PM";
+      // Process PENDING bookings (visual indicator only)
+      dayPending.forEach((b) => {
+        if (b.bookingType === "FULL_DAY" || b.bookingType === "MULTIPLE_DAYS") {
+          pendingAmBooked = true;
+          pendingPmBooked = true;
+        } else if (b.bookingType === "HALF_DAY_AM") {
+          pendingAmBooked = true;
+        } else if (b.bookingType === "HALF_DAY_PM") {
+          pendingPmBooked = true;
+        }
+        specificTimeBookings.push({
+          startTime: new Date(b.startDate).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+          endTime: new Date(b.endDate).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+          type: b.bookingType,
+          status: 'PENDING',
+        });
+      });
+
+      // Compute confirmed-only status
+      let confirmedStatus = "AVAILABLE";
+      if (amBooked && pmBooked) confirmedStatus = "FULLY_BOOKED";
+      else if (amBooked) confirmedStatus = "PARTIALLY_BOOKED_AM";
+      else if (pmBooked) confirmedStatus = "PARTIALLY_BOOKED_PM";
+
+      // Compute composite status that also encodes pending state
+      let status = confirmedStatus;
+      if (confirmedStatus === "AVAILABLE") {
+        if (pendingAmBooked && pendingPmBooked) status = "PENDING_FULL";
+        else if (pendingAmBooked) status = "PENDING_AM";
+        else if (pendingPmBooked) status = "PENDING_PM";
+      } else if (confirmedStatus === "PARTIALLY_BOOKED_AM" && pendingPmBooked) {
+        status = "PARTIALLY_BOOKED_AM_PENDING_PM";
+      } else if (confirmedStatus === "PARTIALLY_BOOKED_PM" && pendingAmBooked) {
+        status = "PARTIALLY_BOOKED_PM_PENDING_AM";
+      }
 
       availability.push({
-        date: format(currentDay, 'yyyy-MM-dd'),  // Local date, no UTC shift
+        date: format(currentDay, 'yyyy-MM-dd'),
         status,
-        details: { 
-          amBooked, 
+        details: {
+          amBooked,
           pmBooked,
-          specificTimeBookings
+          pendingAmBooked,
+          pendingPmBooked,
+          specificTimeBookings,
         },
       });
     }
-    console.log(
-      "Availability for vehicle",
-      vehicleId,
-      "in",
-      month,
-      "/",
-      year,
-      ":",
-      availability,
-    );
-    res.status(200).json({
-      success: true,
-      data: availability,
-    });
-    console.log("Sent availability response:", availability);
+
+    console.log("Availability for vehicle", vehicleId, "in", month, "/", year, ":", availability);
+    res.status(200).json({ success: true, data: availability });
   } catch (error) {
     next(error);
   }
@@ -277,6 +306,87 @@ export const cancelBooking = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Booking cancelled successfully",
+      data: booking,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const approveBooking = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid booking ID format" });
+    }
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
+    }
+
+    if (booking.status !== "PENDING") {
+      return res.status(400).json({
+        success: false,
+        message: `Booking cannot be approved because its status is '${booking.status}'.`,
+      });
+    }
+
+    // Re-check availability against already CONFIRMED bookings before approving
+    const conflictingBookings = await Booking.find({
+      _id: { $ne: booking._id },
+      vehicle: booking.vehicle,
+      status: "CONFIRMED",
+      $or: [{ startDate: { $lte: booking.endDate }, endDate: { $gte: booking.startDate } }],
+    });
+
+    let canApprove = true;
+    let conflictMessage = "";
+
+    if (booking.bookingType === "MULTIPLE_DAYS" || booking.bookingType === "FULL_DAY") {
+      if (conflictingBookings.length > 0) {
+        canApprove = false;
+        conflictMessage = "Cannot approve: one or more selected days are already confirmed.";
+      }
+    } else if (booking.bookingType === "HALF_DAY_AM") {
+      const hasConflict = conflictingBookings.some(
+        (b) =>
+          b.bookingType === "FULL_DAY" ||
+          b.bookingType === "HALF_DAY_AM" ||
+          b.bookingType === "MULTIPLE_DAYS"
+      );
+      if (hasConflict) {
+        canApprove = false;
+        conflictMessage = "Cannot approve: morning slot is already confirmed.";
+      }
+    } else if (booking.bookingType === "HALF_DAY_PM") {
+      const hasConflict = conflictingBookings.some(
+        (b) =>
+          b.bookingType === "FULL_DAY" ||
+          b.bookingType === "HALF_DAY_PM" ||
+          b.bookingType === "MULTIPLE_DAYS"
+      );
+      if (hasConflict) {
+        canApprove = false;
+        conflictMessage = "Cannot approve: afternoon slot is already confirmed.";
+      }
+    }
+
+    if (!canApprove) {
+      return res.status(400).json({ success: false, message: conflictMessage });
+    }
+
+    booking.status = "CONFIRMED";
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Booking approved successfully",
       data: booking,
     });
   } catch (error) {
