@@ -89,7 +89,7 @@ class MyBookingsScreen extends StatelessWidget {
               final slot = data['slot'] ?? 'No slot';
               final price = data['price'] ?? 'LKR 0';
               final purpose = data['purpose'] ?? 'Not specified';
-              final crowd = data['crowd_size'] ?? '0';
+              //final crowd = data['crowd_size'] ?? '0';
 
 
               final String status = data['status'] ?? 'Approval Pending';
