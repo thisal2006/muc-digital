@@ -395,7 +395,14 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
                   onPressed: () {
                     _navigateToDump(dump);
                   },
-                  child: const Text("Navigate"),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.navigation),
+                      SizedBox(width: 6),
+                      Text("Navigate"),
+                    ],
+                  ),
                 ),
               ),
             ],
