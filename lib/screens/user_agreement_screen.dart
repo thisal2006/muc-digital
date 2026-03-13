@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Add this for AuthWrapper
-import 'package:muc_digital/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../widgets/auth_wrapper.dart';
-
-class UserAgreementScreen extends StatelessWidget {
+class UserAgreementScreen extends StatefulWidget {
   const UserAgreementScreen({super.key});
+
+  @override
+  State<UserAgreementScreen> createState() => _UserAgreementScreenState();
+}
+
+class _UserAgreementScreenState extends State<UserAgreementScreen> {
+  bool _agreed = false;
+
+  Future<void> _acceptAgreement() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('user_agreed', true);
+
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/sign_in');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        title: const Text('User Agreement & Consent'),
+        backgroundColor: const Color(0xFF1B5E20),
+        foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
@@ -27,84 +41,83 @@ class UserAgreementScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF2E7D32), Color(0xFFFF7043)],
+            colors: [
+              Color(0xFF1B5E20),
+              Color(0xFF2E7D32),
+            ],
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                // White Card
+                Expanded(
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(28),
-                      child: Scrollbar(
-                        thumbVisibility: true,
-                        radius: const Radius.circular(10),
-                        thickness: 6,
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.fromLTRB(32, 32, 32, 40),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'User Agreement & Consent',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF2E7D32),
-                                ),
+                      borderRadius: BorderRadius.circular(24),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.all(28),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'User Agreement & Consent',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1B5E20),
                               ),
-                              const SizedBox(height: 24),
+                            ),
+                            const SizedBox(height: 20),
 
-                              const Text(
-                                'By creating an account or using the MUC Digital mobile application, you agree to the following:',
-                                style: TextStyle(fontSize: 16, height: 1.5, color: Colors.black87),
-                              ),
-                              const SizedBox(height: 24),
+                            const Text(
+                              'By using the MUC Digital mobile application, you agree to the following terms:',
+                              style: TextStyle(fontSize: 16, height: 1.6),
+                            ),
+                            const SizedBox(height: 24),
 
-                              const BulletPoint(
-                                text: 'You are a resident or authorized user of services provided by the Maharagama Urban Council (MUC).',
-                              ),
-                              const BulletPoint(
-                                text: 'You consent to the collection, processing, and use of your personal information (name, contact details, location for garbage tracking, booking history) strictly for providing municipal services.',
-                              ),
-                              const BulletPoint(
-                                text: 'You agree to receive notifications, announcements, and service-related updates from the Maharagama Urban Council through the app.',
-                              ),
-                              const BulletPoint(
-                                text: 'You will use the application responsibly and only for lawful purposes.',
-                              ),
-                              const BulletPoint(
-                                text: 'The app is provided "as is" for demonstration and academic purposes as part of the Software Development Group Project (5COSC021C) by Group CS-33, Informatics Institute of Technology / University of Westminster.',
-                              ),
+                            const BulletPoint(
+                              text: 'You are a resident or authorized user of services provided by the Maharagama Urban Council (MUC).',
+                            ),
+                            const BulletPoint(
+                              text: 'You consent to the collection, processing, and use of your personal information (name, contact details, location for garbage tracking, booking history) strictly for providing municipal services.',
+                            ),
+                            const BulletPoint(
+                              text: 'You agree to receive notifications, announcements, and service-related updates from the Maharagama Urban Council through the app.',
+                            ),
+                            const BulletPoint(
+                              text: 'You will use the application responsibly and only for lawful purposes.',
+                            ),
+                            const BulletPoint(
+                              text: 'The app is provided "as is" for demonstration and academic purposes as part of the Software Development Group Project (5COSC021C) by Group CS-33, Informatics Institute of Technology / University of Westminster.',
+                            ),
 
-                              const SizedBox(height: 40),
+                            const SizedBox(height: 32),
 
-                              const Text(
-                                'By tapping "I Agree" or "Accept", you confirm that you have read, understood, and accept these terms.',
-                                style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic, color: Colors.black87),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Last updated: January 2026',
-                                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-                              ),
-                            ],
-                          ),
+                            const Text(
+                              'By tapping "Accept & Continue", you confirm that you have read, understood, and accept these terms.',
+                              style: TextStyle(fontSize: 15, fontStyle: FontStyle.italic),
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Last updated: March 2026',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -132,10 +145,29 @@ class UserAgreementScreen extends StatelessWidget {
                       'I Agree',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                ElevatedButton(
+                  onPressed: _agreed ? _acceptAgreement : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1B5E20),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 6,
+                  ),
+                  child: const Text(
+                    'Accept & Continue',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -143,6 +175,7 @@ class UserAgreementScreen extends StatelessWidget {
   }
 }
 
+// Custom Bullet Widget
 class BulletPoint extends StatelessWidget {
   final String text;
 
@@ -155,15 +188,11 @@ class BulletPoint extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '• ',
-            style: TextStyle(fontSize: 22, color: Color(0xFF2E7D32), fontWeight: FontWeight.bold),
-          ),
+          const Text('• ', style: TextStyle(fontSize: 18, color: Color(0xFF1B5E20))),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 15, height: 1.5, color: Colors.black87),
-              softWrap: true,
+              style: const TextStyle(fontSize: 16, height: 1.5),
             ),
           ),
         ],
