@@ -30,6 +30,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
             child: SafeArea(
+              bottom: false,
               child: Stack(
                 children: [
                   // Close button
