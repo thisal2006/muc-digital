@@ -179,10 +179,13 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       'user_id': user.uid,
                       'property_name': widget.property.name,
                       'price': widget.property.price,
-                      'status': 'pending', // Use lowercase 'pending' to match your MyBookings filter
+                      'status': 'pending',
                       'timestamp': FieldValue.serverTimestamp(),
-                      'booking_date': 'March 20, 2026',
-                      'time_slot': '09:00 AM - 05:00 PM',
+
+                      'date': 'March 20, 2026',
+                      'slot': '09:00 AM - 05:00 PM',
+                      'purpose': 'Event',
+                      'crowd_size': '100',
                     });
 
                     if (mounted) {
