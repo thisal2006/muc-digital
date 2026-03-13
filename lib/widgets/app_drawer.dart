@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/services/auth_service.dart';
 import '../screens/auth/sign_in_screen.dart';
 import '../screens/home_screen.dart';
-import '../screens/complaints_screen.dart'; // Import for ComplaintsScreen
-import '../screens/services/settings_screen.dart'; // Correct import for SettingsScreen
+import '../screens/complaints_screen.dart'; 
+import '../screens/settings_screen.dart'; // Correct import path after moving
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
