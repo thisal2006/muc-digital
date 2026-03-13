@@ -31,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
   late TextEditingController _emailController;
+  late TextEditingController _nicController;
 
   File? _tempImageFile;
   String? _photoUrl;
@@ -52,6 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
     _emailController = TextEditingController();
+    _nicController = TextEditingController();
 
     _animationController = AnimationController(
       vsync: this,
@@ -105,6 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _phoneController.text = data['phone'] ?? '';
           _addressController.text = data['address'] ?? '';
           _emailController.text = data['email'] ?? currentUser!.email ?? '';
+          _nicController.text = data['nic'] ?? '';
           _photoUrl = data['photoUrl'];
 
           final createdAt = data['createdAt'] as Timestamp?;
@@ -141,6 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         'phone': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
         'email': _emailController.text.trim(),
+        'nic': _nicController.text.trim(),
         'photoUrl': newUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -246,6 +250,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                             const SizedBox(height: 16),
 
                             _buildModernField("Email Address", _emailController, Icons.email_outlined, enabled: false),
+                            const SizedBox(height: 16),
+                            _buildModernField("NIC Number", _nicController, Icons.badge_outlined),
                             const SizedBox(height: 16),
                             _buildModernField("Phone", _phoneController, Icons.phone_android),
                             const SizedBox(height: 16),
@@ -418,6 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _phoneController.dispose();
     _addressController.dispose();
     _emailController.dispose();
+    _nicController.dispose();
     _animationController.dispose();
     super.dispose();
   }
