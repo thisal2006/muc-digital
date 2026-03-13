@@ -143,7 +143,14 @@ class MyBookingsScreen extends StatelessWidget {
                       _buildDetailRow(Icons.access_time, slot),
                       const SizedBox(height: 8),
                       _buildDetailRow(Icons.payments_outlined, price, isBold: true),
+
+                      const SizedBox(height: 8),
+                      _buildDetailRow(Icons.info_outline, "Purpose: $purpose"),
+                      const SizedBox(height: 8),
+                      _buildDetailRow(Icons.people_outline, "Crowd: $crowd"),
                       const Divider(height: 32, thickness: 0.5),
+
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
