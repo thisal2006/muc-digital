@@ -559,4 +559,3 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     );
   }
 }
-snippet: dump.address,
