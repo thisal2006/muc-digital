@@ -1,6 +1,5 @@
 /*
 import 'package:flutter/material.dart';
-/*import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'crematorium_booking_data.dart';               // Model for passing data
 import 'crematorium_eligibility_screen.dart';        // Eligibility screen
@@ -234,5 +233,3 @@ class _CrematoriumBookingScreenState extends State<CrematoriumBookingScreen> {
     );
   }
 }*/
-}
-*/

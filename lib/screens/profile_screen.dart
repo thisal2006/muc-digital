@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -281,6 +282,30 @@ class ProfileField extends StatelessWidget {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  AuthCredential credential = EmailAuthProvider.credential(
+                    email: currentUser!.email!,
+                    password: passwordController.text.trim(),
+                  );
+                  await currentUser!.reauthenticateWithCredential(credential);
+                  await _firestore.collection('users').doc(currentUser!.uid).delete();
+                  await currentUser!.delete();
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SignInScreen()), (route) => false);
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              child: const Text("Delete Forever"),
+            ),
+          ],
         ),
       ),
     );

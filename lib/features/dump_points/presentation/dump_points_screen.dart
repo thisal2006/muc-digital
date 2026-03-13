@@ -22,7 +22,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
   GoogleMapController? mapController;
   StreamSubscription? dumpSubscription;
-
+  MapType _mapType = MapType.normal;
   Position? userPosition;
 
   DumpPoint? nearestDump;
@@ -150,7 +150,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
               infoWindow: InfoWindow(
                 title: dump.name,
-                snippet: dump.address,
+                snippet: "${dump.address} • ${dump.status}",
               ),
 
               onTap: () {
@@ -223,8 +223,8 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
       mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(
           LatLng(closest.lat, closest.lng),
-          15,
-        ),
+          12,
+      ),
       );
     }
   }
@@ -395,7 +395,14 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
                   onPressed: () {
                     _navigateToDump(dump);
                   },
-                  child: const Text("Navigate"),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.navigation),
+                      SizedBox(width: 6),
+                      Text("Navigate"),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -436,9 +443,16 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
             child: Row(
               children: [
 
-                const Icon(
-                  Icons.location_on,
-                  color: Colors.green,
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.delete,
+                    color: Colors.green,
+                  ),
                 ),
 
                 const SizedBox(width: 12),
@@ -507,19 +521,23 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Dump Points"),
+        title: const Text(
+          "Dump Points",
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
+        elevation: 2,
       ),
 
       body: Stack(
         children: [
 
           GoogleMap(
-            initialCameraPosition:
-            initialCamera,
+            initialCameraPosition: initialCamera,
             markers: dumpMarkers,
             myLocationEnabled: true,
             trafficEnabled: true,
-
+            mapType: _mapType,
             onMapCreated: (controller) {
               mapController = controller;
             },
@@ -532,6 +550,24 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
               right: 16,
               child: _nearestDumpCard(),
             ),
+
+          Positioned(
+            bottom: 100,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: "mapTypeToggle",
+              mini: true,
+              onPressed: () {
+                setState(() {
+                  _mapType = _mapType == MapType.normal
+                      ? MapType.satellite
+                      : MapType.normal;
+                });
+              },
+              child: const Icon(Icons.layers),
+            ),
+          ),
+
         ],
       ),
     );
