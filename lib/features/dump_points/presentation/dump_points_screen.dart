@@ -150,7 +150,7 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
 
               infoWindow: InfoWindow(
                 title: dump.name,
-                snippet: dump.address,
+                snippet: "${dump.address} • ${dump.status}",
               ),
 
               onTap: () {
@@ -559,3 +559,4 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
     );
   }
 }
+snippet: dump.address,
