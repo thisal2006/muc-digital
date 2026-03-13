@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'auth/sign_in_screen.dart';
+import 'services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -40,6 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final AuthService _authService = AuthService();
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -195,12 +197,23 @@ class _ProfileScreenState extends State<ProfileScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 40),
-                      Tooltip(
-                        message: "Profile Photo",
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundImage: _getProfileImage(),
-                          child: _getProfileImage() == null ? const Icon(Icons.person, size: 50, color: Colors.white) : null,
+                      GestureDetector(
+                        onTap: _isEditing ? _pickImage : null,
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundImage: _getProfileImage(),
+                              child: _getProfileImage() == null ? const Icon(Icons.person, size: 50, color: Colors.white) : null,
+                            ),
+                            if (_isEditing)
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                child: const Icon(Icons.camera_alt, size: 20, color: Color(0xFF2E7D32)),
+                              ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -332,6 +345,16 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+    if (pickedFile != null) {
+      setState(() => _tempImageFile = File(pickedFile.path));
+    }
+  }
+
   ImageProvider? _getProfileImage() {
     if (_tempImageFile != null) return FileImage(_tempImageFile!);
     if (_photoUrl != null && _photoUrl!.isNotEmpty) return CachedNetworkImageProvider(_photoUrl!);
@@ -354,7 +377,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
 
     if (confirm == true) {
-      await _auth.signOut();
+      await _authService.signOut();
       if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
     }
   }
