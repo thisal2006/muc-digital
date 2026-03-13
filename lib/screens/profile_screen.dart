@@ -316,7 +316,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Logout"),
-        content: const Text("Are you sure you want to sign out?"),
+        content: const Text("Are you sure you want to Logout ?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("CANCEL")),
           TextButton(onPressed: () => Navigator.pop(context, true),
