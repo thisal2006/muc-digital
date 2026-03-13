@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' hide Card;
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MyBookingsScreen extends StatelessWidget {
   const MyBookingsScreen({super.key});
@@ -8,22 +9,19 @@ class MyBookingsScreen extends StatelessWidget {
   // --- STRIPE PAYMENT LOGIC ---
   Future<void> makePayment(BuildContext context, String priceStr, String bookingId) async {
     try {
-      // 1. Initialize the Payment Sheet
-      // Note: In production, 'paymentIntentClientSecret' must come from your server/cloud function
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: const SetupPaymentSheetParameters(
-          paymentIntentClientSecret: "pi_test_placeholder_secret", // Dummy for now
+          paymentIntentClientSecret: "pi_test_placeholder_secret",
           merchantDisplayName: 'MUC Digital',
           style: ThemeMode.light,
         ),
       );
 
-      // 2. Display the Stripe UI
       await Stripe.instance.presentPaymentSheet();
 
-      // 3. Update Firestore if successful
+      // Inside makePayment function:
       await FirebaseFirestore.instance
-          .collection('bookings')
+          .collection('property_bookings') // Change 'bookings' to 'property_bookings'
           .doc(bookingId)
           .update({'status': 'Paid'});
 
@@ -39,6 +37,10 @@ class MyBookingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Get the actual logged-in user's ID
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    final String userId = currentUser?.uid ?? '';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("My Bookings"),
@@ -47,8 +49,8 @@ class MyBookingsScreen extends StatelessWidget {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('bookings')
-            .where('user_id', isEqualTo: 'current_user_id')
+            .collection('property_bookings') // Double check if it's 'bookings' or 'property_bookings'
+            .where('user_id', isEqualTo: FirebaseAuth.instance.currentUser?.uid) // Match the index name!
             .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
@@ -80,11 +82,15 @@ class MyBookingsScreen extends StatelessWidget {
             itemCount: bookings.length,
             itemBuilder: (context, index) {
               final data = bookings[index].data() as Map<String, dynamic>;
+              final String docId = bookings[index].id; // Reference for payment
 
               final propertyName = data['property_name'] ?? 'Unknown Venue';
               final date = data['date'] ?? 'No date';
               final slot = data['slot'] ?? 'No slot';
               final price = data['price'] ?? 'LKR 0';
+              final purpose = data['purpose'] ?? 'Not specified';
+              //final crowd = data['crowd_size'] ?? '0';
+
 
               final String status = data['status'] ?? 'Approval Pending';
               Color statusColor = Colors.orange;
@@ -117,21 +123,16 @@ class MyBookingsScreen extends StatelessWidget {
                               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                           ),
-                          // The Status Badge
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.1),
+                              color: statusColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(color: statusColor, width: 1),
                             ),
                             child: Text(
                               displayStatus.toUpperCase(),
-                              style: TextStyle(
-                                color: statusColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 10,
-                              ),
+                              style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10),
                             ),
                           ),
                         ],
@@ -142,29 +143,46 @@ class MyBookingsScreen extends StatelessWidget {
                       _buildDetailRow(Icons.access_time, slot),
                       const SizedBox(height: 8),
                       _buildDetailRow(Icons.payments_outlined, price, isBold: true),
+
+                      const SizedBox(height: 8),
+                      _buildDetailRow(Icons.info_outline, "Purpose: $purpose"),
+                      const SizedBox(height: 8),
+                      _buildDetailRow(Icons.people_outline, "Crowd: $crowd"),
                       const Divider(height: 32, thickness: 0.5),
+
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             "BOOKING REF",
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade500,
-                              letterSpacing: 1.1,
-                            ),
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.1),
                           ),
                           Text(
-                            bookings[index].id.substring(0, 8).toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontFamily: 'monospace', // Gives it that digital receipt look
-                              color: Colors.grey.shade700,
-                            ),
+                            docId.substring(0, 8).toUpperCase(),
+                            style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.grey),
                           ),
                         ],
                       ),
+
+                      // --- PAYMENT BUTTON SECTION ---
+                      if (status == 'Approved, Payment Pending') ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () => makePayment(context, price, docId),
+                            icon: const Icon(Icons.payment_rounded),
+                            label: const Text("Pay Now to Confirm Booking"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -176,7 +194,6 @@ class MyBookingsScreen extends StatelessWidget {
     );
   }
 
-
   Widget _buildDetailRow(IconData icon, String text, {bool isBold = false}) {
     return Row(
       children: [
@@ -184,14 +201,9 @@ class MyBookingsScreen extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           text,
-          style: TextStyle(
-              fontSize: 14,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.normal
-          ),
+          style: TextStyle(fontSize: 14, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
         ),
       ],
     );
   }
 }
-
-//good to go.

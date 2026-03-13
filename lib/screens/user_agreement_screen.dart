@@ -28,6 +28,13 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
         backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () {
+            // FIX: Just go back to the previous screen (Onboarding)
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -116,24 +123,27 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
                     ),
                   ),
                 ),
+              ),
 
-                const SizedBox(height: 20),
-
-                // Checkbox + Button
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _agreed,
-                      activeColor: const Color(0xFF1B5E20),
-                      onChanged: (value) {
-                        setState(() => _agreed = value!);
-                      },
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // FIX: Go to Sign In to let the user authenticate.
+                      // pushReplacementNamed ensures they can't come back here.
+                      Navigator.pushReplacementNamed(context, '/sign_in');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF2E7D32),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    const Expanded(
-                      child: Text(
-                        'I have read and agree to the terms and conditions',
-                        style: TextStyle(fontSize: 15),
-                      ),
+                    child: const Text(
+                      'I Agree',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),

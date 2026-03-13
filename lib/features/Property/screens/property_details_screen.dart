@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/property_model.dart';
@@ -20,7 +22,6 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     selectedImage = widget.property.imageUrl;
   }
 
-  // Improved Map Launcher with error handling
   Future<void> _launchMap() async {
     final Uri url = Uri.parse(widget.property.googleMapsUrl);
     try {
@@ -47,22 +48,14 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
       ),
       body: Column(
         children: [
-          // Expanded ensures the scrollable area takes up all space except the bottom bar
           Expanded(
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // HERO IMAGE
-                  Image.asset(
-                    selectedImage,
-                    width: double.infinity,
-                    height: 250,
-                    fit: BoxFit.cover,
-                  ),
+                  Image.asset(selectedImage, width: double.infinity, height: 250, fit: BoxFit.cover),
 
-                  // GALLERY
                   const Padding(
                     padding: EdgeInsets.only(left: 16, top: 16),
                     child: Text("Gallery", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -77,7 +70,6 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       itemBuilder: (context, index) {
                         final imgPath = widget.property.galleryImages[index];
                         final isSelected = selectedImage == imgPath;
-
                         return GestureDetector(
                           onTap: () => setState(() => selectedImage = imgPath),
                           child: Container(
@@ -89,10 +81,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 color: isSelected ? const Color(0xFFE67E22) : Colors.transparent,
                                 width: 2,
                               ),
-                              image: DecorationImage(
-                                image: AssetImage(imgPath),
-                                fit: BoxFit.cover,
-                              ),
+                              image: DecorationImage(image: AssetImage(imgPath), fit: BoxFit.cover),
                             ),
                           ),
                         );
@@ -100,7 +89,6 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                     ),
                   ),
 
-                  // INFO SECTION
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
@@ -120,7 +108,6 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // NAVIGATE BUTTON
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
@@ -135,8 +122,6 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         ),
 
                         const SizedBox(height: 16),
-
-                        // NEW: CONTACT NUMBER ROW
                         const Text("Contact", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         InkWell(
@@ -157,17 +142,12 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 child: const Icon(Icons.phone, color: Color(0xFFE67E22), size: 20),
                               ),
                               const SizedBox(width: 12),
-                              Text(
-                                widget.property.contactNumber,
-                                style: const TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w500),
-                              ),
+                              Text(widget.property.contactNumber, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 20),
-                        const SizedBox(height: 8),
-                        Text(widget.property.description, style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.5)),
+                        Text(widget.property.description, style: const TextStyle(fontSize: 14, height: 1.5)),
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -177,21 +157,13 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
             ),
           ),
 
-
-          // SafeArea prevents the button from being cut off by the phone's "home bar"
+          // BOTTOM BUTTON BAR
           SafeArea(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-         
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  )
-                ],
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: const Offset(0, -5))],
               ),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -199,11 +171,36 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => BookingFormScreen(property: widget.property))
-                  );
+                onPressed: () async {
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user != null) {
+                    // SAVE TO FIRESTORE
+                    await FirebaseFirestore.instance.collection('property_bookings').add({
+                      'user_id': user.uid,
+                      'property_name': widget.property.name,
+                      'price': widget.property.price,
+                      'status': 'pending',
+                      'timestamp': FieldValue.serverTimestamp(),
+
+                      'date': 'March 20, 2026',
+                      'slot': '09:00 AM - 05:00 PM',
+                      'purpose': 'Event',
+                      'crowd_size': '100',
+                    });
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Booking request submitted!')),
+                      );
+                      // NAVIGATE TO NEXT SCREEN
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => BookingFormScreen(property: widget.property)),
+                      );
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in to book')));
+                  }
                 },
                 child: const Text("BOOK NOW", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
               ),
@@ -214,4 +211,3 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     );
   }
 }
-//file is upto date

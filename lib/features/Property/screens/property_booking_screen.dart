@@ -4,6 +4,7 @@ import '../models/property_model.dart';
 import 'property_details_screen.dart';
 
 
+
 class PropertyBookingScreen extends StatelessWidget {
   const PropertyBookingScreen({super.key});
 

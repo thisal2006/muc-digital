@@ -4,11 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:muc_digital/widgets/auth_wrapper.dart';
 import 'chatbot.dart';
 import 'features/Garbage_tracking/garbage_tracking_screen.dart';
+import 'features/Property/screens/my_bookings_screen.dart';
 import 'firebase_options.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
-import 'screens/admin_dashboard_screen.dart';
 import 'screens/onboarding_screen.dart';
-import 'screens/splash_screen.dart';
 import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
@@ -31,8 +29,6 @@ bool _firebaseInitialized = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  Stripe.publishableKey = "pk_test_51SzuZY0KRpwcO4zEHs47arkmOTryBOAhNWAgBo2nAHdd2bwvIkoaPhoHnTuJFMhj1B4aB6RqfMaIJkmBsL8R0ERW008fqqSwg4";
 
   if (!_firebaseInitialized) {
     if (Firebase.apps.isEmpty) {
@@ -92,25 +88,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_in': (context) => const SignInScreen(),
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/booking-history': (context) => const BookingHistoryScreen(),
-        '/chatbot': (context) => const ChatbotScreen(),
-/*        '/crematorium_booking': (context) => const CrematoriumBookingScreen(),*/
-        '/vehicle_booking': (context) => const VehicleTypeScreen(),
-
-      },
-      onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => Scaffold(
-            body: Center(
-              child: Text(
-                'Route not found: ${settings.name}\n\nCheck main.dart routes!',
-                style: const TextStyle(fontSize: 18, color: Colors.red),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        );
+        '/my_bookings': (context) => const MyBookingsScreen(), // Un-commented and fixed
       },
     );
   }
