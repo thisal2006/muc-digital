@@ -25,10 +25,14 @@ import 'screens/booking_history_screen.dart';
 import 'widgets/app_drawer.dart';
 import 'vehicleBooking/vehicle_type_screen.dart';
 
+import 'package:flutter_stripe/flutter_stripe.dart';
+
 bool _firebaseInitialized = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = 'pk_test_51SzuZY0KRpwcO4zEHs47arkmOTryBOAhNWAgBo2nAHdd2bwvIkoaPhoHnTuJFMhj1B4aB6RqfMaIJkmBsL8R0ERW008fqqSwg4'; // <-- Put your real test key here
+  await Stripe.instance.applySettings();
 
   if (!_firebaseInitialized) {
     if (Firebase.apps.isEmpty) {
