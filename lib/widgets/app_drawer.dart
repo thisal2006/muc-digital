@@ -16,8 +16,8 @@ class AppDrawer extends StatelessWidget {
         children: [
           // Header / Profile section with gradient
           Container(
-            height: 180,
             width: double.infinity,
+            padding: const EdgeInsets.only(top: 20, bottom: 20),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
