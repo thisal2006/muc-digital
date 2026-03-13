@@ -85,8 +85,8 @@ class MyBookingsScreen extends StatelessWidget {
               final String docId = bookings[index].id; // Reference for payment
 
               final propertyName = data['property_name'] ?? 'Unknown Venue';
-              final date = data['booking_date'] ?? 'No date';
-              final slot = data['time_slot'] ?? 'No slot';
+              final date = data['date'] ?? 'No date';
+              final slot = data['slot'] ?? 'No slot';
               final price = data['price'] ?? 'LKR 0';
 
 
