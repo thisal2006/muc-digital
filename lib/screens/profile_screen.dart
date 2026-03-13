@@ -116,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    HapticFeedback.mediumImpact(); // --- COMMIT 10: Feedback
+    HapticFeedback.mediumImpact();
     setState(() => _isSaving = true);
     try {
       String? newUrl = _photoUrl;
@@ -149,104 +149,116 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  // --- COMMIT 11: Handle Refresh logic
+  Future<void> _handleRefresh() async {
+    HapticFeedback.lightImpact();
+    await _loadUserData();
+    await _loadStats();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF8),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 200.0,
-            pinned: true,
-            backgroundColor: const Color(0xFF2E7D32),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)]),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 40),
-                    Tooltip( // --- COMMIT 10: Tooltip
-                      message: "Profile Photo",
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundImage: _getProfileImage(),
-                        child: _getProfileImage() == null ? const Icon(Icons.person, size: 50, color: Colors.white) : null,
+      body: RefreshIndicator( // --- COMMIT 11: Added RefreshIndicator
+        onRefresh: _handleRefresh,
+        color: const Color(0xFF2E7D32),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(), // Essential for RefreshIndicator
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 200.0,
+              pinned: true,
+              backgroundColor: const Color(0xFF2E7D32),
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)]),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
+                      Tooltip(
+                        message: "Profile Photo",
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundImage: _getProfileImage(),
+                          child: _getProfileImage() == null ? const Icon(Icons.person, size: 50, color: Colors.white) : null,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(_nameController.text, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text("Member Since: $_memberSince", style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(_nameController.text, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text("Member Since: $_memberSince", style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            actions: [
-              IconButton(
-                tooltip: _isEditing ? "Cancel" : "Edit Profile", // --- COMMIT 10: Tooltip
-                icon: Icon(_isEditing ? Icons.close : Icons.edit),
-                onPressed: () {
-                  HapticFeedback.lightImpact(); // --- COMMIT 10: Feedback
-                  setState(() => _isEditing = !_isEditing);
-                },
-              ),
-              if (_isEditing)
+              actions: [
                 IconButton(
-                    tooltip: "Save Changes",
-                    icon: const Icon(Icons.check),
-                    onPressed: _saveProfile
+                  tooltip: _isEditing ? "Cancel" : "Edit Profile",
+                  icon: Icon(_isEditing ? Icons.close : Icons.edit),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    setState(() => _isEditing = !_isEditing);
+                  },
                 ),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        _buildStatCard("Complaints", _complaintCount.toString(), Icons.report_problem, Colors.orange),
-                        const SizedBox(width: 15),
-                        _buildStatCard("Bookings", "0", Icons.calendar_today, Colors.blue),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    Form(
-                      key: _formKey,
-                      child: Column(
+                if (_isEditing)
+                  IconButton(
+                      tooltip: "Save Changes",
+                      icon: const Icon(Icons.check),
+                      onPressed: _saveProfile
+                  ),
+              ],
+            ),
+            SliverToBoxAdapter(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Row(
                         children: [
-                          _buildModernField("Full Name", _nameController, Icons.person_outline),
-                          const SizedBox(height: 16),
-                          _buildModernField("Phone", _phoneController, Icons.phone_android),
-                          const SizedBox(height: 16),
-                          _buildModernField("Address", _addressController, Icons.location_on_outlined, maxLines: 2),
-                          const SizedBox(height: 30),
-                          ElevatedButton.icon(
-                            onPressed: _logout,
-                            icon: const Icon(Icons.logout),
-                            label: const Text("Logout"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.red,
-                              minimumSize: const Size(double.infinity, 50),
-                              side: const BorderSide(color: Colors.red),
-                            ),
-                          ),
+                          _buildStatCard("Complaints", _complaintCount.toString(), Icons.report_problem, Colors.orange),
+                          const SizedBox(width: 15),
+                          _buildStatCard("Bookings", "0", Icons.calendar_today, Colors.blue),
                         ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 30),
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            _buildModernField("Full Name", _nameController, Icons.person_outline),
+                            const SizedBox(height: 16),
+                            _buildModernField("Phone", _phoneController, Icons.phone_android),
+                            const SizedBox(height: 16),
+                            _buildModernField("Address", _addressController, Icons.location_on_outlined, maxLines: 2),
+                            const SizedBox(height: 30),
+                            ElevatedButton.icon(
+                              onPressed: _logout,
+                              icon: const Icon(Icons.logout),
+                              label: const Text("Logout"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.red,
+                                minimumSize: const Size(double.infinity, 50),
+                                side: const BorderSide(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -292,9 +304,24 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _logout() async {
-    HapticFeedback.heavyImpact(); // --- COMMIT 10: Feedback
-    await _auth.signOut();
-    if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
+    HapticFeedback.heavyImpact();
+    // --- COMMIT 11: Added Confirmation Dialog ---
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to sign out?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("CANCEL")),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("LOGOUT", style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _auth.signOut();
+      if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
+    }
   }
 
   @override
