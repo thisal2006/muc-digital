@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Added for Haptics
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'auth/sign_in_screen.dart';
@@ -130,6 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
+        'email': _emailController.text.trim(), // Save email changes if enabled
         'photoUrl': newUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -149,7 +150,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  // --- COMMIT 11: Handle Refresh logic
   Future<void> _handleRefresh() async {
     HapticFeedback.lightImpact();
     await _loadUserData();
@@ -162,11 +162,11 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF8),
-      body: RefreshIndicator( // --- COMMIT 11: Added RefreshIndicator
+      body: RefreshIndicator(
         onRefresh: _handleRefresh,
         color: const Color(0xFF2E7D32),
         child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(), // Essential for RefreshIndicator
+          physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverAppBar(
               expandedHeight: 200.0,
@@ -234,6 +234,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                           children: [
                             _buildModernField("Full Name", _nameController, Icons.person_outline),
                             const SizedBox(height: 16),
+                            // --- COMMIT 12: Added Email Field ---
+                            _buildModernField("Email Address", _emailController, Icons.email_outlined, enabled: false),
+                            const SizedBox(height: 16),
                             _buildModernField("Phone", _phoneController, Icons.phone_android),
                             const SizedBox(height: 16),
                             _buildModernField("Address", _addressController, Icons.location_on_outlined, maxLines: 2),
@@ -284,15 +287,19 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildModernField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+  Widget _buildModernField(String label, TextEditingController controller, IconData icon, {int maxLines = 1, bool enabled = true}) {
     return TextFormField(
       controller: controller,
-      enabled: _isEditing,
+      enabled: _isEditing && enabled, // Uses the 'enabled' parameter to lock fields like Email
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF2E7D32)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
       ),
     );
   }
@@ -305,7 +312,6 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _logout() async {
     HapticFeedback.heavyImpact();
-    // --- COMMIT 11: Added Confirmation Dialog ---
     bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -313,7 +319,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         content: const Text("Are you sure you want to sign out?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("CANCEL")),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("LOGOUT", style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.pop(context, true),
+              child: const Text("LOGOUT", style: TextStyle(color: Colors.red))),
         ],
       ),
     );
