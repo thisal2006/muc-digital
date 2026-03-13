@@ -71,16 +71,20 @@ class AppDrawer extends StatelessWidget {
                         const SizedBox(height: 12),
                         const Text(
                           'MUC Digital',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
                         const Text(
                           'Maharagama Urban Council',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             color: Colors.white70,
                           ),
                         ),
