@@ -25,6 +25,7 @@ import 'package:muc_digital/features/crematorium%20booking/crematorium_booking_s
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'screens/booking_history_screen.dart';
 import 'widgets/app_drawer.dart';
+import 'vehicleBooking/vehicle_type_screen.dart';
 
 bool _firebaseInitialized = false;
 
@@ -93,7 +94,10 @@ class MUCdigitalApp extends StatelessWidget {
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/booking-history': (context) => const BookingHistoryScreen(),
-        '/chatbot': (context) => const ChatbotScreen(), // ADD THIS LINE
+        '/chatbot': (context) => const ChatbotScreen(),
+/*        '/crematorium_booking': (context) => const CrematoriumBookingScreen(),*/
+        '/vehicle_booking': (context) => const VehicleTypeScreen(),
+
       },
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
