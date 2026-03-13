@@ -4,10 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Added for Haptics
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'auth/sign_in_screen.dart';
+import 'services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,6 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isLoading = true;
   bool _isSaving = false;
   int _complaintCount = 0;
+  int _bookingCount = 0;
   String _memberSince = "---";
 
   final _formKey = GlobalKey<FormState>();
@@ -30,6 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
   late TextEditingController _emailController;
+  late TextEditingController _nicController;
 
   File? _tempImageFile;
   String? _photoUrl;
@@ -38,6 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
+  final AuthService _authService = AuthService();
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -51,6 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
     _emailController = TextEditingController();
+    _nicController = TextEditingController();
 
     _animationController = AnimationController(
       vsync: this,
@@ -69,12 +74,21 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _loadStats() async {
     if (currentUser == null) return;
     try {
-      final snapshot = await _firestore
+      final complaintSnapshot = await _firestore
           .collection('complaints')
           .where('userId', isEqualTo: currentUser!.uid)
           .get();
+      
+      final bookingSnapshot = await _firestore
+          .collection('crematorium_bookings')
+          .where('userId', isEqualTo: currentUser!.uid)
+          .get();
+
       if (mounted) {
-        setState(() => _complaintCount = snapshot.docs.length);
+        setState(() {
+          _complaintCount = complaintSnapshot.docs.length;
+          _bookingCount = bookingSnapshot.docs.length;
+        });
       }
     } catch (e) {
       debugPrint("Error loading stats: $e");
@@ -95,6 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _phoneController.text = data['phone'] ?? '';
           _addressController.text = data['address'] ?? '';
           _emailController.text = data['email'] ?? currentUser!.email ?? '';
+          _nicController.text = data['nic'] ?? '';
           _photoUrl = data['photoUrl'];
 
           final createdAt = data['createdAt'] as Timestamp?;
@@ -116,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    HapticFeedback.mediumImpact(); // --- COMMIT 10: Feedback
+    HapticFeedback.mediumImpact();
     setState(() => _isSaving = true);
     try {
       String? newUrl = _photoUrl;
@@ -130,6 +145,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
+        'email': _emailController.text.trim(),
+        'nic': _nicController.text.trim(),
         'photoUrl': newUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -149,104 +166,161 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  Future<void> _handleRefresh() async {
+    HapticFeedback.lightImpact();
+    await _loadUserData();
+    await _loadStats();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF8),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 200.0,
-            pinned: true,
-            backgroundColor: const Color(0xFF2E7D32),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)]),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 40),
-                    Tooltip( // --- COMMIT 10: Tooltip
-                      message: "Profile Photo",
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundImage: _getProfileImage(),
-                        child: _getProfileImage() == null ? const Icon(Icons.person, size: 50, color: Colors.white) : null,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(_nameController.text, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text("Member Since: $_memberSince", style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              IconButton(
-                tooltip: _isEditing ? "Cancel" : "Edit Profile", // --- COMMIT 10: Tooltip
-                icon: Icon(_isEditing ? Icons.close : Icons.edit),
-                onPressed: () {
-                  HapticFeedback.lightImpact(); // --- COMMIT 10: Feedback
-                  setState(() => _isEditing = !_isEditing);
-                },
-              ),
-              if (_isEditing)
-                IconButton(
-                    tooltip: "Save Changes",
-                    icon: const Icon(Icons.check),
-                    onPressed: _saveProfile
-                ),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        _buildStatCard("Complaints", _complaintCount.toString(), Icons.report_problem, Colors.orange),
-                        const SizedBox(width: 15),
-                        _buildStatCard("Bookings", "0", Icons.calendar_today, Colors.blue),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          _buildModernField("Full Name", _nameController, Icons.person_outline),
-                          const SizedBox(height: 16),
-                          _buildModernField("Phone", _phoneController, Icons.phone_android),
-                          const SizedBox(height: 16),
-                          _buildModernField("Address", _addressController, Icons.location_on_outlined, maxLines: 2),
-                          const SizedBox(height: 30),
-                          ElevatedButton.icon(
-                            onPressed: _logout,
-                            icon: const Icon(Icons.logout),
-                            label: const Text("Logout"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.red,
-                              minimumSize: const Size(double.infinity, 50),
-                              side: const BorderSide(color: Colors.red),
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        color: const Color(0xFF2E7D32),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 200.0,
+              pinned: true,
+              backgroundColor: const Color(0xFF2E7D32),
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)]),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
+                      GestureDetector(
+                        onTap: _isEditing ? _pickImage : null,
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundImage: _getProfileImage(),
+                              child: _getProfileImage() == null ? const Icon(Icons.person, size: 50, color: Colors.white) : null,
                             ),
-                          ),
+                            if (_isEditing)
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                                child: const Icon(Icons.camera_alt, size: 20, color: Color(0xFF2E7D32)),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(_nameController.text, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text("Member Since: $_memberSince", style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                IconButton(
+                  tooltip: _isEditing ? "Cancel" : "Edit Profile",
+                  icon: Icon(_isEditing ? Icons.close : Icons.edit),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    setState(() => _isEditing = !_isEditing);
+                  },
+                ),
+                if (_isEditing)
+                  IconButton(
+                      tooltip: "Save Changes",
+                      icon: const Icon(Icons.check),
+                      onPressed: _saveProfile
+                  ),
+              ],
+            ),
+            SliverToBoxAdapter(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          _buildStatCard("Complaints", _complaintCount.toString(), Icons.report_problem, Colors.orange),
+                          const SizedBox(width: 15),
+                          _buildStatCard("Bookings", _bookingCount.toString(), Icons.calendar_today, Colors.blue),
                         ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 30),
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _sectionTitle("Personal Information"),
+                            const SizedBox(height: 15),
+                            _buildModernField("Full Name", _nameController, Icons.person_outline),
+                            const SizedBox(height: 16),
+
+                            _buildModernField("Email Address", _emailController, Icons.email_outlined, enabled: false),
+                            const SizedBox(height: 16),
+                            _buildModernField("NIC Number", _nicController, Icons.badge_outlined),
+                            const SizedBox(height: 16),
+                            _buildModernField("Phone", _phoneController, Icons.phone_android),
+                            const SizedBox(height: 16),
+                            _buildModernField("Address", _addressController, Icons.location_on_outlined, maxLines: 2),
+                            const SizedBox(height: 30),
+                            
+                            _sectionTitle("Security & Account"),
+                            const SizedBox(height: 15),
+                            ElevatedButton.icon(
+                              onPressed: _logout,
+                              icon: const Icon(Icons.logout),
+                              label: const Text("Logout"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFF2E7D32),
+                                minimumSize: const Size(double.infinity, 50),
+                                side: const BorderSide(color: Color(0xFF2E7D32)),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
+                              onPressed: _showDeleteAccountDialog,
+                              icon: const Icon(Icons.delete_forever),
+                              label: const Text("Delete Account"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.red,
+                                minimumSize: const Size(double.infinity, 50),
+                                side: const BorderSide(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: Colors.grey[600],
+        letterSpacing: 1.2,
       ),
     );
   }
@@ -258,6 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withAlpha(30), width: 1),
           boxShadow: [BoxShadow(color: Colors.black.withAlpha(15), blurRadius: 10)],
         ),
         child: Column(
@@ -272,17 +347,31 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  Widget _buildModernField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+  Widget _buildModernField(String label, TextEditingController controller, IconData icon, {int maxLines = 1, bool enabled = true}) {
     return TextFormField(
       controller: controller,
-      enabled: _isEditing,
+      enabled: _isEditing && enabled,
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFF2E7D32)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
       ),
     );
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+    if (pickedFile != null) {
+      setState(() => _tempImageFile = File(pickedFile.path));
+    }
   }
 
   ImageProvider? _getProfileImage() {
@@ -292,9 +381,83 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _logout() async {
-    HapticFeedback.heavyImpact(); // --- COMMIT 10: Feedback
-    await _auth.signOut();
-    if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
+    HapticFeedback.heavyImpact();
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to Logout ?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("CANCEL")),
+          TextButton(onPressed: () => Navigator.pop(context, true),
+              child: const Text("LOGOUT", style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _authService.signOut();
+      if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
+    }
+  }
+
+  void _showDeleteAccountDialog() {
+    final passwordController = TextEditingController();
+    bool obscurePassword = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Delete Account", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("This action is permanent and cannot be undone. Please enter your password to confirm."),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: passwordController,
+                obscureText: obscurePassword,
+                decoration: InputDecoration(
+                  labelText: "Password",
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(obscurePassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  AuthCredential credential = EmailAuthProvider.credential(
+                    email: currentUser!.email!,
+                    password: passwordController.text.trim(),
+                  );
+                  await currentUser!.reauthenticateWithCredential(credential);
+                  await _firestore.collection('users').doc(currentUser!.uid).delete();
+                  await currentUser!.delete();
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SignInScreen()), (route) => false);
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              child: const Text("Delete Forever"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -303,6 +466,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _phoneController.dispose();
     _addressController.dispose();
     _emailController.dispose();
+    _nicController.dispose();
     _animationController.dispose();
     super.dispose();
   }
