@@ -22,6 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isLoading = true;
   bool _isSaving = false;
   int _complaintCount = 0;
+  int _bookingCount = 0;
   String _memberSince = "---";
 
   final _formKey = GlobalKey<FormState>();
@@ -69,12 +70,21 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _loadStats() async {
     if (currentUser == null) return;
     try {
-      final snapshot = await _firestore
+      final complaintSnapshot = await _firestore
           .collection('complaints')
           .where('userId', isEqualTo: currentUser!.uid)
           .get();
+      
+      final bookingSnapshot = await _firestore
+          .collection('crematorium_bookings')
+          .where('userId', isEqualTo: currentUser!.uid)
+          .get();
+
       if (mounted) {
-        setState(() => _complaintCount = snapshot.docs.length);
+        setState(() {
+          _complaintCount = complaintSnapshot.docs.length;
+          _bookingCount = bookingSnapshot.docs.length;
+        });
       }
     } catch (e) {
       debugPrint("Error loading stats: $e");
@@ -224,7 +234,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         children: [
                           _buildStatCard("Complaints", _complaintCount.toString(), Icons.report_problem, Colors.orange),
                           const SizedBox(width: 15),
-                          _buildStatCard("Bookings", "0", Icons.calendar_today, Colors.blue),
+                          _buildStatCard("Bookings", _bookingCount.toString(), Icons.calendar_today, Colors.blue),
                         ],
                       ),
                       const SizedBox(height: 30),
