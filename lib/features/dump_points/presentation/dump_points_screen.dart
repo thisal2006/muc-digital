@@ -443,9 +443,16 @@ class _DumpPointsScreenState extends State<DumpPointsScreen>
             child: Row(
               children: [
 
-                const Icon(
-                  Icons.location_on,
-                  color: Colors.green,
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.delete,
+                    color: Colors.green,
+                  ),
                 ),
 
                 const SizedBox(width: 12),
