@@ -258,7 +258,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                       Form(
                         key: _formKey,
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            _sectionTitle("Personal Information"),
+                            const SizedBox(height: 15),
                             _buildModernField("Full Name", _nameController, Icons.person_outline),
                             const SizedBox(height: 16),
 
@@ -270,6 +273,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                             const SizedBox(height: 16),
                             _buildModernField("Address", _addressController, Icons.location_on_outlined, maxLines: 2),
                             const SizedBox(height: 30),
+                            
+                            _sectionTitle("Security & Account"),
+                            const SizedBox(height: 15),
                             ElevatedButton.icon(
                               onPressed: _logout,
                               icon: const Icon(Icons.logout),
@@ -307,6 +313,18 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: Colors.grey[600],
+        letterSpacing: 1.2,
+      ),
+    );
+  }
+
   Widget _buildStatCard(String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
@@ -314,6 +332,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withAlpha(30), width: 1),
           boxShadow: [BoxShadow(color: Colors.black.withAlpha(15), blurRadius: 10)],
         ),
         child: Column(
