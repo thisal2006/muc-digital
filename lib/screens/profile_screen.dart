@@ -130,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
-        'email': _emailController.text.trim(), // Save email changes if enabled
+        'email': _emailController.text.trim(),
         'photoUrl': newUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -247,6 +247,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                               label: const Text("Logout"),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
+                                foregroundColor: const Color(0xFF2E7D32),
+                                minimumSize: const Size(double.infinity, 50),
+                                side: const BorderSide(color: Color(0xFF2E7D32)),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
+                              onPressed: _showDeleteAccountDialog,
+                              icon: const Icon(Icons.delete_forever),
+                              label: const Text("Delete Account"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
                                 foregroundColor: Colors.red,
                                 minimumSize: const Size(double.infinity, 50),
                                 side: const BorderSide(color: Colors.red),
@@ -290,7 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildModernField(String label, TextEditingController controller, IconData icon, {int maxLines = 1, bool enabled = true}) {
     return TextFormField(
       controller: controller,
-      enabled: _isEditing && enabled, // Uses the 'enabled' parameter to lock fields like Email
+      enabled: _isEditing && enabled,
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
@@ -329,6 +341,65 @@ class _ProfileScreenState extends State<ProfileScreen>
       await _auth.signOut();
       if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
     }
+  }
+
+  void _showDeleteAccountDialog() {
+    final passwordController = TextEditingController();
+    bool obscurePassword = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Delete Account", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("This action is permanent and cannot be undone. Please enter your password to confirm."),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: passwordController,
+                obscureText: obscurePassword,
+                decoration: InputDecoration(
+                  labelText: "Password",
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(obscurePassword ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
+                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  AuthCredential credential = EmailAuthProvider.credential(
+                    email: currentUser!.email!,
+                    password: passwordController.text.trim(),
+                  );
+                  await currentUser!.reauthenticateWithCredential(credential);
+                  await _firestore.collection('users').doc(currentUser!.uid).delete();
+                  await currentUser!.delete();
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SignInScreen()), (route) => false);
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              child: const Text("Delete Forever"),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
