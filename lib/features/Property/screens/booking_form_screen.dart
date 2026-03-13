@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -121,22 +122,33 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         );
         return;
       }
+      // Get the currently logged-in user automatically
+      final user = FirebaseAuth.instance.currentUser;
+
+      // Safety check: Make sure someone is actually logged in
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error: You must be logged in to book.")),
+        );
+        return;
+      }
 
       // 3. LOGIC: Save with the correct Municipal Status
       final bookingData = {
-        "user_id": "current_user_id", // Replace with actual Auth ID later
+        "user_id": user.uid, // <--- THIS GRABS THE REAL ID AUTOMATICALLY
         "property_name": widget.property.name,
         "price": _calculatedPrice,
         "date": formattedDate,
         "slot": selectedSlot,
         "contact_name": _nameController.text.trim(),
         "contact_number": _phoneController.text.trim(),
-        "reason": _reasonController.text.trim(),
-        "status": "Approval Pending", // <--- CORRECT STATUS
+        "purpose": _reasonController.text.trim(),
+        "crowd_size": "Not specified",
+        "status": "pending",
         "timestamp": FieldValue.serverTimestamp(),
       };
 
-      await FirebaseFirestore.instance.collection('bookings').add(bookingData);
+      await FirebaseFirestore.instance.collection('property_bookings').add(bookingData);
 
       if (!mounted) return;
       Navigator.of(context).pop(); // Close loading
