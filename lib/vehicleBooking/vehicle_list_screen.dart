@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'vehicle_models.dart';
 import 'vehicle_service.dart';
 import 'vehicle_details_screen.dart';
@@ -29,10 +30,12 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
   Future<void> _loadVehicles() async {
     setState(() => _isLoading = true);
     final vehicles = await _vehicleService.getVehicles(typeId: widget.typeId);
-    setState(() {
-      _vehicles = vehicles;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _vehicles = vehicles;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -59,22 +62,44 @@ class _VehicleListScreenState extends State<VehicleListScreen> {
         ),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF00897B)),
-            )
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF00897B)))
           : RefreshIndicator(
-              onRefresh: _loadVehicles,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _vehicles.length,
-                itemBuilder: (context, index) {
-                  return FadeInUp(
-                    delay: Duration(milliseconds: 100 * index),
-                    child: _VehicleCard(vehicle: _vehicles[index]),
-                  );
-                },
-              ),
+        onRefresh: _loadVehicles,
+        child: _vehicles.isEmpty
+            ? Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.cloud_off, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                Text(
+                  'No vehicles found in this category',
+                  style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w500),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Check if the backend is running correctly',
+                  style: GoogleFonts.poppins(color: Colors.grey[700]),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
+          ),
+        )
+            : ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: _vehicles.length,
+          itemBuilder: (context, index) {
+            return FadeInUp(
+              delay: Duration(milliseconds: 100 * index),
+              child: _VehicleCard(vehicle: _vehicles[index]),
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -113,24 +138,21 @@ class _VehicleCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              child: Image.network(
-                vehicle.images.isNotEmpty
-                    ? vehicle.images[0]
-                    : 'https://via.placeholder.com/400x200',
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: CachedNetworkImage(
+                imageUrl: vehicle.images.isNotEmpty ? vehicle.images[0] : 'https://via.placeholder.com/400x200?text=No+Image',
                 height: 180,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+                placeholder: (context, url) => Container(
                   height: 180,
                   color: Colors.grey[200],
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    size: 50,
-                    color: Colors.grey,
-                  ),
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  height: 180,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.image_not_supported, size: 60, color: Colors.grey),
                 ),
               ),
             ),
@@ -139,20 +161,13 @@ class _VehicleCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          vehicle.name,
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1A1A1A),
-                          ),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    vehicle.name,
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1A1A1A),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
