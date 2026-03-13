@@ -234,7 +234,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           children: [
                             _buildModernField("Full Name", _nameController, Icons.person_outline),
                             const SizedBox(height: 16),
-                            // --- COMMIT 12: Added Email Field ---
+
                             _buildModernField("Email Address", _emailController, Icons.email_outlined, enabled: false),
                             const SizedBox(height: 16),
                             _buildModernField("Phone", _phoneController, Icons.phone_android),
