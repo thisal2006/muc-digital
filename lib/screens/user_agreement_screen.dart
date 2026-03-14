@@ -9,7 +9,7 @@ class UserAgreementScreen extends StatefulWidget {
 }
 
 class _UserAgreementScreenState extends State<UserAgreementScreen> {
-  bool _agreed = false;
+  final bool _agreed = false;
 
   Future<void> _acceptAgreement() async {
     final prefs = await SharedPreferences.getInstance();
@@ -31,7 +31,6 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () {
-            // FIX: Just go back to the previous screen (Onboarding)
             Navigator.pop(context);
           },
         ),
@@ -123,17 +122,15 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
                     ),
                   ),
                 ),
-              ),
 
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                child: SizedBox(
+                const SizedBox(height: 20),
+
+                // Bottom Buttons
+                SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
                     onPressed: () {
-                      // FIX: Go to Sign In to let the user authenticate.
-                      // pushReplacementNamed ensures they can't come back here.
                       Navigator.pushReplacementNamed(context, '/sign_in');
                     },
                     style: ElevatedButton.styleFrom(
@@ -145,25 +142,28 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
                       'I Agree',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                  ],
+                  ),
                 ),
 
                 const SizedBox(height: 12),
 
-                ElevatedButton(
-                  onPressed: _agreed ? _acceptAgreement : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1B5E20),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _agreed ? _acceptAgreement : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1B5E20),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 6,
                     ),
-                    elevation: 6,
-                  ),
-                  child: const Text(
-                    'Accept & Continue',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    child: const Text(
+                      'Accept & Continue',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
               ],
