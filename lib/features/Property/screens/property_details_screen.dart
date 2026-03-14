@@ -158,6 +158,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
           ),
 
           // BOTTOM BUTTON BAR
+          // BOTTOM BUTTON BAR - CLEANED VERSION
           SafeArea(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -171,35 +172,19 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: () async {
+                onPressed: () {
                   final user = FirebaseAuth.instance.currentUser;
                   if (user != null) {
-                    // SAVE TO FIRESTORE
-                    await FirebaseFirestore.instance.collection('property_bookings').add({
-                      'user_id': user.uid,
-                      'property_name': widget.property.name,
-                      'price': widget.property.price,
-                      'status': 'pending',
-                      'timestamp': FieldValue.serverTimestamp(),
-
-                      'date': 'March 20, 2026',
-                      'slot': '09:00 AM - 05:00 PM',
-                      'purpose': 'Event',
-                      'crowd_size': '100',
-                    });
-
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Booking request submitted!')),
-                      );
-                      // NAVIGATE TO NEXT SCREEN
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => BookingFormScreen(property: widget.property)),
-                      );
-                    }
+                    // Logic: We don't save to Firebase yet!
+                    // We go to the form so they can pick a date and PAY.
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => BookingFormScreen(property: widget.property)),
+                    );
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please log in to book')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please log in to book')),
+                    );
                   }
                 },
                 child: const Text("BOOK NOW", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
