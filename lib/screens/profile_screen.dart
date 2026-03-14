@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,11 +18,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController = TextEditingController(text: "Praveen Silva");
-  final _emailController = TextEditingController(text: "praveen@example.com");
-  final _phoneController = TextEditingController(text: "+94 77 123 4567");
-  final _addressController =
-  TextEditingController(text: "No. 45, Negombo Road, Maharagama");
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
 
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
@@ -36,6 +37,32 @@ class _ProfileScreenState extends State<ProfileScreen>
     _fadeAnimation =
         CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
     _animationController.forward();
+
+    _loadUserData(); // ← This loads the real data from Firestore after signup
+  }
+
+  Future<void> _loadUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        setState(() {
+          _nameController.text = data['name']?.toString() ?? '';
+          _emailController.text = data['email']?.toString() ?? user.email ?? '';
+          _phoneController.text = data['phone']?.toString() ?? '';
+          _addressController.text = data['address']?.toString() ?? '';
+        });
+      }
+    } catch (e) {
+      // Silent fail (network issue or rare error) - user will still see empty fields
+    }
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -49,17 +76,42 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _saveProfile() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+        'name': _nameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'address': _addressController.text.trim(),
+        'lastActive': FieldValue.serverTimestamp(),
+      });
+
       setState(() {
         _isEditing = false;
         _isLoading = false;
       });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile updated successfully")),
+          const SnackBar(
+            content: Text("Profile updated successfully"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Update failed: $e")),
         );
       }
     }
@@ -116,7 +168,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     const SizedBox(height: 30),
                     ProfileField(label: "Full Name", controller: _nameController, enabled: _isEditing),
                     const SizedBox(height: 16),
-                    ProfileField(label: "Email", controller: _emailController, enabled: _isEditing, keyboardType: TextInputType.emailAddress),
+                    ProfileField(label: "Email", controller: _emailController, enabled: false, keyboardType: TextInputType.emailAddress), // Email is read-only
                     const SizedBox(height: 16),
                     ProfileField(label: "Phone Number", controller: _phoneController, enabled: _isEditing, keyboardType: TextInputType.phone),
                     const SizedBox(height: 16),
@@ -129,10 +181,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const BookingHistoryScreen()),
-                        );
+                        Navigator.pushNamed(context, '/booking_history'); // Uses the real booking screen from routes
                       },
                       child: const Text("View Booking History", style: TextStyle(color: Colors.white)),
                     )
@@ -142,7 +191,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             if (_isLoading)
               Container(
-                color: Colors.black.withOpacity(0.4), // Fixed .withValues error
+                color: Colors.black.withOpacity(0.4),
                 child: const Center(child: CircularProgressIndicator(color: Color(0xFF2E7D32))),
               ),
           ],
@@ -187,38 +236,6 @@ class ProfileField extends StatelessWidget {
         filled: true,
         fillColor: enabled ? Colors.white : Colors.grey[200],
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-}
-
-class BookingHistoryScreen extends StatelessWidget {
-  const BookingHistoryScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Map<String, String>> bookings = [
-      {'title': "Garbage Pickup", 'subtitle': "2025-11-26 | Completed", 'status': "Completed"},
-      {'title': "Community Hall", 'subtitle': "2025-12-05 | Upcoming", 'status': "Upcoming"},
-    ];
-
-    return Scaffold(
-      appBar: AppBar(title: const Text("Booking History"), backgroundColor: const Color(0xFF2E7D32)),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: bookings.length,
-        itemBuilder: (context, index) {
-          final booking = bookings[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 15),
-            child: ListTile(
-              title: Text(booking['title']!),
-              subtitle: Text(booking['subtitle']!),
-              trailing: Text(booking['status']!,
-                  style: TextStyle(color: booking['status'] == "Completed" ? Colors.green : Colors.orange)),
-            ),
-          );
-        },
       ),
     );
   }
