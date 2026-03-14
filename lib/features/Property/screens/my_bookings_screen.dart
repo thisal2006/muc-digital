@@ -147,7 +147,7 @@ class MyBookingsScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       _buildDetailRow(Icons.info_outline, "Purpose: $purpose"),
                       const SizedBox(height: 8),
-                      _buildDetailRow(Icons.people_outline, "Crowd: $crowd"),
+                     // _buildDetailRow(Icons.people_outline, "Crowd: $crowd"),
                       const Divider(height: 32, thickness: 0.5),
 
 
