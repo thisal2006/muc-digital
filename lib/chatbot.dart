@@ -15,7 +15,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final List<Map<String, String>> _messages = [
     {
       'header': 'bot',
-      'text': 'Hello! I am the Maharagama Urban Council assistant. How can I help you today?',
+      'text':
+          'Hello! I am the Maharagama Urban Council assistant. How can I help you with waste management or bookings today?',
     },
   ];
   final ScrollController _scrollController = ScrollController();
@@ -48,11 +49,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     try {
       final response = await http
           .post(
-        Uri.parse('$_apiUrl/chat'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'message': text}),
-      )
-          .timeout(const Duration(seconds: 25));
+            Uri.parse('$_apiUrl/chat'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'message': text}),
+          )
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -60,22 +61,31 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           if (data['reply'] != null) {
             _messages.add({'header': 'bot', 'text': data['reply']});
           } else {
-            _messages.add({'header': 'bot', 'text': "Error: ${data['error'] ?? 'Unknown error'}"});
+            _messages.add({'header': 'bot', 'text': "Error: ${data['error']}"});
           }
         });
       } else {
+        String errorMessage = "Server error: ${response.statusCode}";
+        try {
+          final data = jsonDecode(response.body);
+          if (data['error'] != null) {
+            errorMessage = "Error: ${data['error']}";
+          }
+        } catch (_) {
+          if (response.body.isNotEmpty) {
+            errorMessage = "Detail: ${response.body}";
+          }
+        }
         setState(() {
-          _messages.add({
-            'header': 'bot',
-            'text': "Server responded with error ${response.statusCode}\n${response.body.isNotEmpty ? response.body : ''}"
-          });
+          _messages.add({'header': 'bot', 'text': errorMessage});
         });
       }
     } on TimeoutException {
       setState(() {
         _messages.add({
           'header': 'bot',
-          'text': "The AI server is taking too long to respond (>25s).\nMake sure flask-chatbot is running on port 5000."
+          'text':
+              "Request timed out. The server is taking too long to respond (over 60s).",
         });
       });
     } catch (e) {
@@ -83,11 +93,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         _messages.add({
           'header': 'bot',
           'text':
-          "Cannot connect to the AI backend.\n\nPossible fixes:\n1. Open terminal\n2. cd to your flask-chatbot folder\n3. Run: python app.py\n4. Make sure it says * Running on http://0.0.0.0:5000\n\nError: $e"
+              "Connection failed: $e\n\nCheck if your PC's IP is actually $_apiUrl and Firewall allows port 5000.",
         });
       });
     } finally {
-      setState(() => _isLoading = false);
+      setState(() {
+        _isLoading = false;
+      });
       _scrollToBottom();
     }
   }
@@ -99,13 +111,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         _messages.clear();
         _messages.add({
           'header': 'bot',
-          'text': 'Chat history cleared. How can I help you?',
+          'text': 'Chat history cleared. How can I help?',
         });
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to reset chat: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to reset chat')));
     }
   }
 
@@ -117,7 +129,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.home),
-            onPressed: () => Navigator.pushNamed(context, '/home'),
+            onPressed: () {
+              Navigator.pushNamed(context, '/home');
+            },
           ),
         ],
       ),
@@ -129,12 +143,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               padding: const EdgeInsets.all(15),
               itemCount: _messages.length + (_isLoading ? 1 : 0),
               itemBuilder: (context, index) {
-                if (index == _messages.length && _isLoading) {
+                if (index == _messages.length) {
                   return Align(
                     alignment: Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.symmetric(vertical: 5),
-                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 15,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
                         borderRadius: const BorderRadius.only(
@@ -145,22 +162,30 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         ),
                       ),
                       child: const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.grey,
+                          ),
+                        ),
                       ),
                     ),
                   );
                 }
-
                 final msg = _messages[index];
                 final isUser = msg['header'] == 'user';
-
                 return Align(
-                  alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isUser
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 5),
-                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 15,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: isUser ? Colors.green[700] : Colors.grey[200],
                       borderRadius: BorderRadius.only(
@@ -171,13 +196,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       ),
                     ),
                     constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.78,
+                      maxWidth: MediaQuery.of(context).size.width * 0.8,
                     ),
                     child: Text(
                       msg['text']!,
                       style: TextStyle(
                         color: isUser ? Colors.white : Colors.black87,
-                        fontSize: 14.5,
+                        fontSize: 14,
                       ),
                     ),
                   ),
@@ -194,7 +219,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 style: TextStyle(
                   color: Colors.red,
                   decoration: TextDecoration.underline,
-                  fontSize: 13,
+                  fontSize: 12,
                 ),
               ),
             ),
@@ -212,8 +237,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     controller: _controller,
                     onSubmitted: (_) => _sendMessage(),
                     decoration: InputDecoration(
-                      hintText: 'Ask anything...',
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      hintText: 'Type your message...',
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide(color: Colors.grey[300]!),
@@ -225,10 +253,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 CircleAvatar(
                   backgroundColor: Colors.green[700],
-                  radius: 24,
                   child: IconButton(
                     icon: const Icon(Icons.send, color: Colors.white),
                     onPressed: _sendMessage,
@@ -240,12 +267,5 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _scrollController.dispose();
-    super.dispose();
   }
 }
