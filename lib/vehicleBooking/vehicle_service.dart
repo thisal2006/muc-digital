@@ -7,17 +7,18 @@ class VehicleService {
 
   Future<List<VehicleType>> getVehicleTypes() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/vehicle-types'));
+      final response = await http.get(Uri.parse('$baseUrl/vehicle-types')).timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return (data['data'] as List)
-            .map((t) => VehicleType.fromJson(t))
-            .toList();
+        return (data['data'] as List).map((t) => VehicleType.fromJson(t)).toList();
+      } else {
+        print('Vehicle types - HTTP ${response.statusCode}');
+        return [];
       }
     } catch (e) {
-      print('Error fetching vehicle types: $e');
+      print('getVehicleTypes failed: $e');
+      return [];
     }
-    return [];
   }
 
   Future<List<Vehicle>> getVehicles({String? typeId}) async {
@@ -25,28 +26,32 @@ class VehicleService {
       String url = '$baseUrl/vehicles';
       if (typeId != null) url += '?type=$typeId';
 
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 12));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return (data['data'] as List).map((v) => Vehicle.fromJson(v)).toList();
+      } else {
+        print('Vehicles - HTTP ${response.statusCode}');
+        return [];
       }
     } catch (e) {
-      print('Error fetching vehicles: $e');
+      print('getVehicles failed: $e');
+      return [];
     }
-    return [];
   }
 
   Future<Map<String, String>> getAvailability(
-    String vehicleId,
-    int year,
-    int month,
-  ) async {
+      String vehicleId,
+      int year,
+      int month,
+      ) async {
     try {
       final response = await http.get(
         Uri.parse(
           '$baseUrl/bookings/availability?vehicleId=$vehicleId&year=$year&month=$month',
         ),
-      );
+      ).timeout(const Duration(seconds: 10));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<dynamic> rawList = data['data'] as List<dynamic>? ?? [];
@@ -55,13 +60,12 @@ class VehicleService {
         for (var item in rawList) {
           final dateStr = item['date'] as String;
           final status = item['status'] as String;
-          // Use full yyyy-MM-dd as key to avoid month clashes
           availabilityMap[dateStr] = status;
         }
         return availabilityMap;
       }
     } catch (e) {
-      print('Error fetching availability: $e');
+      print('getAvailability failed: $e');
     }
     return {};
   }
@@ -86,11 +90,12 @@ class VehicleService {
           'userName': userName,
           'userPhone': userPhone,
         }),
-      );
+      ).timeout(const Duration(seconds: 12));
+
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      print('Error creating booking: $e');
+      print('createBooking failed: $e');
+      return false;
     }
-    return false;
   }
 }
