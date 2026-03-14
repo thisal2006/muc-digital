@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -49,69 +48,21 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  void _showImagePickerOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) => SafeArea(
-        child: Wrap(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text("Choose from Gallery"),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.gallery);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text("Take a Photo"),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage(ImageSource.camera);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
+      // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
       setState(() {
         _isEditing = false;
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile updated successfully")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile updated successfully")),
+        );
+      }
     }
-  }
-
-  void _confirmLogout() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Confirm Logout"),
-        content: const Text("Are you sure you want to log out?"),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Logged out successfully")),
-              );
-            },
-            child: const Text("Logout", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -124,19 +75,15 @@ class _ProfileScreenState extends State<ProfileScreen>
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: !_isEditing
-                ? IconButton(
-              key: const ValueKey("edit"),
-              icon: const Icon(Icons.edit),
-              onPressed: () => setState(() => _isEditing = true),
-            )
-                : IconButton(
-              key: const ValueKey("save"),
-              icon: const Icon(Icons.save),
-              onPressed: _saveProfile,
-            ),
+          IconButton(
+            icon: Icon(_isEditing ? Icons.save : Icons.edit),
+            onPressed: () {
+              if (_isEditing) {
+                _saveProfile();
+              } else {
+                setState(() => _isEditing = true);
+              }
+            },
           )
         ],
       ),
@@ -151,90 +98,52 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: Column(
                   children: [
                     const SizedBox(height: 10),
-
-                    // Animated Avatar
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.easeInOut,
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: _isEditing
-                            ? const LinearGradient(
-                            colors: [Color(0xFF2E7D32), Colors.greenAccent])
-                            : null,
-                      ),
+                    GestureDetector(
+                      onTap: _isEditing ? () => _pickImage(ImageSource.gallery) : null,
                       child: CircleAvatar(
                         radius: 65,
-                        backgroundColor: Colors.white,
+                        backgroundColor: const Color(0xFF2E7D32),
                         child: CircleAvatar(
                           radius: 60,
                           backgroundColor: Colors.grey[200],
-                          backgroundImage:
-                          _profileImage != null ? FileImage(_profileImage!) : null,
+                          backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
                           child: _profileImage == null
-                              ? const Icon(Icons.person,
-                              size: 70, color: Color(0xFF2E7D32))
+                              ? const Icon(Icons.person, size: 70, color: Color(0xFF2E7D32))
                               : null,
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 30),
-
-                    ProfileField(
-                        label: "Full Name",
-                        controller: _nameController,
-                        enabled: _isEditing),
+                    ProfileField(label: "Full Name", controller: _nameController, enabled: _isEditing),
                     const SizedBox(height: 16),
-                    ProfileField(
-                        label: "Email",
-                        controller: _emailController,
-                        enabled: _isEditing,
-                        keyboardType: TextInputType.emailAddress),
+                    ProfileField(label: "Email", controller: _emailController, enabled: _isEditing, keyboardType: TextInputType.emailAddress),
                     const SizedBox(height: 16),
-                    ProfileField(
-                        label: "Phone Number",
-                        controller: _phoneController,
-                        enabled: _isEditing,
-                        keyboardType: TextInputType.phone),
+                    ProfileField(label: "Phone Number", controller: _phoneController, enabled: _isEditing, keyboardType: TextInputType.phone),
                     const SizedBox(height: 16),
-                    ProfileField(
-                        label: "Address",
-                        controller: _addressController,
-                        enabled: _isEditing),
+                    ProfileField(label: "Address", controller: _addressController, enabled: _isEditing),
                     const SizedBox(height: 30),
-
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2E7D32),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 40, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (_) => const BookingHistoryScreen()),
+                          MaterialPageRoute(builder: (_) => const BookingHistoryScreen()),
                         );
                       },
-                      child: const Text("View Booking History"),
+                      child: const Text("View Booking History", style: TextStyle(color: Colors.white)),
                     )
                   ],
                 ),
               ),
             ),
-
             if (_isLoading)
               Container(
-                color: Colors.black.withValues(alpha: 0.4),
-                child: const Center(
-                  child: CircularProgressIndicator(
-                    color: Color(0xFF2E7D32),
-                  ),
-                ),
+                color: Colors.black.withOpacity(0.4), // Fixed .withValues error
+                child: const Center(child: CircularProgressIndicator(color: Color(0xFF2E7D32))),
               ),
           ],
         ),
@@ -269,128 +178,44 @@ class ProfileField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      child: TextFormField(
-        controller: controller,
-        enabled: enabled,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: enabled ? Colors.white : Colors.grey[200],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  AuthCredential credential = EmailAuthProvider.credential(
-                    email: currentUser!.email!,
-                    password: passwordController.text.trim(),
-                  );
-                  await currentUser!.reauthenticateWithCredential(credential);
-                  await _firestore.collection('users').doc(currentUser!.uid).delete();
-                  await currentUser!.delete();
-                  if (context.mounted) {
-                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SignInScreen()), (route) => false);
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
-                }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-              child: const Text("Delete Forever"),
-            ),
-          ],
-        ),
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: enabled ? Colors.white : Colors.grey[200],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
 }
 
-// Booking History Screen
 class BookingHistoryScreen extends StatelessWidget {
   const BookingHistoryScreen({super.key});
 
-  final List<Map<String, String>> bookings = const [
-    {
-      'title': "Garbage Pickup - 2025-11-26",
-      'subtitle': "Both | 8:00 AM - 12:00 PM",
-      'status': "Completed"
-    },
-    {
-      'title': "Community Hall Booking",
-      'subtitle': "2025-12-05 | 2:00 PM - 5:00 PM",
-      'status': "Upcoming"
-    },
-  ];
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case "Completed":
-        return Colors.green;
-      case "Upcoming":
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, String>> bookings = [
+      {'title': "Garbage Pickup", 'subtitle': "2025-11-26 | Completed", 'status': "Completed"},
+      {'title': "Community Hall", 'subtitle': "2025-12-05 | Upcoming", 'status': "Upcoming"},
+    ];
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
-      appBar: AppBar(
-        title: const Text("Booking History"),
-        backgroundColor: const Color(0xFF2E7D32),
-        foregroundColor: Colors.white,
-      ),
-      body: bookings.isEmpty
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.history, size: 80, color: Colors.grey),
-            SizedBox(height: 16),
-            Text("No bookings yet",
-                style: TextStyle(color: Colors.grey, fontSize: 18)),
-          ],
-        ),
-      )
-          : ListView.builder(
+      appBar: AppBar(title: const Text("Booking History"), backgroundColor: const Color(0xFF2E7D32)),
+      body: ListView.builder(
         padding: const EdgeInsets.all(20),
         itemCount: bookings.length,
         itemBuilder: (context, index) {
           final booking = bookings[index];
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
+          return Card(
             margin: const EdgeInsets.only(bottom: 15),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15)),
-              elevation: 3,
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                leading: const Icon(Icons.calendar_today,
-                    color: Color(0xFF2E7D32)),
-                title: Text(
-                  booking['title']!,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(booking['subtitle']!),
-                trailing: Chip(
-                  backgroundColor:
-                  _statusColor(booking['status']!).withValues(alpha: 0.15),
-                  label: Text(
-                    booking['status']!,
-                    style: TextStyle(color: _statusColor(booking['status']!)),
-                  ),
-                ),
-              ),
+            child: ListTile(
+              title: Text(booking['title']!),
+              subtitle: Text(booking['subtitle']!),
+              trailing: Text(booking['status']!,
+                  style: TextStyle(color: booking['status'] == "Completed" ? Colors.green : Colors.orange)),
             ),
           );
         },

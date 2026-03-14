@@ -11,7 +11,7 @@ import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
-//import 'screens/profile_screen.dart';
+import 'screens/profile_screen.dart';
 import 'features/Property/screens/property_booking_screen.dart';
 import 'screens/phone_login_screen.dart';
 import 'screens/otp_verification_screen.dart';
@@ -83,7 +83,7 @@ class MUCdigitalApp extends StatelessWidget {
         '/announcements': (context) => const AnnouncementsScreen(),
         '/garbage_tracker': (context) => const GarbageTrackingScreen(),
         '/property_booking': (context) => const PropertyBookingScreen(),
-       // '/profile': (context) => const ProfileScreen(),
+        '/profile': (context) => const ProfileScreen(),
         '/phone_login': (context) => const PhoneLoginScreen(),
         '/otp_verification': (context) => OTPVerificationScreen(
           verificationId: '',
