@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/property_model.dart';
-
+import '../services/stripe_service.dart';
 
 class BookingFormScreen extends StatefulWidget {
   final Property property;
@@ -84,83 +84,72 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     // 1. Validation
     if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your Contact Name and Phone Number."), backgroundColor: Colors.red),
+        const SnackBar(content: Text("Please enter contact details."), backgroundColor: Colors.red),
       );
       return;
     }
 
     if (selectedDate == null || selectedSlot == null || !_agreedToTerms) return;
 
-    // Show Loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFE67E22))),
-    );
-
     try {
-      final String formattedDate = selectedDate.toString().split(' ')[0];
+      // --- START STRIPE FLOW ---
+      // We use the _calculatedPrice which you already built!
+      await StripeService.makePayment(context, _calculatedPrice, () async {
 
-      // 2. LOGIC: Check if this slot is ALREADY TAKEN by an Approved/Paid user
-      final existingBookings = await FirebaseFirestore.instance
-          .collection('bookings')
-          .where('property_name', isEqualTo: widget.property.name)
-          .where('date', isEqualTo: formattedDate)
-          .where('slot', isEqualTo: selectedSlot)
-      // If anyone is already Approved or has Paid, this slot is GONE.
-          .where('status', whereIn: ['Approved', 'Paid', 'Approved, Payment Pending'])
-          .get();
+        // --- THIS CODE RUNS ONLY IF PAYMENT SUCCEEDS ---
 
-      if (existingBookings.docs.isNotEmpty) {
+        // Show Loading
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFE67E22))),
+        );
+
+        final String formattedDate = selectedDate.toString().split(' ')[0];
+        final user = FirebaseAuth.instance.currentUser;
+
+        final bookingData = {
+          "user_id": user?.uid,
+          "property_name": widget.property.name,
+          "price": _calculatedPrice,
+          "date": formattedDate,
+          "slot": selectedSlot,
+          "contact_name": _nameController.text.trim(),
+          "contact_number": _phoneController.text.trim(),
+          "purpose": _reasonController.text.trim(),
+          "status": "Paid", // Updated status since they just paid!
+          "timestamp": FieldValue.serverTimestamp(),
+        };
+
+        await FirebaseFirestore.instance.collection('property_bookings').add(bookingData);
+
         if (!mounted) return;
         Navigator.of(context).pop(); // Close loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("This slot is already officially booked by someone else."),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-      // Get the currently logged-in user automatically
-      final user = FirebaseAuth.instance.currentUser;
 
-      // Safety check: Make sure someone is actually logged in
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error: You must be logged in to book.")),
-        );
-        return;
-      }
-
-      // 3. LOGIC: Save with the correct Municipal Status
-      final bookingData = {
-        "user_id": user.uid, // <--- THIS GRABS THE REAL ID AUTOMATICALLY
-        "property_name": widget.property.name,
-        "price": _calculatedPrice,
-        "date": formattedDate,
-        "slot": selectedSlot,
-        "contact_name": _nameController.text.trim(),
-        "contact_number": _phoneController.text.trim(),
-        "purpose": _reasonController.text.trim(),
-        "crowd_size": "Not specified",
-        "status": "pending",
-        "timestamp": FieldValue.serverTimestamp(),
-      };
-
-      await FirebaseFirestore.instance.collection('property_bookings').add(bookingData);
-
-      if (!mounted) return;
-      Navigator.of(context).pop(); // Close loading
-      _showRequestSuccessDialog();
+        // Show Success Dialog
+        _showPaymentSuccessDialog();
+      });
 
     } catch (e) {
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to submit request: $e")),
-      );
+      debugPrint("Stripe flow interrupted: $e");
     }
+  }
+
+  void _showPaymentSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.check_circle, color: Colors.green, size: 60),
+        title: const Text("Payment Successful!"),
+        content: Text("Your booking for ${widget.property.name} is confirmed and paid."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+            child: const Text("Go to Home"),
+          )
+        ],
+      ),
+    );
   }
 
   void _showRequestSuccessDialog() {
