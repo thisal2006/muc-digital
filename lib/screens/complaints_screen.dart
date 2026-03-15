@@ -40,10 +40,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
-            NewComplaintForm(),
-            MyComplaintsList(),
+            const NewComplaintForm(),
+            const MyComplaintsList(),
           ],
         ),
       ),
@@ -368,4 +368,59 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     super.dispose();
   }
 }
+class MyComplaintsList extends StatelessWidget {
+  const MyComplaintsList({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const Center(child: Text("Please login to view reports"));
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('complaints')
+          .where('userId', isEqualTo: user.uid)
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
+
+      builder: (context, snapshot) {
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text("No complaints found"));
+        }
+
+        final docs = snapshot.data!.docs;
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+
+            final data =
+            docs[index].data() as Map<String, dynamic>;
+
+            return _ComplaintHistoryCard(
+              category: data['category'] ?? '',
+              description: data['description'] ?? '',
+              status: data['status'] ?? '',
+              date: data['createdAt'] != null
+                  ? (data['createdAt'] as Timestamp)
+                  .toDate()
+                  .toString()
+                  : "Recent",
+              imageUrl: data['imageUrl'],
+            );
+          },
+        );
+      },
+    );
+  }
+}
