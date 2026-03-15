@@ -383,7 +383,7 @@ class MyComplaintsList extends StatelessWidget {
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
-          .collection('complaints')
+          .collection('illegal_dumps')
           .where('userId', isEqualTo: user.uid)
           .orderBy('createdAt', descending: true)
           .snapshots(),
