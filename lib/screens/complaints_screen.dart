@@ -6,11 +6,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 
 class ComplaintsScreen extends StatefulWidget {
   final int initialTabIndex;
+
   const ComplaintsScreen({super.key, this.initialTabIndex = 0});
 
   @override
@@ -40,10 +40,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
             ],
           ),
         ),
-        body: TabBarView(
+        body: const TabBarView(
           children: [
-            const NewComplaintForm(),
-            const MyComplaintsList(),
+            NewComplaintForm(),
+            MyComplaintsList(),
           ],
         ),
       ),
@@ -51,7 +51,9 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
   }
 }
 
-
+////////////////////////////////////////////////////////////
+/// NEW REPORT TAB (Illegal Dumping)
+////////////////////////////////////////////////////////////
 
 class NewComplaintForm extends StatefulWidget {
   const NewComplaintForm({super.key});
@@ -77,7 +79,6 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
   //--------------------------------------------------
 
   Future<void> pickImage() async {
-
     try {
 
       final picked = await picker.pickImage(
@@ -102,25 +103,20 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
 
   Future<Position> _getLocation() async {
 
-    bool serviceEnabled =
-    await Geolocator.isLocationServiceEnabled();
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
     if (!serviceEnabled) {
       throw Exception("Location services disabled.");
     }
 
-    LocationPermission permission =
-    await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
 
     if (permission == LocationPermission.denied) {
-      permission =
-      await Geolocator.requestPermission();
+      permission = await Geolocator.requestPermission();
     }
 
-    if (permission ==
-        LocationPermission.deniedForever) {
-      throw Exception(
-          "Location permission permanently denied.");
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception("Location permission permanently denied.");
     }
 
     return await Geolocator.getCurrentPosition(
@@ -136,11 +132,17 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
 
   Future<void> submitReport() async {
 
-    final description =
-    descriptionController.text.trim();
+    final description = descriptionController.text.trim();
 
     if (imageFile == null || description.isEmpty) {
       _showError("Photo and description required");
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      _showError("User not logged in");
       return;
     }
 
@@ -150,8 +152,6 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     });
 
     try {
-
-      final user = FirebaseAuth.instance.currentUser;
 
       final position = await _getLocation();
 
@@ -166,8 +166,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
           .ref()
           .child("illegal_dumps/$fileName");
 
-      UploadTask uploadTask =
-      ref.putFile(imageFile!);
+      UploadTask uploadTask = ref.putFile(imageFile!);
 
       uploadTask.snapshotEvents.listen((event) {
 
@@ -178,6 +177,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
         setState(() {
           uploadProgress = progress;
         });
+
       });
 
       TaskSnapshot snapshot =
@@ -189,7 +189,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
       await snapshot.ref.getDownloadURL();
 
       //----------------------------------
-      // FIRESTORE SAVE
+      // SAVE TO FIRESTORE
       //----------------------------------
 
       await FirebaseFirestore.instance
@@ -214,6 +214,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
           position.latitude,
           position.longitude,
         ),
+
       });
 
       //----------------------------------
@@ -226,17 +227,14 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
         isUploading = false;
       });
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-          Text("Report submitted successfully"),
+          content: Text("Report submitted successfully"),
           backgroundColor: Colors.green,
         ),
       );
 
-      DefaultTabController.of(context)
-          .animateTo(1);
+      DefaultTabController.of(context).animateTo(1);
 
     } catch (e) {
 
@@ -249,13 +247,11 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
   }
 
   //--------------------------------------------------
-  // ERROR
+  // ERROR HELPER
   //--------------------------------------------------
 
   void _showError(String message) {
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         behavior: SnackBarBehavior.floating,
@@ -291,8 +287,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
               height: 180,
               width: double.infinity,
               decoration: BoxDecoration(
-                borderRadius:
-                BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12),
                 color: Colors.grey.shade100,
                 border: Border.all(
                   color: Colors.grey.shade400,
@@ -300,20 +295,15 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
               ),
               child: imageFile == null
                   ? const Column(
-                mainAxisAlignment:
-                MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.camera_alt,
-                      size: 50),
+                  Icon(Icons.camera_alt, size: 50),
                   SizedBox(height: 8),
-                  Text(
-                      "Tap to capture photo"),
+                  Text("Tap to capture photo"),
                 ],
               )
                   : ClipRRect(
-                borderRadius:
-                BorderRadius.circular(
-                    12),
+                borderRadius: BorderRadius.circular(12),
                 child: Image.file(
                   imageFile!,
                   fit: BoxFit.cover,
@@ -325,14 +315,12 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
           const SizedBox(height: 20),
 
           TextField(
-            controller:
-            descriptionController,
+            controller: descriptionController,
             maxLines: 4,
             decoration: InputDecoration(
               labelText: "Describe issue",
               border: OutlineInputBorder(
-                borderRadius:
-                BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
@@ -350,11 +338,9 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed:
-              isUploading ? null : submitReport,
+              onPressed: isUploading ? null : submitReport,
               child: isUploading
-                  ? Text(
-                  "${(uploadProgress * 100).toStringAsFixed(0)}%")
+                  ? Text("${(uploadProgress * 100).toStringAsFixed(0)}%")
                   : const Text("Submit Report"),
             ),
           ),
@@ -369,6 +355,11 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
     super.dispose();
   }
 }
+
+////////////////////////////////////////////////////////////
+/// HISTORY TAB
+////////////////////////////////////////////////////////////
+
 class MyComplaintsList extends StatelessWidget {
   const MyComplaintsList({super.key});
 
@@ -382,6 +373,7 @@ class MyComplaintsList extends StatelessWidget {
     }
 
     return StreamBuilder<QuerySnapshot>(
+
       stream: FirebaseFirestore.instance
           .collection('illegal_dumps')
           .where('userId', isEqualTo: user.uid)
@@ -401,8 +393,11 @@ class MyComplaintsList extends StatelessWidget {
         final docs = snapshot.data!.docs;
 
         return ListView.builder(
+
           padding: const EdgeInsets.all(16),
+
           itemCount: docs.length,
+
           itemBuilder: (context, index) {
 
             final data =
@@ -425,6 +420,11 @@ class MyComplaintsList extends StatelessWidget {
     );
   }
 }
+
+////////////////////////////////////////////////////////////
+/// HISTORY CARD
+////////////////////////////////////////////////////////////
+
 class _ComplaintHistoryCard extends StatelessWidget {
 
   final String category;
