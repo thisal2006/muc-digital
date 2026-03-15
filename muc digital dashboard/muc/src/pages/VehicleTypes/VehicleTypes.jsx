@@ -181,7 +181,7 @@ export default function VehicleTypes() {
                   </tr>
                 ) : (
                   types.map((t) => (
-                    <tr key={t._id}>
+                    <tr key={t.id}>
                       <td>{t.name}</td>
                       <td style={{ color: 'var(--muted)', fontSize: 12 }}>
                         {t.description || '---'}
@@ -195,9 +195,8 @@ export default function VehicleTypes() {
                       </td>
                       <td>
                         <span
-                          className={`badge ${
-                            t.isActive ? 'badge-active' : 'badge-inactive'
-                          }`}
+                          className={`badge ${t.isActive ? 'badge-active' : 'badge-inactive'
+                            }`}
                         >
                           {t.isActive ? 'ACTIVE' : 'INACTIVE'}
                         </span>
@@ -206,14 +205,14 @@ export default function VehicleTypes() {
                         {t.isActive ? (
                           <button
                             className="btn btn-danger btn-sm"
-                            onClick={() => toggleStatus(t._id, false)}
+                            onClick={() => toggleStatus(t.id, false)}
                           >
                             Disable
                           </button>
                         ) : (
                           <button
                             className="btn btn-primary btn-sm"
-                            onClick={() => toggleStatus(t._id, true)}
+                            onClick={() => toggleStatus(t.id, true)}
                           >
                             Enable
                           </button>
