@@ -193,21 +193,22 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
       //----------------------------------
 
       await FirebaseFirestore.instance
-          .collection("complaints")
+          .collection("illegal_dumps")
           .add({
 
         "userId": user?.uid,
-
-        "category": "Illegal Dumping",
 
         "description": description,
 
         "imageUrl": imageUrl,
 
-        "status": "Pending",
+        "status": "pending",
 
-        "createdAt":
-        FieldValue.serverTimestamp(),
+        "priority": "normal",
+
+        "reportedBy": "citizen",
+
+        "createdAt": FieldValue.serverTimestamp(),
 
         "location": GeoPoint(
           position.latitude,
