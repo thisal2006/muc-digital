@@ -387,7 +387,7 @@ class MyComplaintsList extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text("No complaints found"));
+          return const Center(child: Text("No illegal dumping reports found"));
         }
 
         final docs = snapshot.data!.docs;
