@@ -424,3 +424,116 @@ class MyComplaintsList extends StatelessWidget {
     );
   }
 }
+class _ComplaintHistoryCard extends StatelessWidget {
+
+  final String category;
+  final String description;
+  final String status;
+  final String date;
+  final String? imageUrl;
+
+  const _ComplaintHistoryCard({
+    required this.category,
+    required this.description,
+    required this.status,
+    required this.date,
+    this.imageUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+
+    Color statusColor;
+
+    switch (status) {
+      case 'Completed':
+        statusColor = Colors.green;
+        break;
+      case 'In Progress':
+        statusColor = Colors.orange;
+        break;
+      default:
+        statusColor = Colors.blue;
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 2,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+          ListTile(
+            leading: CircleAvatar(
+              backgroundColor: statusColor.withAlpha(26),
+              child: Icon(
+                Icons.report_problem_outlined,
+                color: statusColor,
+              ),
+            ),
+
+            title: Text(
+              category,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            subtitle: Text(date),
+
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: statusColor.withAlpha(26),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                status,
+                style: TextStyle(
+                  color: statusColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            child: Text(
+              description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.black54,
+              ),
+            ),
+          ),
+
+          if (imageUrl != null)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  imageUrl!,
+                  height: 120,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
