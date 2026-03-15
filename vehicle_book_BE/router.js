@@ -17,7 +17,8 @@ import {
   createBooking,
   getVehicleAvailability,
   getAllBookings,
-  cancelBooking
+  cancelBooking,
+  approveBooking
 } from "./controller/bookingController.js";
 
 const router = express.Router();
@@ -355,5 +356,28 @@ router.get("/bookings/availability", getVehicleAvailability);
  *         description: Booking cancelled successfully
  */
 router.patch("/bookings/:id/cancel", cancelBooking);
+
+/**
+ * @swagger
+ * /api/bookings/{id}/approve:
+ *   patch:
+ *     summary: Approve a pending booking (Admin)
+ *     tags: [Bookings]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Booking ID
+ *     responses:
+ *       200:
+ *         description: Booking approved successfully
+ *       400:
+ *         description: Booking is not pending or slot conflict
+ *       404:
+ *         description: Booking not found
+ */
+router.patch("/bookings/:id/approve", approveBooking);
 
 export default router;
