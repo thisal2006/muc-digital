@@ -5,13 +5,7 @@ import specs from './config/swagger.js';
 import router from './router.js';
 import errorHandler from './middleware/errorHandler.js';
 import dotenv from 'dotenv';
-import connectDB from './config/dbconnect.js';
-
-// Load environment variables FIRST
-dotenv.config();
-
-// Connect to MongoDB
-connectDB();
+import './config/firebase.js';
 
 const app = express();
 const PORT = process.env.PORT;
