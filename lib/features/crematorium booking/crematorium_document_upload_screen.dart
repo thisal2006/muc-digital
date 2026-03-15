@@ -4,8 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:path/path.dart' as path;
 import 'crematorium_booking_data.dart';
-import 'crematorium_contact_screen.dart';   // ← NEW IMPORT
+import 'crematorium_contact_screen.dart';  // ← Your contact screen
 
 class CrematoriumDocumentUploadScreen extends StatefulWidget {
   final CrematoriumBookingData bookingData;
@@ -41,8 +42,10 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
     if (_image == null) return;
 
     setState(() => _isUploading = true);
-    final currentContext = context;
-    final scaffoldMessenger = ScaffoldMessenger.of(currentContext);
+
+    // Capture navigator BEFORE any await (fixes async context warning)
+    final navigator = Navigator.of(context);
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     scaffoldMessenger.showSnackBar(
       const SnackBar(content: Text('Uploading document...')),
@@ -78,9 +81,8 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
         ),
       );
 
-      // ← CHANGED: Now goes to contact council instead of payment
-      Navigator.pushReplacement(
-        currentContext,
+      // Navigate to contact council screen (fixed syntax)
+      navigator.pushReplacement(
         MaterialPageRoute(
           builder: (context) => CrematoriumContactScreen(
             bookingData: widget.bookingData,
@@ -102,7 +104,6 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
 
   @override
   Widget build(BuildContext context) {
-    // ... (the entire build method is exactly the same as you provided - no changes needed here)
     return Scaffold(
       appBar: AppBar(
         title: const Text('Upload Documents'),
