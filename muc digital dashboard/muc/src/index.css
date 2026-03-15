@@ -9,20 +9,20 @@
 }
 
 :root {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface2: #21262d;
-  --border: #30363d;
-  --accent: #3b82f6;
-  --accent-light: #60a5fa;
-  --green: #22c55e;
-  --green-bg: rgba(20, 83, 45, 0.13);
-  --yellow: #f59e0b;
-  --yellow-bg: rgba(120, 53, 15, 0.13);
-  --red: #ef4444;
-  --red-bg: rgba(127, 29, 29, 0.13);
-  --text: #e6edf3;
-  --muted: #8b949e;
+  --bg: #f4faf4;
+  --surface: #ffffff;
+  --surface2: #edf6ed;
+  --border: #d2e2d2;
+  --accent: #2f8f46;
+  --accent-light: #276f38;
+  --green: #2f8f46;
+  --green-bg: rgba(47, 143, 70, 0.13);
+  --yellow: #d9a515;
+  --yellow-bg: rgba(217, 165, 21, 0.16);
+  --red: #c63f3f;
+  --red-bg: rgba(198, 63, 63, 0.13);
+  --text: #13301d;
+  --muted: #5a6f61;
   --radius: 12px;
   --sidebar-width: 260px;
   --topbar-height: 64px;
@@ -90,7 +90,7 @@ a {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #2f8f46, #d9a515);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -140,7 +140,7 @@ a {
 }
 
 .nav-item.active {
-  background: rgba(59, 130, 246, 0.12);
+  background: rgba(47, 143, 70, 0.12);
   color: var(--accent-light);
 }
 
@@ -294,7 +294,7 @@ a {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #2f8f46, #d9a515);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -499,16 +499,16 @@ select option {
 }
 
 .btn-primary:hover {
-  background: #2563eb;
+  background: #276f38;
 }
 
 .btn-success {
-  background: #16a34a;
+  background: #2f8f46;
   color: #fff;
 }
 
 .btn-success:hover {
-  background: #15803d;
+  background: #276f38;
 }
 
 .btn-danger {
@@ -650,7 +650,7 @@ td {
 .filter-tab.active {
   border-color: var(--accent);
   color: var(--accent-light);
-  background: rgba(59, 130, 246, 0.08);
+  background: rgba(47, 143, 70, 0.08);
 }
 
 /* ══════════════════════════════════════
@@ -820,21 +820,15 @@ td {
 .home-card:hover {
   border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(47, 143, 70, 0.14);
 }
 
-.home-card-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.home-card-icon svg {
-  width: 28px;
-  height: 28px;
+.home-card-image {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border);
 }
 
 .home-card h3 {
@@ -868,7 +862,7 @@ td {
 
 .pending-count {
   background: var(--yellow);
-  color: #000;
+  color: #2b1f00;
   border-radius: 10px;
   padding: 1px 7px;
   font-size: 11px;
