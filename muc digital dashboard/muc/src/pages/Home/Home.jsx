@@ -1,49 +1,41 @@
 import { useNavigate } from 'react-router-dom';
+import vehicleModuleImage from '../../assets/vehicle-module.svg';
+import cemeteryModuleImage from '../../assets/cemetery-module.svg';
+import propertyModuleImage from '../../assets/property-module.svg';
+import notificationModuleImage from '../../assets/notification-module.svg';
 
 const sections = [
   {
     name: 'Vehicle Management',
     description: 'Manage vehicle bookings, fleet, and vehicle types. View booking stats, approve or cancel reservations.',
     to: '/vehicle',
-    color: '#3b82f6',
-    bg: 'rgba(59, 130, 246, 0.12)',
     status: 'Active',
     statusColor: 'badge-active',
-    icon: (
-      <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M8 17h.01M16 17h.01M4 11l1.34-4.02A2 2 0 017.24 5h9.52a2 2 0 011.9 1.38L20 11m-16 0h16m-16 0v6a1 1 0 001 1h1a1 1 0 001-1v-1h10v1a1 1 0 001 1h1a1 1 0 001-1v-6" />
-      </svg>
-    ),
+    image: vehicleModuleImage,
   },
   {
     name: 'Cemetery Management',
     description: 'Manage cemetery plots, reservations, and maintenance schedules.',
     to: '/cemetery',
-    color: '#8b5cf6',
-    bg: 'rgba(139, 92, 246, 0.12)',
     status: 'Coming Soon',
     statusColor: 'badge-pending',
-    icon: (
-      <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z" />
-        <path d="M12 7v6m-3-3h6" />
-      </svg>
-    ),
+    image: cemeteryModuleImage,
   },
   {
     name: 'Property Management',
     description: 'Manage property listings, tenant records, and lease agreements.',
     to: '/property',
-    color: '#f59e0b',
-    bg: 'rgba(245, 158, 11, 0.12)',
-    status: 'Coming Soon',
-    statusColor: 'badge-pending',
-    icon: (
-      <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-        <rect x="2" y="7" width="20" height="14" rx="2" />
-        <path d="M16 7V5a4 4 0 00-8 0v2" />
-      </svg>
-    ),
+    status: 'Active',
+    statusColor: 'badge-active',
+    image: propertyModuleImage,
+  },
+  {
+    name: 'Notifications',
+    description: 'Add or remove global announcements and push notifications for users.',
+    to: '/notifications',
+    status: 'Active',
+    statusColor: 'badge-active',
+    image: notificationModuleImage,
   },
 ];
 
@@ -68,12 +60,7 @@ export default function Home() {
             className="home-card"
             onClick={() => navigate(section.to)}
           >
-            <div
-              className="home-card-icon"
-              style={{ background: section.bg, color: section.color }}
-            >
-              {section.icon}
-            </div>
+            <img className="home-card-image" src={section.image} alt={section.name} />
             <h3>{section.name}</h3>
             <p>{section.description}</p>
             <span className={`badge ${section.statusColor}`}>
