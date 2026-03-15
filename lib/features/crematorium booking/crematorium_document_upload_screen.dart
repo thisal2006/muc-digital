@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:path/path.dart' as path;
+// import 'package:path/path.dart' as path;
 import 'crematorium_booking_data.dart';
 import 'crematorium_contact_screen.dart';  // ← Your contact screen
 
@@ -67,6 +67,7 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
         'relation': widget.bookingData.relation ?? 'Unknown',
         'documentUrl': downloadUrl,
         'status': 'pending',
+        'adminApproved': false,
         'createdAt': FieldValue.serverTimestamp(),
         'userId': FirebaseAuth.instance.currentUser?.uid ?? 'anonymous',
       });
