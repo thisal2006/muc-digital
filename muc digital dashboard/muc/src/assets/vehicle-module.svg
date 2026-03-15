@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Vehicle module image">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e8f6ea"/>
+      <stop offset="1" stop-color="#f9f3dc"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" rx="28" fill="url(#bg)"/>
+  <rect x="46" y="246" width="548" height="54" rx="12" fill="#c9ddcb" opacity="0.5"/>
+  <path d="M160 210l30-70c8-18 25-30 45-30h170c20 0 37 12 45 30l30 70h24c17 0 30 13 30 30v34h-40" fill="#2f8f46"/>
+  <path d="M160 210h-24c-17 0-30 13-30 30v34h40" fill="#25743a"/>
+  <circle cx="210" cy="278" r="38" fill="#1d5e2f"/>
+  <circle cx="430" cy="278" r="38" fill="#1d5e2f"/>
+  <circle cx="210" cy="278" r="17" fill="#fff"/>
+  <circle cx="430" cy="278" r="17" fill="#fff"/>
+  <rect x="228" y="138" width="88" height="50" rx="8" fill="#f2f7f2"/>
+  <rect x="324" y="138" width="88" height="50" rx="8" fill="#f2f7f2"/>
+  <rect x="478" y="208" width="42" height="15" rx="7" fill="#d9a515"/>
+  <text x="50" y="64" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="700" fill="#1d5e2f">Vehicle Management</text>
+</svg>
