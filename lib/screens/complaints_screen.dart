@@ -409,7 +409,7 @@ class MyComplaintsList extends StatelessWidget {
             docs[index].data() as Map<String, dynamic>;
 
             return _ComplaintHistoryCard(
-              category: data['category'] ?? '',
+              category: "Illegal Dumping",
               description: data['description'] ?? '',
               status: data['status'] ?? '',
               date: data['createdAt'] != null
@@ -538,3 +538,4 @@ class _ComplaintHistoryCard extends StatelessWidget {
     );
   }
 }
+category: data['category'] ?? '',
