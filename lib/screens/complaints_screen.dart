@@ -538,4 +538,3 @@ class _ComplaintHistoryCard extends StatelessWidget {
     );
   }
 }
-category: data['category'] ?? '',
