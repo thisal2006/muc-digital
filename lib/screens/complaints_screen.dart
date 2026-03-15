@@ -196,7 +196,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
           .collection("illegal_dumps")
           .add({
 
-        "userId": user?.uid,
+        "userId": user.uid,
 
         "description": description,
 
