@@ -3,20 +3,40 @@ class VehicleType {
   final String name;
   final String? description;
   final String? image;
+  final bool isActive;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   VehicleType({
     required this.id,
     required this.name,
     this.description,
     this.image,
+    this.isActive = true,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory VehicleType.fromJson(Map<String, dynamic> json) {
+    DateTime? parseTimestamp(dynamic timestamp) {
+      if (timestamp == null) return null;
+      if (timestamp is Map<String, dynamic>) {
+        final seconds = timestamp['_seconds'] as int?;
+        if (seconds != null) {
+          return DateTime.fromMillisecondsSinceEpoch(seconds * 1000);
+        }
+      }
+      return null;
+    }
+
     return VehicleType(
-      id: json['_id'],
-      name: json['name'],
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
       description: json['description'],
       image: json['image'],
+      isActive: json['isActive'] ?? true,
+      createdAt: parseTimestamp(json['createdAt']),
+      updatedAt: parseTimestamp(json['updatedAt']),
     );
   }
 }
@@ -42,10 +62,10 @@ class Vehicle {
 
   factory Vehicle.fromJson(Map<String, dynamic> json) {
     return Vehicle(
-      id: json['_id'],
-      name: json['name'],
-      pricePerDay: (json['pricePerDay'] as num).toDouble(),
-      halfDayPrice: (json['halfDayPrice'] as num).toDouble(),
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      pricePerDay: (json['pricePerDay'] as num?)?.toDouble() ?? 0.0,
+      halfDayPrice: (json['halfDayPrice'] as num?)?.toDouble() ?? 0.0,
       includedServices: List<String>.from(json['includedServices'] ?? []),
       images: List<String>.from(json['images'] ?? []),
       typeName: json['type'] != null ? json['type']['name'] : 'Unknown',
