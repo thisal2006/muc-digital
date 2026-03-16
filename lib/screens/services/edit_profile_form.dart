@@ -45,6 +45,9 @@ class _EditProfileFormState extends State<EditProfileForm> {
           children: [
             _buildTextField("Full Name", _nameController, Icons.person),
             _buildTextField("Email Address", _emailController, Icons.email),
+            _buildTextField("Phone Number", _phoneController, Icons.phone),
+            _buildTextField("Home Address", _addressController, Icons.home),
+
           ],
         ),
       ),
