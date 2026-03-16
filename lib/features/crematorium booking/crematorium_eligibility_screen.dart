@@ -69,7 +69,18 @@ class _CrematoriumEligibilityScreenState extends State<CrematoriumEligibilityScr
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate() && _isResident) {
-                    // Create updated data with eligibility info
+
+                    if (widget.bookingData.selectedDate == null ||
+                        widget.bookingData.timeSlot == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Date or time slot is missing. Please go back and select them.'),
+                          backgroundColor: Colors.orange,
+                          duration: Duration(seconds: 4),
+                        ),
+                      );
+                      return; // Stop here — do not proceed
+                    }
                     final updatedData = CrematoriumBookingData(
                       selectedDate: widget.bookingData.selectedDate,
                       timeSlot: widget.bookingData.timeSlot,
