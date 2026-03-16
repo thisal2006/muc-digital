@@ -429,8 +429,23 @@ class MyComplaintsList extends StatelessWidget {
 
             final data =
             docs[index].data() as Map<String, dynamic>;
+            return Dismissible(
+                key: Key(docs[index].id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  color: Colors.red,
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (direction) async {
+                  await FirebaseFirestore.instance
+                      .collection('illegal_dumps')
+                      .doc(docs[index].id)
+                      .delete();
+                },
+                child: _ComplaintHistoryCard(
 
-            return _ComplaintHistoryCard(
               category: "Illegal Dumping",
               description: data['description'] ?? '',
               status: data['status'] ?? '',
@@ -439,7 +454,9 @@ class MyComplaintsList extends StatelessWidget {
                   .format((data['createdAt'] as Timestamp).toDate())
                   : "Recent",
               imageUrl: data['imageUrl'],
+            ),
             );
+
           },
         );
       },
