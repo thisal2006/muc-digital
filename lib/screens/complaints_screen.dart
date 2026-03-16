@@ -443,6 +443,9 @@ class MyComplaintsList extends StatelessWidget {
                       .collection('illegal_dumps')
                       .doc(docs[index].id)
                       .delete();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Report deleted")),
+                  );
                 },
                 child: _ComplaintHistoryCard(
 
