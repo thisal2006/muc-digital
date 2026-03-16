@@ -27,13 +27,30 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAF8),
         appBar: AppBar(
-          title: const Text(
-            "Complaints Center",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
           backgroundColor: const Color(0xFF2E7D32),
           foregroundColor: Colors.white,
           elevation: 0,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                "Complaints Center",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,           // optional: make explicit
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                "Help keep the city clean",
+                style: TextStyle(
+                  color: Colors.white70,         // or Colors.grey[300]
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
           bottom: const TabBar(
             tabs: [
               Tab(text: "New Report"),
