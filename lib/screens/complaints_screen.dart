@@ -354,6 +354,8 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
           if (isUploading)
             LinearProgressIndicator(
               value: uploadProgress,
+              minHeight: 6,
+              borderRadius: BorderRadius.circular(10),
             ),
 
           const SizedBox(height: 20),
