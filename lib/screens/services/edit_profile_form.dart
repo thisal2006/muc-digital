@@ -53,8 +53,20 @@ class _EditProfileFormState extends State<EditProfileForm> {
             _buildTextField("Email Address", _emailController, Icons.email),
             _buildTextField("Phone Number", _phoneController, Icons.phone),
             _buildTextField("Home Address", _addressController, Icons.home),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _saveProfile,
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Save Changes", style: TextStyle(fontSize: 16)),
+              ),
+            ),
 
           ],
+
         ),
       ),
     );
