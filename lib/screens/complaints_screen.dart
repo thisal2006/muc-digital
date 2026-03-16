@@ -339,6 +339,13 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                // you can add more style properties here (padding, elevation, etc.)
+              ),
               onPressed: isUploading ? null : submitReport,
               child: isUploading
                   ? Text("${(uploadProgress * 100).toStringAsFixed(0)}%")
