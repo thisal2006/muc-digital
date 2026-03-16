@@ -94,10 +94,75 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    throw UnimplementedError();
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 1)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      selectableDayPredicate: (DateTime day) {
+        String formattedDay = day.toString().split(' ')[0];
+        List<String>? slotsTaken = bookedSlots[formattedDay];
+
+        if (slotsTaken != null) {
+          if (slotsTaken.contains(timeSlots[3])) return false; // Full Day taken
+          if (slotsTaken.contains(timeSlots[0]) &&
+              slotsTaken.contains(timeSlots[1]) &&
+              slotsTaken.contains(timeSlots[2])) {
+            return false; // All individual slots taken
+          }
+        }
+        return true;
+      },
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFFE67E22), onPrimary: Colors.white, onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+        selectedSlot = null; // Reset slot when date changes
+      });
+    }
   }
 
-// --- PASTE CLUSTER 3 HERE ---
+  List<DropdownMenuItem<String>> _getAvailableTimeSlots() {
+    if (selectedDate == null) return [];
+
+    String formattedDay = selectedDate.toString().split(' ')[0];
+    List<String> slotsTaken = bookedSlots[formattedDay] ?? [];
+
+    return timeSlots.map((String slot) {
+      bool isTaken = slotsTaken.contains(slot);
+
+      if (slot == timeSlots[3] && (slotsTaken.contains(timeSlots[0]) || slotsTaken.contains(timeSlots[1]))) {
+        isTaken = true;
+      }
+      if ((slot == timeSlots[0] || slot == timeSlots[1]) && slotsTaken.contains(timeSlots[3])) {
+        isTaken = true;
+      }
+
+      return DropdownMenuItem<String>(
+        value: slot,
+        enabled: !isTaken,
+        child: Text(
+          isTaken ? "$slot - BOOKED" : slot,
+          style: TextStyle(
+            color: isTaken ? Colors.red : Colors.black,
+            fontWeight: isTaken ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      );
+    }).toList();
+  }
+
+// --- CLUSTER 4 HERE ---
