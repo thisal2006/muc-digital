@@ -14,6 +14,8 @@ class _EditProfileFormState extends State<EditProfileForm> {
   Widget build(BuildContext context) {
     final _nameController = TextEditingController();
     final _emailController = TextEditingController();
+    final _phoneController = TextEditingController();
+    final _addressController = TextEditingController();
     return const SizedBox();
   }
 }
