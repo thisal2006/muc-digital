@@ -10,7 +10,7 @@ class EditProfileForm extends StatefulWidget {
 }
 
 class _EditProfileFormState extends State<EditProfileForm> {
-  // --- STATE VARIABLES GO HERE (OUTSIDE THE BUILD METHOD) ---
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -32,6 +32,12 @@ class _EditProfileFormState extends State<EditProfileForm> {
         ),
       ),
     );
+  }
+
+  Future<void> _saveProfile() async {
+    setState(() => _isLoading = true);
+    // Logic goes here
+    setState(() => _isLoading = false);
   }
 
 
