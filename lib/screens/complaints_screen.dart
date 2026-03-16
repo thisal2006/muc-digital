@@ -7,6 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 
 class ComplaintsScreen extends StatefulWidget {
   final int initialTabIndex;
@@ -408,9 +409,8 @@ class MyComplaintsList extends StatelessWidget {
               description: data['description'] ?? '',
               status: data['status'] ?? '',
               date: data['createdAt'] != null
-                  ? (data['createdAt'] as Timestamp)
-                  .toDate()
-                  .toString()
+                  ? DateFormat('dd MMM yyyy • hh:mm a')
+                  .format((data['createdAt'] as Timestamp).toDate())
                   : "Recent",
               imageUrl: data['imageUrl'],
             );
