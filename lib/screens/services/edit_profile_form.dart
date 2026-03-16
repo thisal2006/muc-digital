@@ -12,6 +12,8 @@ class EditProfileForm extends StatefulWidget {
 class _EditProfileFormState extends State<EditProfileForm> {
   @override
   Widget build(BuildContext context) {
+    final _nameController = TextEditingController();
+    final _emailController = TextEditingController();
     return const SizedBox();
   }
 }
