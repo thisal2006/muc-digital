@@ -19,6 +19,15 @@ class _EditProfileFormState extends State<EditProfileForm> {
   final _service = ProfileManagementService();
   bool _isLoading = false;
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
 
   Widget _buildTextField(String label, TextEditingController controller, IconData icon) {
     return Padding(
