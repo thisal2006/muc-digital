@@ -541,6 +541,7 @@ class _ComplaintHistoryCard extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
+
                 color: statusColor.withAlpha(26),
                 borderRadius: BorderRadius.circular(20),
               ),
