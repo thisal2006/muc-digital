@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/profile_management_service.dart';
@@ -41,7 +42,17 @@ class _EditProfileFormState extends State<EditProfileForm> {
         _nameController.text = user.displayName ?? "";
         _emailController.text = user.email ?? "";
       });
-      // Firestore data loading goes here
+      try {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (doc.exists && mounted) {
+          setState(() {
+            _phoneController.text = doc.data()?['phone'] ?? "";
+            _addressController.text = doc.data()?['address'] ?? "";
+          });
+        }
+      } catch (e) {
+        debugPrint("Error loading extended profile: $e");
+      }
     }
   }
 
