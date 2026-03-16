@@ -45,7 +45,12 @@ class _EditProfileFormState extends State<EditProfileForm> {
         _phoneController.text.trim(),
         _addressController.text.trim(),
       );
-      // Success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile updated successfully!")),
+        );
+        Navigator.pop(context); // Goes back to Settings
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
