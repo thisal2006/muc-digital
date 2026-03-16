@@ -28,17 +28,47 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
   Map<String, String> _availability = {};
 
   final Map<String, Color> _statusColors = {
-    'AVAILABLE': const Color(0xFFE8F5E9), // Light Green
-    'FULLY_BOOKED': const Color(0xFFFFEBEE), // Light Red
-    'PARTIALLY_BOOKED_AM': const Color(0xFFE3F2FD), // Light Blue
-    'PARTIALLY_BOOKED_PM': const Color(0xFFFFF3E0), // Light Orange
+    // ── Fully confirmed ─────────────────────────────────────────────
+    'AVAILABLE': const Color(0xFFE8F5E9), // ✅ soft green
+    'PARTIALLY_BOOKED_AM': const Color(
+      0xFFE3F2FD,
+    ), // 🔵 soft blue  (AM confirmed, PM free)
+    'PARTIALLY_BOOKED_PM': const Color(
+      0xFFFFF3E0,
+    ), // 🟠 soft orange (PM confirmed, AM free)
+    'FULLY_BOOKED': const Color(0xFFFFEBEE), // 🔴 soft red    (both confirmed)
+    // ── Pending only (no confirmed booking yet) ──────────────────────
+    'PENDING_AM': const Color(
+      0xFFFFF8E1,
+    ), // 🟡 amber-yellow (AM slot has pending)
+    'PENDING_PM': const Color(
+      0xFFE1F5FE,
+    ), // 🩵 sky-blue     (PM slot has pending)
+    'PENDING_FULL': const Color(
+      0xFFFFE0B2,
+    ), // 🟠 deep amber   (full day pending)
+    // ── Mixed: one slot confirmed + other slot pending ───────────────
+    'PARTIALLY_BOOKED_AM_PENDING_PM': const Color(
+      0xFFE3F2FD,
+    ), // split — blue | sky-blue  (rendered as gradient)
+    'PARTIALLY_BOOKED_PM_PENDING_AM': const Color(
+      0xFFFFF3E0,
+    ), // split — amber | orange   (rendered as gradient)
   };
 
   final Map<String, Color> _statusTextColors = {
-    'AVAILABLE': const Color(0xFF2E7D32), // Dark Green
-    'FULLY_BOOKED': const Color(0xFFC62828), // Dark Red
-    'PARTIALLY_BOOKED_AM': const Color(0xFF1565C0), // Dark Blue
-    'PARTIALLY_BOOKED_PM': const Color(0xFFEF6C00), // Dark Orange
+    // ── Fully confirmed ─────────────────────────────────────────────
+    'AVAILABLE': const Color(0xFF2E7D32), // dark green
+    'PARTIALLY_BOOKED_AM': const Color(0xFF1565C0), // dark blue
+    'PARTIALLY_BOOKED_PM': const Color(0xFFEF6C00), // dark orange
+    'FULLY_BOOKED': const Color(0xFFC62828), // dark red
+    // ── Pending only ────────────────────────────────────────────────
+    'PENDING_AM': const Color(0xFFF57F17), // dark amber     (AM pending)
+    'PENDING_PM': const Color(0xFF0277BD), // dark sky-blue  (PM pending)
+    'PENDING_FULL': const Color(0xFFE65100), // deep dark orange (full pending)
+    // ── Mixed ───────────────────────────────────────────────────────
+    'PARTIALLY_BOOKED_AM_PENDING_PM': const Color(0xFF37474F), // dark slate
+    'PARTIALLY_BOOKED_PM_PENDING_AM': const Color(0xFF37474F), // dark slate
   };
 
   @override
@@ -126,27 +156,55 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
           const SizedBox(height: 12),
           Wrap(
             spacing: 16,
-            runSpacing: 8,
+            runSpacing: 10,
             children: [
+              // ── Confirmed states ──────────────────────────────
               _buildLegendItem(
-                'Free',
+                '✅ Free',
                 const Color(0xFFE8F5E9),
                 const Color(0xFF2E7D32),
               ),
               _buildLegendItem(
-                'AM Booked',
+                '🔵 AM Confirmed',
                 const Color(0xFFE3F2FD),
                 const Color(0xFF1565C0),
               ),
               _buildLegendItem(
-                'PM Booked',
+                '🟠 PM Confirmed',
                 const Color(0xFFFFF3E0),
                 const Color(0xFFEF6C00),
               ),
               _buildLegendItem(
-                'Fully Booked',
+                '🔴 Fully Confirmed',
                 const Color(0xFFFFEBEE),
                 const Color(0xFFC62828),
+              ),
+              // ── Pending-only states ───────────────────────────
+              _buildLegendItem(
+                '🟡 AM Pending',
+                const Color(0xFFFFF8E1),
+                const Color(0xFFF57F17),
+              ),
+              _buildLegendItem(
+                '🩵 PM Pending',
+                const Color(0xFFE1F5FE),
+                const Color(0xFF0277BD),
+              ),
+              _buildLegendItem(
+                '🟠 Full Day Pending',
+                const Color(0xFFFFE0B2),
+                const Color(0xFFE65100),
+              ),
+              // ── Mixed split states ────────────────────────────
+              _buildSplitLegendItem(
+                '🔵🩵 AM Confirmed · PM Pending',
+                const Color(0xFFE3F2FD), // blue — AM confirmed
+                const Color(0xFFE1F5FE), // sky-blue — PM pending
+              ),
+              _buildSplitLegendItem(
+                '🟡🟠 AM Pending · PM Confirmed',
+                const Color(0xFFFFF8E1), // amber — AM pending
+                const Color(0xFFFFF3E0), // orange — PM confirmed
               ),
             ],
           ),
@@ -179,40 +237,106 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
     );
   }
 
+  /// Split-color legend swatch (left half = color1, right half = color2)
+  Widget _buildSplitLegendItem(String label, Color color1, Color color2) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [color1, color2],
+              stops: const [0.5, 0.5],
+            ),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            color: const Color(0xFF666666),
+          ),
+        ),
+      ],
+    );
+  }
+
   bool _isSlotAvailable(BookingType type) {
     if (_selectedDay == null) return false;
     final status = _availability[_getDateKey(_selectedDay!)] ?? 'AVAILABLE';
 
-    if (status == 'FULLY_BOOKED') return false;
-
+    // Both CONFIRMED and PENDING bookings block slots
     switch (type) {
       case BookingType.HALF_DAY_AM:
-        return status != 'PARTIALLY_BOOKED_AM';
+        // AM is free only when no AM booking exists (confirmed or pending)
+        return status == 'AVAILABLE' ||
+            status == 'PENDING_PM' ||
+            status == 'PARTIALLY_BOOKED_PM';
       case BookingType.HALF_DAY_PM:
-        return status != 'PARTIALLY_BOOKED_PM';
+        // PM is free only when no PM booking exists (confirmed or pending)
+        return status == 'AVAILABLE' ||
+            status == 'PENDING_AM' ||
+            status == 'PARTIALLY_BOOKED_AM';
       case BookingType.FULL_DAY:
+        // Full day only available if no bookings at all
         return status == 'AVAILABLE';
       default:
         return true;
     }
   }
 
-  bool _isRangeAvailable() {
-    if (_rangeStart == null || _rangeEnd == null) return false;
-
-    DateTime current = _rangeStart!;
-    while (current.isBefore(_rangeEnd!) || isSameDay(current, _rangeEnd!)) {
-      final status = _availability[_getDateKey(current)] ?? 'AVAILABLE';
-      if (status != 'AVAILABLE') return false;
-      current = current.add(const Duration(days: 1));
-    }
-    return true;
-  }
 
   bool _isDayFullyBooked() {
     if (_selectedDay == null) return false;
     final status = _availability[_getDateKey(_selectedDay!)] ?? 'AVAILABLE';
-    return status == 'FULLY_BOOKED';
+    // Block the day if fully booked (confirmed) OR fully pending
+    return status == 'FULLY_BOOKED' || status == 'PENDING_FULL';
+  }
+
+  /// Returns the {label, color} pair that explains WHY a slot is disabled.
+  /// Differentiates between PENDING blocks (amber) and CONFIRMED blocks (red).
+  ({String label, Color color}) _getDisabledInfo(BookingType type) {
+    if (_selectedDay == null) return (label: 'Unavailable', color: Colors.grey);
+    final status = _availability[_getDateKey(_selectedDay!)] ?? 'AVAILABLE';
+
+    final bool pendingAM =
+        status == 'PENDING_AM' ||
+        status == 'PENDING_FULL' ||
+        status == 'PARTIALLY_BOOKED_PM_PENDING_AM';
+    final bool pendingPM =
+        status == 'PENDING_PM' ||
+        status == 'PENDING_FULL' ||
+        status == 'PARTIALLY_BOOKED_AM_PENDING_PM';
+
+    switch (type) {
+      case BookingType.HALF_DAY_AM:
+        if (pendingAM)
+          return (
+            label: '⏳ Pending — Currently Unavailable',
+            color: const Color(0xFFE65100),
+          );
+        return (label: 'Confirmed — Unavailable', color: Colors.red.shade400);
+      case BookingType.HALF_DAY_PM:
+        if (pendingPM)
+          return (
+            label: '⏳ Pending — Currently Unavailable',
+            color: const Color(0xFFE65100),
+          );
+        return (label: 'Confirmed — Unavailable', color: Colors.red.shade400);
+      case BookingType.FULL_DAY:
+        if (pendingAM || pendingPM)
+          return (
+            label: '⏳ Pending — Currently Unavailable',
+            color: const Color(0xFFE65100),
+          );
+        return (label: 'Confirmed — Unavailable', color: Colors.red.shade400);
+      default:
+        return (label: 'Unavailable', color: Colors.grey);
+    }
   }
 
   String _getDateKey(DateTime date) {
@@ -281,29 +405,8 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
                       _fetchAvailability();
                     },
                     calendarBuilders: CalendarBuilders(
-                      defaultBuilder: (context, day, focusedDay) {
-                        final status =
-                            _availability[_getDateKey(day)] ?? 'AVAILABLE';
-                        final bgColor = _statusColors[status];
-                        final textColor = _statusTextColors[status];
-
-                        return Container(
-                          margin: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: bgColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            '${day.day}',
-                            style: GoogleFonts.poppins(
-                              color: textColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        );
-                      },
+                      defaultBuilder: (context, day, focusedDay) =>
+                          _buildDefaultDayCell(day),
                       selectedBuilder: (context, day, focusedDay) {
                         return Container(
                           margin: const EdgeInsets.all(4),
@@ -441,18 +544,21 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
                 'Half Day (AM - 4 hrs)',
                 widget.vehicle.halfDayPrice,
                 isDisabled: !_isSlotAvailable(BookingType.HALF_DAY_AM),
+                disabledInfo: _getDisabledInfo(BookingType.HALF_DAY_AM),
               ),
               _buildDurationOption(
                 BookingType.HALF_DAY_PM,
                 'Half Day (PM - 4 hrs)',
                 widget.vehicle.halfDayPrice,
                 isDisabled: !_isSlotAvailable(BookingType.HALF_DAY_PM),
+                disabledInfo: _getDisabledInfo(BookingType.HALF_DAY_PM),
               ),
               _buildDurationOption(
                 BookingType.FULL_DAY,
                 'Full Day (8 hours)',
                 widget.vehicle.pricePerDay,
                 isDisabled: !_isSlotAvailable(BookingType.FULL_DAY),
+                disabledInfo: _getDisabledInfo(BookingType.FULL_DAY),
               ),
               // _buildDurationOption(
               //   BookingType.MULTIPLE_DAYS,
@@ -482,7 +588,12 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
                     ),
                     child: Text(
                       _isDayFullyBooked()
-                          ? 'Select Another Date'
+                          ? (_availability[_getDateKey(
+                                      _selectedDay ?? DateTime.now(),
+                                    )] ==
+                                    'PENDING_FULL'
+                                ? '⏳ Pending — Currently Unavailable'
+                                : 'Select Another Date')
                           : 'Next: Contact Details',
                       style: GoogleFonts.poppins(
                         fontSize: 16,
@@ -500,12 +611,102 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
     );
   }
 
-  double _calculateMultiDayPrice() {
-    if (_rangeStart != null && _rangeEnd != null) {
-      final days = _rangeEnd!.difference(_rangeStart!).inDays + 1;
-      return days * widget.vehicle.pricePerDay;
+
+  /// Builds the day cell widget.
+  /// Split statuses use ClipRRect + Row for a true 50/50 pixel-perfect split.
+  Widget _buildDefaultDayCell(DateTime day, {bool isBold = false}) {
+    final status = _availability[_getDateKey(day)] ?? 'AVAILABLE';
+    final textColor = _statusTextColors[status] ?? const Color(0xFF2E7D32);
+    final dayText = '${day.day}';
+    final fontWeight = isBold ? FontWeight.w700 : FontWeight.w500;
+
+    // --- Split cell: AM confirmed (blue) | PM pending (sky-blue) ---
+    if (status == 'PARTIALLY_BOOKED_AM_PENDING_PM') {
+      return Container(
+        margin: const EdgeInsets.all(4),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(color: const Color(0xFFE3F2FD)),
+                  ), // 🔵 blue — AM confirmed
+                  Expanded(
+                    child: Container(color: const Color(0xFFE1F5FE)),
+                  ), // 🩵 sky-blue — PM pending
+                ],
+              ),
+              Center(
+                child: Text(
+                  dayText,
+                  style: GoogleFonts.poppins(
+                    color: textColor,
+                    fontSize: 14,
+                    fontWeight: fontWeight,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
-    return 0;
+
+    // --- Split cell: AM pending (amber) | PM confirmed (orange) ---
+    if (status == 'PARTIALLY_BOOKED_PM_PENDING_AM') {
+      return Container(
+        margin: const EdgeInsets.all(4),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(color: const Color(0xFFFFF8E1)),
+                  ), // 🟡 amber — AM pending
+                  Expanded(
+                    child: Container(color: const Color(0xFFFFF3E0)),
+                  ), // 🟠 orange — PM confirmed
+                ],
+              ),
+              Center(
+                child: Text(
+                  dayText,
+                  style: GoogleFonts.poppins(
+                    color: textColor,
+                    fontSize: 14,
+                    fontWeight: fontWeight,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // --- Solid color for all other statuses ---
+    return Container(
+      margin: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: _statusColors[status] ?? const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        dayText,
+        style: GoogleFonts.poppins(
+          color: textColor,
+          fontSize: 14,
+          fontWeight: fontWeight,
+        ),
+      ),
+    );
   }
 
   Widget _buildDurationOption(
@@ -513,6 +714,7 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
     String title,
     double price, {
     bool isDisabled = false,
+    ({String label, Color color})? disabledInfo,
   }) {
     final isSelected = _selectedBookingType == type;
 
@@ -575,10 +777,10 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
                       ),
                       if (isDisabled && type != BookingType.MULTIPLE_DAYS)
                         Text(
-                          'Already Booked',
+                          disabledInfo?.label ?? 'Unavailable',
                           style: GoogleFonts.poppins(
                             fontSize: 12,
-                            color: Colors.red[400],
+                            color: disabledInfo?.color ?? Colors.red.shade400,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -608,7 +810,14 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
                     ],
                   ),
                 if (isDisabled && type != BookingType.MULTIPLE_DAYS)
-                  const Icon(Icons.lock_outline, color: Colors.grey, size: 20),
+                  Icon(
+                    disabledInfo?.label.contains('Pending') == true
+                        ? Icons
+                              .access_time_rounded // clock for pending
+                        : Icons.lock_outline, // lock for confirmed
+                    color: disabledInfo?.color ?? Colors.grey,
+                    size: 20,
+                  ),
               ],
             ),
           ),

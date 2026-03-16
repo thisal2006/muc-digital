@@ -11,7 +11,7 @@ import 'screens/user_agreement_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/emergency_screen.dart';
 import 'screens/announcements_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/profile_screen.dart' hide BookingHistoryScreen;
 import 'features/Property/screens/property_booking_screen.dart';
 import 'screens/phone_login_screen.dart';
 import 'screens/otp_verification_screen.dart';
@@ -92,10 +92,14 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_in': (context) => const SignInScreen(),
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
-        '/my_bookings': (context) => const MyBookingsScreen(), // Un-commented and fixed
+        '/my_bookings': (context) => const MyBookingsScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/crematorium_booking': (context) => const CrematoriumBookingScreen(),
+        '/booking_history': (context) => const BookingHistoryScreen(),
+        '/vehicle_type': (context) => const VehicleTypeScreen(),
+        /*'/chatbot': (context) => const Chatbot(),
+*/
       },
     );
   }
 }
-
-//OLD MAIN NO ERRORS

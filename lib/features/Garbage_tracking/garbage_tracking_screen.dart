@@ -105,7 +105,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
     _movementTimers[truckId]?.cancel();
 
     _movementTimers[truckId] =
-        Timer.periodic(const Duration(milliseconds: 40), (timer) {
+        Timer.periodic(const Duration(milliseconds: 120), (timer) {
 
           if (!_markers.containsKey(truckId) ||
               !_targetPositions.containsKey(truckId)) {

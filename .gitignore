@@ -66,3 +66,4 @@ vehicle_book_BE/.env
 /flask-chatbot/muc_vector_db
 flask-chatbot/.env
 flask-chatbot/Dockerfile
+vehicle_book_BE/muc-digital-4390a-firebase-adminsdk-fbsvc-43d005d6e1.json

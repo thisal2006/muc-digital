@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'vehicle_models.dart';
 import 'booking_calendar_screen.dart';
 
@@ -48,21 +49,22 @@ class VehicleDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             FadeInDown(
-              child: Image.network(
-                vehicle.images.isNotEmpty
+              child: CachedNetworkImage(
+                imageUrl: vehicle.images.isNotEmpty
                     ? vehicle.images[0]
-                    : 'https://via.placeholder.com/400x300',
+                    : 'https://via.placeholder.com/400x300?text=No+Image',
                 width: double.infinity,
                 height: 250,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+                placeholder: (context, url) => Container(
                   height: 250,
                   color: Colors.grey[200],
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    size: 50,
-                    color: Colors.grey,
-                  ),
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  height: 250,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.image_not_supported, size: 80, color: Colors.grey),
                 ),
               ),
             ),
@@ -108,30 +110,28 @@ class VehicleDetailsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        ...vehicle.includedServices
-                            .map(
+                        ...vehicle.includedServices.map(
                               (service) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.check_circle,
-                                      color: Color(0xFF00897B),
-                                      size: 18,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      service,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        color: Colors.grey[700],
-                                      ),
-                                    ),
-                                  ],
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Color(0xFF00897B),
+                                  size: 18,
                                 ),
-                              ),
-                            )
-                            .toList(),
+                                const SizedBox(width: 12),
+                                Text(
+                                  service,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -186,28 +186,20 @@ class VehicleDetailsScreen extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      BookingCalendarScreen(vehicle: vehicle),
+                                  builder: (context) => BookingCalendarScreen(vehicle: vehicle),
                                 ),
                               );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF00897B),
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               elevation: 0,
                             ),
                             child: Text(
                               'Book Now',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                             ),
                           ),
                         ],

@@ -1,11 +1,11 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../features/Property/screens/my_bookings_screen.dart';
 import '../widgets/app_drawer.dart';
 import 'announcements_screen.dart';
-import 'complaints_screen.dart'; // 👈 Complaints screen import
-
+import 'complaints_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,17 +17,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  // All pages that bottom nav can switch to
   final List<Widget> _pages = [
     const _HomeDashboardContent(),
-    const MyBookingsScreen(),  //My bookings page imported
-    const AnnouncementsScreen(), // Updates tab → Announcements
+    const AnnouncementsScreen(),
   ];
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    setState(() => _selectedIndex = index);
   }
 
   @override
@@ -40,11 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(
-              Icons.menu_rounded,
-              color: Color(0xFF1B5E20),
-              size: 28,
-            ),
+            icon: const Icon(Icons.menu_rounded, color: Color(0xFF1B5E20), size: 28),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
@@ -66,27 +58,19 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Badge(
                 label: const Text('3', style: TextStyle(fontSize: 10)),
                 backgroundColor: Colors.red,
-                child: const Icon(
-                  Icons.notifications_rounded,
-                  color: Color(0xFF1B5E20),
-                ),
+                child: const Icon(Icons.notifications_rounded, color: Color(0xFF1B5E20)),
               ),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const AnnouncementsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const AnnouncementsScreen()),
                 );
               },
             ),
           ),
         ],
       ),
-
-      // Switch between pages when tapping bottom nav
       body: IndexedStack(index: _selectedIndex, children: _pages),
-
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
@@ -97,27 +81,15 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_rounded),
-            label: 'Bookings',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_rounded),
-            label: 'Updates',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications_rounded), label: 'Updates'),
         ],
       ),
       floatingActionButton: FadeInUp(
         duration: const Duration(milliseconds: 1000),
         child: FloatingActionButton(
           heroTag: 'home_chat_fab',
-          onPressed: () {
-            Navigator.pushNamed(context, '/chatbot');
-          },
+          onPressed: () => Navigator.pushNamed(context, '/chatbot'),
           backgroundColor: const Color(0xFF1B5E20),
           child: const Icon(Icons.chat_bubble_rounded, color: Colors.white),
         ),
@@ -126,7 +98,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Home Dashboard content (search + stats + cards)
 class _HomeDashboardContent extends StatefulWidget {
   const _HomeDashboardContent();
 
@@ -158,10 +129,10 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Vehicle Booking',
       'subtitle': 'Reserve municipal vehicles',
       'color': const Color(0xFF1976D2),
-      'route': '/vehicle_booking',
+      'route': '/vehicle_type',
     },
     {
-      'icon': Icons.location_on_rounded,
+      'icon': Icons.local_florist_rounded,
       'title': 'Cemetery Booking',
       'subtitle': 'Cemetery & crematorium',
       'color': const Color(0xFF7B1FA2),
@@ -186,16 +157,16 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Complaints',
       'subtitle': 'File & track complaints',
       'color': const Color(0xFF795548),
-      'route': 'complaints',
+      'route': null,
     },
   ];
 
   List<Map<String, dynamic>> get _filteredServices {
     if (_searchQuery.isEmpty) return _services;
     final query = _searchQuery.toLowerCase();
-    return _services.where((service) {
-      return service['title'].toString().toLowerCase().contains(query) ||
-          service['subtitle'].toString().toLowerCase().contains(query);
+    return _services.where((s) {
+      return (s['title'] as String).toLowerCase().contains(query) ||
+          (s['subtitle'] as String).toLowerCase().contains(query);
     }).toList();
   }
 
@@ -222,11 +193,11 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
+                      color: Colors.black.withOpacity(0.06),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
-                  ], //updated
+                  ],
                 ),
                 child: TextField(
                   controller: _searchController,
@@ -234,10 +205,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
                   decoration: InputDecoration(
                     hintText: 'Search services...',
                     hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(
-                      Icons.search_rounded,
-                      color: Color(0xFF1B5E20),
-                    ),
+                    prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1B5E20)),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                       icon: const Icon(Icons.clear, color: Colors.grey),
@@ -255,55 +223,19 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
             ),
           ),
 
-          // Stats row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                FadeInLeft(
-                  duration: const Duration(milliseconds: 800),
-                  child: _statCard(
-                    '3',
-                    'Bookings',
-                    Icons.book_online,
-                    const Color(0xFF1B5E20),
-                  ),
-                ),
-                FadeInUp(
-                  duration: const Duration(milliseconds: 850),
-                  child: _statCard(
-                    '1',
-                    'Pending',
-                    Icons.hourglass_empty,
-                    const Color(0xFFF57C00),
-                  ),
-                ),
-                FadeInRight(
-                  duration: const Duration(milliseconds: 900),
-                  child: _statCard(
-                    '2',
-                    'Complaints',
-                    Icons.report_problem,
-                    const Color(0xFFD32F2F),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Service cards
+          // Service cards grid (no stats row anymore)
           Padding(
             padding: const EdgeInsets.all(16),
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: GridView.count(
+                key: ValueKey<String>(_searchQuery),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
-                childAspectRatio: 1.1,
+                childAspectRatio: 1.12,
                 children: _filteredServices.map((service) {
                   return FadeInUp(
                     duration: const Duration(milliseconds: 800),
@@ -320,47 +252,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
             ),
           ),
 
-          const SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-
-  Widget _statCard(String number, String label, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withValues(alpha: 0.85)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ), //removed warning
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ], //removed warning
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            number,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
-          ),
+          const SizedBox(height: 32),
         ],
       ),
     );
@@ -391,8 +283,8 @@ class ServiceCard extends StatelessWidget {
       color: Colors.white,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        splashColor: color.withValues(alpha: 0.15),
-        highlightColor: color.withValues(alpha: 0.08),
+        splashColor: color.withOpacity(0.15),
+        highlightColor: color.withOpacity(0.08),
         onTap: () {
           if (title == 'Complaints') {
             Navigator.push(
@@ -408,26 +300,18 @@ class ServiceCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Wrap the icon in Expanded so it shrinks if the text is too long
               Expanded(
                 child: Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        color.withValues(alpha: 0.15), // Updated
-                        color.withValues(alpha: 0.05), // Updated
-                      ],
+                      colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Icon(
-                    icon,
-                    size: 40,
-                    color: color,
-                  ), // Reduced icon size from 48 to 40
+                  child: Icon(icon, size: 40, color: color),
                 ),
               ),
               const SizedBox(height: 12),
@@ -443,12 +327,9 @@ class ServiceCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey[700],
-                ), // Reduced from 13 to 11
+                style: TextStyle(fontSize: 11, color: Colors.grey[700]),
                 textAlign: TextAlign.center,
-                maxLines: 1, // Restrict to 1 line to save space
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
