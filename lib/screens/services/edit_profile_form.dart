@@ -16,6 +16,8 @@ class _EditProfileFormState extends State<EditProfileForm> {
     final _emailController = TextEditingController();
     final _phoneController = TextEditingController();
     final _addressController = TextEditingController();
+    final _service = ProfileManagementService();
+    bool _isLoading = false;
     return const SizedBox();
   }
 }
