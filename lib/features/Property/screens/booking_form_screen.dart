@@ -14,21 +14,61 @@ class BookingFormScreen extends StatefulWidget {
   State<BookingFormScreen> createState() => _BookingFormScreenState();
 }
 
-// NEW: State for the Terms and Conditions checkbox
-bool _agreedToTerms = false;
-
 class _BookingFormScreenState extends State<BookingFormScreen> {
   DateTime? selectedDate;
   String? selectedSlot;
+  bool _agreedToTerms = false;
+  bool _isLoadingBookings = true;
+
+  // Store booked slots. Key: Date (YYYY-MM-DD), Value: List of booked slots
+  Map<String, List<String>> bookedSlots = {};
+
   final List<String> timeSlots = [
     "Morning (8:00 AM - 12:00 PM)",
     "Evening (1:00 PM - 5:00 PM)",
     "Night (6:00 PM - 11:00 PM)",
     "Full Day (8:00 AM - 5:00 PM)"
   ];
+
   final TextEditingController _reasonController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExistingBookings();
+  }
+
+  Future<void> _fetchExistingBookings() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('property_bookings')
+          .where('property_name', isEqualTo: widget.property.name)
+          .where('status', isEqualTo: 'Paid') // Only block officially paid slots
+          .get();
+
+      Map<String, List<String>> tempBooked = {};
+
+      for (var doc in snapshot.docs) {
+        String date = doc['date'];
+        String slot = doc['slot'];
+
+        if (!tempBooked.containsKey(date)) {
+          tempBooked[date] = [];
+        }
+        tempBooked[date]!.add(slot);
+      }
+
+      setState(() {
+        bookedSlots = tempBooked;
+        _isLoadingBookings = false;
+      });
+    } catch (e) {
+      debugPrint("Error fetching bookings: $e");
+      setState(() => _isLoadingBookings = false);
+    }
+  }
 
   String get _calculatedPrice {
     if (selectedSlot == null) return widget.property.price;
@@ -54,34 +94,78 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     }
   }
 
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      selectableDayPredicate: (DateTime day) {
+        String formattedDay = day.toString().split(' ')[0];
+        List<String>? slotsTaken = bookedSlots[formattedDay];
+
+        if (slotsTaken != null) {
+          if (slotsTaken.contains(timeSlots[3])) return false; // Full Day taken
+          if (slotsTaken.contains(timeSlots[0]) &&
+              slotsTaken.contains(timeSlots[1]) &&
+              slotsTaken.contains(timeSlots[2])) {
+            return false; // All individual slots taken
+          }
+        }
+        return true;
+      },
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFFE67E22),
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
+              primary: Color(0xFFE67E22), onPrimary: Colors.white, onSurface: Colors.black,
             ),
           ),
           child: child!,
         );
       },
     );
+
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
+        selectedSlot = null; // Reset slot when date changes
       });
     }
   }
 
+  List<DropdownMenuItem<String>> _getAvailableTimeSlots() {
+    if (selectedDate == null) return [];
+
+    String formattedDay = selectedDate.toString().split(' ')[0];
+    List<String> slotsTaken = bookedSlots[formattedDay] ?? [];
+
+    return timeSlots.map((String slot) {
+      bool isTaken = slotsTaken.contains(slot);
+
+      if (slot == timeSlots[3] && (slotsTaken.contains(timeSlots[0]) || slotsTaken.contains(timeSlots[1]))) {
+        isTaken = true;
+      }
+      if ((slot == timeSlots[0] || slot == timeSlots[1]) && slotsTaken.contains(timeSlots[3])) {
+        isTaken = true;
+      }
+
+      return DropdownMenuItem<String>(
+        value: slot,
+        enabled: !isTaken,
+        child: Text(
+          isTaken ? "$slot - BOOKED" : slot,
+          style: TextStyle(
+            color: isTaken ? Colors.red : Colors.black,
+            fontWeight: isTaken ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      );
+    }).toList();
+  }
+
   Future<void> _submitBookingRequest() async {
-    // 1. Validation
     if (_nameController.text.trim().isEmpty || _phoneController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter contact details."), backgroundColor: Colors.red),
@@ -92,16 +176,9 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     if (selectedDate == null || selectedSlot == null || !_agreedToTerms) return;
 
     try {
-      // --- START STRIPE FLOW ---
-      // We use the _calculatedPrice which you already built!
       await StripeService.makePayment(context, _calculatedPrice, () async {
-
-        // --- THIS CODE RUNS ONLY IF PAYMENT SUCCEEDS ---
-
-        // Show Loading
         showDialog(
-          context: context,
-          barrierDismissible: false,
+          context: context, barrierDismissible: false,
           builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFE67E22))),
         );
 
@@ -117,19 +194,16 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
           "contact_name": _nameController.text.trim(),
           "contact_number": _phoneController.text.trim(),
           "purpose": _reasonController.text.trim(),
-          "status": "Paid", // Updated status since they just paid!
+          "status": "Paid",
           "timestamp": FieldValue.serverTimestamp(),
         };
 
         await FirebaseFirestore.instance.collection('property_bookings').add(bookingData);
 
         if (!mounted) return;
-        Navigator.of(context).pop(); // Close loading
-
-        // Show Success Dialog
+        Navigator.of(context).pop();
         _showPaymentSuccessDialog();
       });
-
     } catch (e) {
       debugPrint("Stripe flow interrupted: $e");
     }
@@ -152,24 +226,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     );
   }
 
-  void _showRequestSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        icon: const Icon(Icons.access_time_filled, color: Colors.blue, size: 50),
-        title: const Text("Request Submitted!"),
-        content: const Text("Your booking request has been sent to the Admin. You will be notified once approved to make your payment."),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            },
-            child: const Text("OK"),
-          )
-        ],
-      ),
-    );
-  }
   @override
   void dispose() {
     _nameController.dispose();
@@ -180,14 +236,15 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Request Booking"),
+        title: const Text("Instant Booking"),
         backgroundColor: const Color(0xFFE67E22),
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
+      body: _isLoadingBookings
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFFE67E22)))
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,13 +309,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
               hint: const Text("Choose a slot"),
-              initialValue: selectedSlot,
-              items: timeSlots.map((String slot) {
-                return DropdownMenuItem<String>(value: slot, child: Text(slot));
-              }).toList(),
+              value: selectedSlot,
+              items: _getAvailableTimeSlots(),
               onChanged: (newValue) => setState(() => selectedSlot = newValue),
             ),
-
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -290,10 +344,8 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
                 ],
               ),
             ),
-
             const Divider(),
             const SizedBox(height: 10),
-
             const Text("Contact Details", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             TextField(
@@ -315,8 +367,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            const SizedBox(height: 20),
             const Text("Purpose of Booking", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             TextField(
@@ -327,9 +377,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               ),
               maxLines: 3,
             ),
-
             const SizedBox(height: 20),
-
             Container(
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
@@ -353,14 +401,12 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
           ],
         ),
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton(
-          // NEW: Button is completely disabled if the checkbox is false
           onPressed: (selectedDate != null && selectedSlot != null && _agreedToTerms)
               ? _submitBookingRequest
               : null,
@@ -370,10 +416,10 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
             padding: const EdgeInsets.symmetric(vertical: 15),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             elevation: 2,
+            disabledBackgroundColor: Colors.grey.shade400,
           ),
           child: Text(
-            // NEW: Button text tells them exactly what to do!
-              _agreedToTerms ? "Request Booking" : "Agree to Terms to Proceed",
+              _agreedToTerms ? "Pay & Book Instantly" : "Agree to Terms to Proceed",
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
           ),
         ),
@@ -382,4 +428,3 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
   }
 }
 
-//Good to go
