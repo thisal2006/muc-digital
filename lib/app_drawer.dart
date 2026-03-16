@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:muc_digital/screens/settings_screen.dart';
 import '../screens/services/auth_service.dart';
 import '../screens/auth/sign_in_screen.dart';
 
@@ -108,12 +109,13 @@ class AppDrawer extends StatelessWidget {
                 ),
 
                 ListTile(
-                  leading: const Icon(Icons.settings_outlined, color: Color(0xFF2E7D32)),
-                  title: const Text('Settings'),
+                  leading: const Icon(Icons.settings_outlined, color: Color(0xFF1B5E20)),
+                  title: const Text("Settings"),
                   onTap: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Settings screen coming soon!')),
+                    Navigator.pop(context); // This closes the drawer first
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
                     );
                   },
                 ),
