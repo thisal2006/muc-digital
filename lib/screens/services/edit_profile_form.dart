@@ -28,6 +28,16 @@ class _EditProfileFormState extends State<EditProfileForm> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUserData();
+  }
+
+  Future<void> _loadCurrentUserData() async {
+    // Data loading logic goes here
+  }
+
 
   Widget _buildTextField(String label, TextEditingController controller, IconData icon) {
     return Padding(
