@@ -36,7 +36,17 @@ class _EditProfileFormState extends State<EditProfileForm> {
 
   Future<void> _saveProfile() async {
     setState(() => _isLoading = true);
-    // Logic goes here
+    try {
+      // Auth update
+      // Extended update
+      // Success message
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: ${e.toString()}")),
+        );
+      }
+    }
     setState(() => _isLoading = false);
   }
 
