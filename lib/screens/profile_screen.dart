@@ -225,7 +225,6 @@ class ProfileField extends StatelessWidget {
     this.keyboardType,
   });
 
-
   @override
   Widget build(BuildContext context) {
     return TextFormField(
@@ -234,27 +233,10 @@ class ProfileField extends StatelessWidget {
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(_getIconForLabel(label)),
         filled: true,
-        fillColor: enabled ? Colors.white : Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
+        fillColor: enabled ? Colors.white : Colors.grey[200],
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
-  }
-
-// Helper to add icons based on the label
-  IconData _getIconForLabel(String label) {
-    if (label.contains("Name")) return Icons.person_outline;
-    if (label.contains("Email")) return Icons.email_outlined;
-    if (label.contains("Phone")) return Icons.phone_outlined;
-    if (label.contains("Address")) return Icons.location_on_outlined;
-    return Icons.edit_outlined;
   }
 }
