@@ -1,10 +1,15 @@
-import Vehicle from "../model/Vehicle.js";
-import Booking from "../model/Booking.js";
-import mongoose from "mongoose";
-import { parseISO, format } from 'date-fns';  // For safe date parsing and formatting
+import { db } from '../config/firebase.js';
+import { randomUUID } from 'crypto';
+import { parseISO, format } from 'date-fns';
 
-// Helper to check if string is valid ObjectId
-const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+const populateVehicle = async (bookingData) => {
+  if (!bookingData.vehicle) return bookingData;
+  const vehicleDoc = await db.collection('vehicles').doc(bookingData.vehicle).get();
+  return {
+    ...bookingData,
+    vehicle: vehicleDoc.exists ? { id: vehicleDoc.id, ...vehicleDoc.data() } : bookingData.vehicle
+  };
+};
 
 export const createBooking = async (req, res, next) => {
   try {
@@ -17,26 +22,19 @@ export const createBooking = async (req, res, next) => {
       userPhone,
     } = req.body;
 
-    console.log("Received booking request:", req.body);
-
-    if (!isValidObjectId(vehicleId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid vehicle ID format" });
+    if (!vehicleId) {
+      return res.status(400).json({ success: false, message: "Vehicle ID is required" });
     }
 
-    const vehicle = await Vehicle.findById(vehicleId);
-    if (!vehicle) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Vehicle not found" });
+    const vehicleDoc = await db.collection('vehicles').doc(vehicleId).get();
+    if (!vehicleDoc.exists) {
+      return res.status(404).json({ success: false, message: "Vehicle not found" });
     }
+    const vehicle = vehicleDoc.data();
 
-    // Parse dates as local time using date-fns (handles '2026-05-30' as local midnight)
     const start = parseISO(startDate);
     const end = endDate ? parseISO(endDate) : new Date(start);
 
-    // Set times based on booking type (always apply defaults for half-day if no time provided)
     if (bookingType === 'FULL_DAY' || bookingType === 'MULTIPLE_DAYS') {
       start.setHours(0, 0, 0, 0);
       end.setHours(23, 59, 59, 999);
@@ -47,17 +45,21 @@ export const createBooking = async (req, res, next) => {
       start.setHours(13, 0, 0, 0);
       end.setHours(17, 59, 59, 999);
     }
-    // For other types or if times are provided, preserve as-is
 
-    // Check availability against both CONFIRMED and PENDING bookings
-    // (PENDING bookings also block new bookings — slot is held until admin decides)
-    const existingBookings = await Booking.find({
-      vehicle: vehicleId,
-      status: { $in: ["CONFIRMED", "PENDING"] },
-      $or: [{ startDate: { $lte: end }, endDate: { $gte: start } }],
-    });
+    // Check availability (In-memory overlap check due to Firestore inequality limitations)
+    const bookingsSnapshot = await db.collection('bookings')
+      .where('vehicle', '==', vehicleId)
+      .where('status', 'in', ["CONFIRMED", "PENDING"])
+      .get();
 
-    // Check for conflicts
+    const existingBookings = bookingsSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(b => {
+        const bStart = b.startDate.toDate();
+        const bEnd = b.endDate.toDate();
+        return bStart <= end && bEnd >= start;
+      });
+
     let canBook = true;
     let conflictMessage = "";
 
@@ -105,7 +107,7 @@ export const createBooking = async (req, res, next) => {
       totalAmount = diffDays * vehicle.pricePerDay;
     }
 
-    const booking = await Booking.create({
+    const bookingData = {
       vehicle: vehicleId,
       bookingType,
       startDate: start,
@@ -114,11 +116,18 @@ export const createBooking = async (req, res, next) => {
       userName,
       userPhone,
       status: "PENDING",
-    });
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const id = randomUUID();
+    const docRef = db.collection('bookings').doc(id);
+    await docRef.set(bookingData);
+    const savedDoc = await docRef.get();
 
     res.status(201).json({
       success: true,
-      data: booking,
+      data: { id: savedDoc.id, ...savedDoc.data() },
     });
   } catch (error) {
     next(error);
@@ -129,48 +138,37 @@ export const getVehicleAvailability = async (req, res, next) => {
   try {
     const { vehicleId, year, month } = req.query;
     if (!vehicleId || !year || !month) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing required parameters" });
+      return res.status(400).json({ success: false, message: "Missing required parameters" });
     }
 
-    if (!isValidObjectId(vehicleId)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid vehicle ID format" });
-    }
-
-    // Parse start/end of month as local dates
     const startOfMonth = parseISO(`${year}-${String(month).padStart(2, '0')}-01`);
     const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    const dateRange = { $or: [{ startDate: { $lte: endOfMonth }, endDate: { $gte: startOfMonth } }] };
+    const snapshot = await db.collection('bookings')
+      .where('vehicle', '==', vehicleId)
+      .where('status', 'in', ["CONFIRMED", "PENDING"])
+      .get();
 
-    // CONFIRMED bookings hard-block slots
-    const confirmedBookings = await Booking.find({
-      vehicle: vehicleId,
-      status: "CONFIRMED",
-      ...dateRange,
-    });
+    const allBookings = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(b => {
+        const bStart = b.startDate.toDate();
+        const bEnd = b.endDate.toDate();
+        return bStart <= endOfMonth && bEnd >= startOfMonth;
+      });
 
-    // PENDING bookings are shown as a visual indicator only — they do NOT block new bookings
-    const pendingBookings = await Booking.find({
-      vehicle: vehicleId,
-      status: "PENDING",
-      ...dateRange,
-    });
+    const confirmedBookings = allBookings.filter(b => b.status === "CONFIRMED");
+    const pendingBookings = allBookings.filter(b => b.status === "PENDING");
 
     const daysInMonth = endOfMonth.getDate();
     const availability = [];
 
-    // Helper: check if booking b falls on currentDay
     const isOnDay = (b, currentDay) => {
-      const bStart = new Date(b.startDate);
-      const bEnd = new Date(b.endDate);
-      return (
-        currentDay >= new Date(bStart.getFullYear(), bStart.getMonth(), bStart.getDate()) &&
-        currentDay <= new Date(bEnd.getFullYear(), bEnd.getMonth(), bEnd.getDate(), 23, 59, 59, 999)
-      );
+      const bStart = b.startDate.toDate();
+      const bEnd = b.endDate.toDate();
+      const dayStart = new Date(currentDay.getFullYear(), currentDay.getMonth(), currentDay.getDate());
+      const dayEnd = new Date(currentDay.getFullYear(), currentDay.getMonth(), currentDay.getDate(), 23, 59, 59, 999);
+      return bStart <= dayEnd && bEnd >= dayStart;
     };
 
     for (let i = 1; i <= daysInMonth; i++) {
@@ -185,7 +183,6 @@ export const getVehicleAvailability = async (req, res, next) => {
       let pendingPmBooked = false;
       let specificTimeBookings = [];
 
-      // Process CONFIRMED bookings (these block the slot)
       dayConfirmed.forEach((b) => {
         if (b.bookingType === "FULL_DAY" || b.bookingType === "MULTIPLE_DAYS") {
           amBooked = true;
@@ -196,14 +193,13 @@ export const getVehicleAvailability = async (req, res, next) => {
           pmBooked = true;
         }
         specificTimeBookings.push({
-          startTime: new Date(b.startDate).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
-          endTime: new Date(b.endDate).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+          startTime: b.startDate.toDate().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+          endTime: b.endDate.toDate().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
           type: b.bookingType,
           status: 'CONFIRMED',
         });
       });
 
-      // Process PENDING bookings (visual indicator only)
       dayPending.forEach((b) => {
         if (b.bookingType === "FULL_DAY" || b.bookingType === "MULTIPLE_DAYS") {
           pendingAmBooked = true;
@@ -214,20 +210,18 @@ export const getVehicleAvailability = async (req, res, next) => {
           pendingPmBooked = true;
         }
         specificTimeBookings.push({
-          startTime: new Date(b.startDate).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
-          endTime: new Date(b.endDate).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+          startTime: b.startDate.toDate().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+          endTime: b.endDate.toDate().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
           type: b.bookingType,
           status: 'PENDING',
         });
       });
 
-      // Compute confirmed-only status
       let confirmedStatus = "AVAILABLE";
       if (amBooked && pmBooked) confirmedStatus = "FULLY_BOOKED";
       else if (amBooked) confirmedStatus = "PARTIALLY_BOOKED_AM";
       else if (pmBooked) confirmedStatus = "PARTIALLY_BOOKED_PM";
 
-      // Compute composite status that also encodes pending state
       let status = confirmedStatus;
       if (confirmedStatus === "AVAILABLE") {
         if (pendingAmBooked && pendingPmBooked) status = "PENDING_FULL";
@@ -252,7 +246,6 @@ export const getVehicleAvailability = async (req, res, next) => {
       });
     }
 
-    console.log("Availability for vehicle", vehicleId, "in", month, "/", year, ":", availability);
     res.status(200).json({ success: true, data: availability });
   } catch (error) {
     next(error);
@@ -261,9 +254,11 @@ export const getVehicleAvailability = async (req, res, next) => {
 
 export const getAllBookings = async (req, res, next) => {
   try {
-    const bookings = await Booking.find()
-      .populate("vehicle")
-      .sort({ createdAt: -1 });
+    const snapshot = await db.collection('bookings').orderBy('createdAt', 'desc').get();
+    const bookings = await Promise.all(snapshot.docs.map(async (doc) => {
+      return await populateVehicle({ id: doc.id, ...doc.data() });
+    }));
+
     res.status(200).json({
       success: true,
       data: bookings,
@@ -278,35 +273,33 @@ export const cancelBooking = async (req, res, next) => {
     const { id } = req.params;
     const { reason } = req.body;
 
-    if (!isValidObjectId(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid booking ID format" });
+    const docRef = db.collection('bookings').doc(id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
-    const booking = await Booking.findById(id);
-    if (!booking) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Booking not found" });
-    }
-
+    const booking = doc.data();
     if (booking.status === "CANCELLED") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Booking is already cancelled" });
+      return res.status(400).json({ success: false, message: "Booking is already cancelled" });
     }
 
-    booking.status = "CANCELLED";
+    const updateData = {
+      status: "CANCELLED",
+      updatedAt: new Date()
+    };
     if (reason) {
-      booking.cancellationReason = reason;
+      updateData.cancellationReason = reason;
     }
-    await booking.save();
+
+    await docRef.update(updateData);
+    const updatedDoc = await docRef.get();
 
     res.status(200).json({
       success: true,
       message: "Booking cancelled successfully",
-      data: booking,
+      data: { id: updatedDoc.id, ...updatedDoc.data() },
     });
   } catch (error) {
     next(error);
@@ -317,19 +310,14 @@ export const approveBooking = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    if (!isValidObjectId(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid booking ID format" });
+    const docRef = db.collection('bookings').doc(id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
-    const booking = await Booking.findById(id);
-    if (!booking) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Booking not found" });
-    }
-
+    const booking = doc.data();
     if (booking.status !== "PENDING") {
       return res.status(400).json({
         success: false,
@@ -337,13 +325,21 @@ export const approveBooking = async (req, res, next) => {
       });
     }
 
-    // Re-check availability against already CONFIRMED bookings before approving
-    const conflictingBookings = await Booking.find({
-      _id: { $ne: booking._id },
-      vehicle: booking.vehicle,
-      status: "CONFIRMED",
-      $or: [{ startDate: { $lte: booking.endDate }, endDate: { $gte: booking.startDate } }],
-    });
+    const snapshot = await db.collection('bookings')
+      .where('vehicle', '==', booking.vehicle)
+      .where('status', '==', "CONFIRMED")
+      .get();
+
+    const conflictingBookings = snapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(b => {
+        if (b.id === id) return false;
+        const bStart = b.startDate.toDate();
+        const bEnd = b.endDate.toDate();
+        const currStart = booking.startDate.toDate();
+        const currEnd = booking.endDate.toDate();
+        return bStart <= currEnd && bEnd >= currStart;
+      });
 
     let canApprove = true;
     let conflictMessage = "";
@@ -381,13 +377,16 @@ export const approveBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, message: conflictMessage });
     }
 
-    booking.status = "CONFIRMED";
-    await booking.save();
+    await docRef.update({
+      status: "CONFIRMED",
+      updatedAt: new Date()
+    });
+    const updatedDoc = await docRef.get();
 
     res.status(200).json({
       success: true,
       message: "Booking approved successfully",
-      data: booking,
+      data: { id: updatedDoc.id, ...updatedDoc.data() },
     });
   } catch (error) {
     next(error);

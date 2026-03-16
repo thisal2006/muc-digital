@@ -3,7 +3,18 @@ import { useState, useEffect } from 'react';
 const BASE_URL = 'http://localhost:3000/api';
 
 function fmt(d) {
-  return new Date(d).toLocaleDateString('en-US', {
+  if (!d) return '---';
+  // Check if it's a Firestore timestamp object
+  let dateObj;
+  if (d && typeof d === 'object' && d._seconds) {
+    dateObj = new Date(d._seconds * 1000);
+  } else {
+    dateObj = new Date(d);
+  }
+
+  if (isNaN(dateObj.getTime())) return 'Invalid Date';
+
+  return dateObj.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -171,7 +182,7 @@ export default function Bookings() {
                 </tr>
               ) : (
                 filtered.map((b) => (
-                  <tr key={b._id}>
+                  <tr key={b.id}>
                     <td>{b.vehicle?.name || '---'}</td>
                     <td style={{ fontSize: 12 }}>
                       {b.bookingType.replace(/_/g, ' ')}
@@ -197,14 +208,14 @@ export default function Bookings() {
                         <>
                           <button
                             className="btn btn-success btn-sm"
-                            onClick={() => setApproveModal(b._id)}
+                            onClick={() => setApproveModal(b.id)}
                           >
                             Approve
                           </button>{' '}
                           <button
                             className="btn btn-danger btn-sm"
                             onClick={() => {
-                              setCancelModal(b._id);
+                              setCancelModal(b.id);
                               setCancelReason('');
                             }}
                           >
@@ -216,7 +227,7 @@ export default function Bookings() {
                         <button
                           className="btn btn-danger btn-sm"
                           onClick={() => {
-                            setCancelModal(b._id);
+                            setCancelModal(b.id);
                             setCancelReason('');
                           }}
                         >
