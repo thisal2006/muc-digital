@@ -19,7 +19,7 @@ class _EditProfileFormState extends State<EditProfileForm> {
   final _service = ProfileManagementService();
   bool _isLoading = false;
 
-  // --- HELPER METHODS GO HERE ---
+
   Widget _buildTextField(String label, TextEditingController controller, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
@@ -34,7 +34,7 @@ class _EditProfileFormState extends State<EditProfileForm> {
     );
   }
 
-  // --- THERE CAN ONLY BE ONE BUILD METHOD ---
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,7 +43,8 @@ class _EditProfileFormState extends State<EditProfileForm> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Fields will go here in the next steps
+            _buildTextField("Full Name", _nameController, Icons.person),
+            _buildTextField("Email Address", _emailController, Icons.email),
           ],
         ),
       ),
