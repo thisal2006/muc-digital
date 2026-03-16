@@ -60,6 +60,12 @@ class _CrematoriumEligibilityScreenState extends State<CrematoriumEligibilityScr
 
               const SizedBox(height: 24),
 
+              const SizedBox(height: 16),
+              const Text(
+                'Note: All personal data is encrypted and protected via Firebase Security Rules.',
+                style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+              ),
+
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate() && _isResident) {
