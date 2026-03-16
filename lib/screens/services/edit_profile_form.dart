@@ -35,7 +35,14 @@ class _EditProfileFormState extends State<EditProfileForm> {
   }
 
   Future<void> _loadCurrentUserData() async {
-    // Data loading logic goes here
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        _nameController.text = user.displayName ?? "";
+        _emailController.text = user.email ?? "";
+      });
+      // Firestore data loading goes here
+    }
   }
 
 
