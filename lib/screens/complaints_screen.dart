@@ -298,7 +298,11 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
                   ? const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.camera_alt, size: 50),
+                  Icon(
+                    Icons.add_a_photo,
+                    size: 50,
+                    color: Colors.lightGreen,
+                  ),
                   SizedBox(height: 8),
                   Text("Tap to capture photo"),
                 ],
