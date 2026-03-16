@@ -113,7 +113,8 @@ class AppDrawer extends StatelessWidget {
                   leading: const Icon(Icons.settings_outlined, color: Color(0xFF1B5E20)),
                   title: const Text("Settings"),
                   onTap: () {
-                    Navigator.pop(context); // Close the drawer
+                    debugPrint("DEBUG: Settings button was tapped!"); // Check your console for this!
+                    Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const SettingsScreen()),
