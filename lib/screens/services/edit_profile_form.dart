@@ -37,7 +37,10 @@ class _EditProfileFormState extends State<EditProfileForm> {
   Future<void> _saveProfile() async {
     setState(() => _isLoading = true);
     try {
-      // Auth update
+      await _service.updateAuthCredentials(
+        _nameController.text.trim(),
+        _emailController.text.trim(),
+      );
       // Extended update
       // Success message
     } catch (e) {
