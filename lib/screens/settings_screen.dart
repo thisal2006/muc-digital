@@ -185,7 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSettingsCard([
               _SettingsTile(
                 icon: Icons.person_outline,
-                title: "Profile Information",
+                title: "Profile Settings",
                 subtitle: "View and edit your profile",
                 onTap: () {
                   Navigator.push(
