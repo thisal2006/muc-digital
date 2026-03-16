@@ -41,7 +41,10 @@ class _EditProfileFormState extends State<EditProfileForm> {
         _nameController.text.trim(),
         _emailController.text.trim(),
       );
-      // Extended update
+      await _service.updateExtendedProfile(
+        _phoneController.text.trim(),
+        _addressController.text.trim(),
+      );
       // Success message
     } catch (e) {
       if (mounted) {
