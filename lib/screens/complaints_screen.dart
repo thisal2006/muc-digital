@@ -320,6 +320,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             maxLines: 4,
             decoration: InputDecoration(
               labelText: "Describe issue",
+              hintText: "Example: garbage dumped near road",
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
