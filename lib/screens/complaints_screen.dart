@@ -318,6 +318,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
           TextField(
             controller: descriptionController,
             maxLines: 4,
+            maxLength: 300,
             decoration: InputDecoration(
               labelText: "Describe issue",
               hintText: "Example: garbage dumped near road",
