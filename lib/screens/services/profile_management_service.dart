@@ -10,7 +10,10 @@ class ProfileManagementService {
     User? user = _auth.currentUser;
     if (user != null) {
       await user.updateDisplayName(name);
-
+      // Use verifyBeforeUpdateEmail instead of updateEmail
+      if (email != user.email) {
+        await user.verifyBeforeUpdateEmail(email);
+      }
     }
   }
 
