@@ -4,6 +4,7 @@ import 'package:muc_digital/screens/settings_screen.dart';
 import '../screens/services/auth_service.dart';
 import '../screens/auth/sign_in_screen.dart';
 
+
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
@@ -112,7 +113,7 @@ class AppDrawer extends StatelessWidget {
                   leading: const Icon(Icons.settings_outlined, color: Color(0xFF1B5E20)),
                   title: const Text("Settings"),
                   onTap: () {
-                    Navigator.pop(context); // This closes the drawer first
+                    Navigator.pop(context); // Close the drawer
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const SettingsScreen()),
