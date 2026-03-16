@@ -121,6 +121,13 @@ class _CrematoriumDocumentUploadScreenState extends State<CrematoriumDocumentUpl
             Text('(e.g. Death Certificate, NIC)', style: TextStyle(fontSize: 16, color: Colors.grey[700])),
             const SizedBox(height: 32),
 
+            const SizedBox(height: 16),
+            const Text(
+              'Note: All personal data is encrypted and protected via Firebase Security Rules.',
+              style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+            ),
+            const SizedBox(height: 8),
+
             Center(
               child: Container(
                 width: double.infinity,
