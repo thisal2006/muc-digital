@@ -611,13 +611,6 @@ class _BookingCalendarScreenState extends State<BookingCalendarScreen> {
     );
   }
 
-  double _calculateMultiDayPrice() {
-    if (_rangeStart != null && _rangeEnd != null) {
-      final days = _rangeEnd!.difference(_rangeStart!).inDays + 1;
-      return days * widget.vehicle.pricePerDay;
-    }
-    return 0;
-  }
 
   /// Builds the day cell widget.
   /// Split statuses use ClipRRect + Row for a true 50/50 pixel-perfect split.

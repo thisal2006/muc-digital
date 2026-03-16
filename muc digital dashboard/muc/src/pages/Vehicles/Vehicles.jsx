@@ -162,7 +162,7 @@ export default function Vehicles() {
                   >
                     <option value="">Select Type</option>
                     {vehicleTypes.map((t) => (
-                      <option key={t._id} value={t._id}>
+                      <option key={t.id} value={t.id}>
                         {t.name}
                       </option>
                     ))}
@@ -248,6 +248,7 @@ export default function Vehicles() {
             <table>
               <thead>
                 <tr>
+                  <th>Image</th>
                   <th>Name</th>
                   <th>Type</th>
                   <th>Full Day</th>
@@ -259,7 +260,7 @@ export default function Vehicles() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="6">
+                    <td colSpan="7">
                       <div className="empty-state">
                         <div className="empty-icon">&#128663;</div>
                         Loading...
@@ -268,7 +269,7 @@ export default function Vehicles() {
                   </tr>
                 ) : vehicles.length === 0 ? (
                   <tr>
-                    <td colSpan="6">
+                    <td colSpan="7">
                       <div className="empty-state">
                         <div className="empty-icon">&#128663;</div>
                         No vehicles yet.
@@ -277,7 +278,37 @@ export default function Vehicles() {
                   </tr>
                 ) : (
                   vehicles.map((v) => (
-                    <tr key={v._id}>
+                    <tr key={v.id}>
+                      <td>
+                        {v.images && v.images.length > 0 ? (
+                          <img
+                            src={v.images[0]}
+                            alt={v.name}
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              objectFit: 'cover',
+                              borderRadius: '4px',
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              backgroundColor: '#f5f5f5',
+                              borderRadius: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '10px',
+                              color: '#888',
+                            }}
+                          >
+                            N/A
+                          </div>
+                        )}
+                      </td>
                       <td>{v.name}</td>
                       <td style={{ color: 'var(--muted)', fontSize: 12 }}>
                         {v.type?.name || '---'}
@@ -286,11 +317,10 @@ export default function Vehicles() {
                       <td>${v.halfDayPrice}</td>
                       <td>
                         <span
-                          className={`badge ${
-                            v.isAvailable
-                              ? 'badge-available'
-                              : 'badge-unavailable'
-                          }`}
+                          className={`badge ${v.isAvailable
+                            ? 'badge-available'
+                            : 'badge-unavailable'
+                            }`}
                         >
                           {v.isAvailable ? 'AVAILABLE' : 'UNAVAILABLE'}
                         </span>
@@ -299,14 +329,14 @@ export default function Vehicles() {
                         {v.isAvailable ? (
                           <button
                             className="btn btn-danger btn-sm"
-                            onClick={() => toggleStatus(v._id, false)}
+                            onClick={() => toggleStatus(v.id, false)}
                           >
                             Disable
                           </button>
                         ) : (
                           <button
                             className="btn btn-primary btn-sm"
-                            onClick={() => toggleStatus(v._id, true)}
+                            onClick={() => toggleStatus(v.id, true)}
                           >
                             Enable
                           </button>
