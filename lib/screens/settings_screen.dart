@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:muc_digital/screens/profile_screen.dart';
+import 'package:muc_digital/screens/services/edit_profile_form.dart';
 import '../screens/auth/sign_in_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -184,9 +186,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSettingsCard([
               _SettingsTile(
                 icon: Icons.person_outline,
-                title: "Profile Information",
+                title: "Profile Settings",
                 subtitle: "View and edit your profile",
-                onTap: () => Navigator.pushNamed(context, '/profile'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const EditProfileForm()),
+                  );
+                },
               ),
               _SettingsTile(
                 icon: Icons.lock_reset_outlined,
