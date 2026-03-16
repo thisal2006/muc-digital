@@ -388,7 +388,24 @@ class MyComplaintsList extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text("No illegal dumping reports found"));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.report_problem_outlined,
+                    size: 60,
+                    color: Colors.grey),
+                SizedBox(height: 12),
+                Text(
+                  "No reports submitted yet",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          );
         }
 
         final docs = snapshot.data!.docs;
