@@ -357,12 +357,6 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
                 MainAxisAlignment.spaceEvenly,
                 children: [
 
-                  _actionButton(
-                    icon: Icons.calendar_month,
-                    label: "Schedule",
-                    color: Colors.green,
-                    onTap: () {},
-                  ),
 
                   _actionButton(
                     icon: Icons.delete,
