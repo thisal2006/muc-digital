@@ -53,7 +53,14 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Password fields will go here
+            const Text(
+              "Your password must be at least 6 characters long.",
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            _buildPasswordField("Current Password", _currentPasswordController),
+            _buildPasswordField("New Password", _newPasswordController),
+            _buildPasswordField("Confirm New Password", _confirmPasswordController),
           ],
         ),
       ),
