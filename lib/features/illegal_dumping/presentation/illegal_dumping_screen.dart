@@ -1,18 +1,78 @@
+// illegal_dumping_screen.dart
+
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 
 class IllegalDumpingScreen extends StatefulWidget {
   const IllegalDumpingScreen({super.key});
 
   @override
-  State<IllegalDumpingScreen> createState() => _IllegalDumpingScreenState();
+  State<IllegalDumpingScreen> createState() =>
+      _IllegalDumpingScreenState();
 }
 
 class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAF8),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF2E7D32),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                "Illegal Dumping",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                "Help keep the city clean",
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: "New Report"),
+              Tab(text: "History"),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            _IllegalForm(),
+            _IllegalHistory(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+////////////////////////////////////////////////////////////
+/// FORM (SAME AS COMPLAINT)
+////////////////////////////////////////////////////////////
+
+class _IllegalForm extends StatefulWidget {
+  const _IllegalForm();
+
+  @override
+  State<_IllegalForm> createState() => _IllegalFormState();
+}
+
+class _IllegalFormState extends State<_IllegalForm> {
 
   final TextEditingController descriptionController =
   TextEditingController();
@@ -20,78 +80,36 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
   final ImagePicker picker = ImagePicker();
 
   File? imageFile;
-
   bool isUploading = false;
   double uploadProgress = 0;
 
-  //--------------------------------------------------
-  // PICK IMAGE
-  //--------------------------------------------------
-
   Future<void> pickImage() async {
+    final picked = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 70,
+    );
 
-    try {
-
-      final picked = await picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 70,
-      );
-
-      if (picked != null) {
-        setState(() {
-          imageFile = File(picked.path);
-        });
-      }
-
-    } catch (e) {
-      _showError("Camera error: $e");
+    if (picked != null) {
+      setState(() => imageFile = File(picked.path));
     }
   }
-
-  //--------------------------------------------------
-  // LOCATION
-  //--------------------------------------------------
 
   Future<Position> _getLocation() async {
-
-    bool serviceEnabled =
-    await Geolocator.isLocationServiceEnabled();
-
-    if (!serviceEnabled) {
-      throw Exception("Location services disabled.");
-    }
-
-    LocationPermission permission =
-    await Geolocator.checkPermission();
-
-    if (permission == LocationPermission.denied) {
-      permission =
-      await Geolocator.requestPermission();
-    }
-
-    if (permission ==
-        LocationPermission.deniedForever) {
-      throw Exception(
-          "Location permission permanently denied.");
-    }
-
-    return await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.best,
-      ),
-    );
+    await Geolocator.requestPermission();
+    return await Geolocator.getCurrentPosition();
   }
-
-  //--------------------------------------------------
-  // SUBMIT REPORT
-  //--------------------------------------------------
 
   Future<void> submitReport() async {
 
-    final description =
-    descriptionController.text.trim();
+    final user = FirebaseAuth.instance.currentUser;
 
-    if (imageFile == null || description.isEmpty) {
+    if (user == null) {
+      _showError("User not logged in");
+      return;
+    }
+
+    if (imageFile == null ||
+        descriptionController.text.isEmpty) {
       _showError("Photo and description required");
       return;
     }
@@ -103,269 +121,258 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
 
     try {
 
-      //----------------------------------
-      // GET LOCATION
-      //----------------------------------
-
       final position = await _getLocation();
-
-      //----------------------------------
-      // STORAGE UPLOAD (TRACKED)
-      //----------------------------------
 
       final fileName =
           "dump_${DateTime.now().millisecondsSinceEpoch}.jpg";
 
       final ref = FirebaseStorage.instance
-          .ref()
-          .child("illegal_dumps/$fileName");
+          .ref("illegal_dumps/$fileName");
 
-      UploadTask uploadTask =
-      ref.putFile(imageFile!);
+      final uploadTask = ref.putFile(imageFile!);
 
-      ///TRACK PROGRESS
       uploadTask.snapshotEvents.listen((event) {
-
-        final progress =
-            event.bytesTransferred /
-                event.totalBytes;
-
         setState(() {
-          uploadProgress = progress;
+          uploadProgress =
+              event.bytesTransferred / event.totalBytes;
         });
       });
 
-      /// FORCE TIMEOUT (NO MORE INFINITE SPINNER)
-      TaskSnapshot snapshot =
-      await uploadTask.timeout(
-        const Duration(seconds: 30),
-      );
-
-      final imageUrl =
-      await snapshot.ref.getDownloadURL();
-
-      //----------------------------------
-      // FIRESTORE WRITE
-      //----------------------------------
+      final snapshot = await uploadTask;
+      final imageUrl = await snapshot.ref.getDownloadURL();
 
       await FirebaseFirestore.instance
           .collection("illegal_dumps")
           .add({
 
-        "description": description,
+        "userId": user.uid,
+        "description": descriptionController.text.trim(),
         "imageUrl": imageUrl,
-
-        //USED GEOPPOINT (VERY IMPORTANT FOR FUTURE MAP QUERIES)
+        "status": "pending",
+        "priority": "normal",
+        "reportedBy": "citizen",
+        "createdAt": FieldValue.serverTimestamp(),
         "location": GeoPoint(
           position.latitude,
           position.longitude,
         ),
-
-        "status": "pending",
-        "priority": "normal",
-        "reportedBy": "citizen",
-
-        "createdAt":
-        FieldValue.serverTimestamp(),
       });
-
-      //----------------------------------
-      // SUCCESS
-      //----------------------------------
 
       if (!mounted) return;
 
-      setState(() {
-        isUploading = false;
-      });
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-          Text("Report submitted successfully"),
+          content: Text("Report submitted successfully"),
           backgroundColor: Colors.green,
         ),
       );
 
-      Navigator.pop(context);
+      DefaultTabController.of(context).animateTo(1);
 
     } catch (e) {
-
-      setState(() {
-        isUploading = false;
-      });
-
       _showError("Upload failed: $e");
     }
+
+    setState(() => isUploading = false);
   }
 
-  //--------------------------------------------------
-  // ERROR HELPER
-  //--------------------------------------------------
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
+  }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+
+          GestureDetector(
+            onTap: pickImage,
+            child: Container(
+              height: 180,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.grey.shade100,
+                border: Border.all(color: Colors.grey.shade400),
+              ),
+              child: imageFile == null
+                  ? const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_a_photo,
+                      size: 50, color: Colors.green),
+                  SizedBox(height: 8),
+                  Text("Tap to capture photo"),
+                ],
+              )
+                  : ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(imageFile!,
+                    fit: BoxFit.cover),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          TextField(
+            controller: descriptionController,
+            maxLines: 4,
+            maxLength: 300,
+            decoration: InputDecoration(
+              labelText: "Describe issue",
+              hintText: "Example: garbage dumped near road",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          if (isUploading)
+            LinearProgressIndicator(
+              value: uploadProgress,
+              minHeight: 6,
+            ),
+
+          const SizedBox(height: 20),
+
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+              ),
+              onPressed: isUploading ? null : submitReport,
+              child: isUploading
+                  ? Text("${(uploadProgress * 100).toStringAsFixed(0)}%")
+                  : const Text("Submit Report"),
+            ),
+          ),
+        ],
       ),
     );
   }
+}
 
-  //--------------------------------------------------
-  // UI
-  //--------------------------------------------------
+////////////////////////////////////////////////////////////
+/// HISTORY (IDENTICAL STYLE)
+////////////////////////////////////////////////////////////
+
+class _IllegalHistory extends StatelessWidget {
+  const _IllegalHistory();
 
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        centerTitle: true,
-        backgroundColor: Colors.green.shade700,
-        title: const Text(
-          "Report Illegal Dumping",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ),
+    final user = FirebaseAuth.instance.currentUser;
 
+    if (user == null) {
+      return const Center(child: Text("Login required"));
+    }
 
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Text(
-              "Help keep the city clean",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('illegal_dumps')
+          .where('userId', isEqualTo: user.uid)
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
 
-            const SizedBox(height: 6),
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-            const Text(
-              "Capture a photo and describe the illegal dumping site.",
-              style: TextStyle(
-                color: Colors.grey,
-              ),
-            ),
+        final docs = snapshot.data!.docs;
 
-            //----------------------------------
-            // IMAGE
-            //----------------------------------
+        if (docs.isEmpty) {
+          return const Center(
+            child: Text("No reports submitted yet"),
+          );
+        }
 
-            GestureDetector(
-              onTap:
-              isUploading ? null : pickImage,
-              child: Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius:
-                  BorderRadius.circular(12),
-                  color: Colors.grey.shade100,
-                  border: Border.all(
-                    color: Colors.grey.shade400,
-                  ),
-                ),
-                child: imageFile == null
-                    ? const Column(
-                  mainAxisAlignment:
-                  MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.camera_alt,
-                        size: 50),
-                    SizedBox(height: 8),
-                    Text(
-                        "Tap to capture photo"),
-                  ],
-                )
-                    : ClipRRect(
-                  borderRadius:
-                  BorderRadius.circular(12),
-                  child: Image.file(
-                    imageFile!,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
 
-            const SizedBox(height: 20),
+            final data =
+            docs[index].data() as Map<String, dynamic>;
 
-            //----------------------------------
-            // DESCRIPTION
-            //----------------------------------
-
-            TextField(
-              controller:
-              descriptionController,
-              maxLines: 4,
-              decoration: InputDecoration(
-                labelText: "Describe the issue",
-                hintText: "Example: Garbage bags dumped near road",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            //----------------------------------
-            // PROGRESS BAR
-            //----------------------------------
-
-            if (isUploading)
-              LinearProgressIndicator(
-                value: uploadProgress,
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(8),
-              ),
-
-            const SizedBox(height: 20),
-
-            //----------------------------------
-            // BUTTON
-            //----------------------------------
-
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade700,
-                  elevation: 6,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                onPressed: isUploading ? null : submitReport,
-                child: isUploading
-                    ? Text(
-                  "${(uploadProgress * 100).toStringAsFixed(0)}%",
-                )
-                    : const Text(
-                  "Submit Report",
-                  style: TextStyle(fontSize: 16),
-                ),
-              )
-            ),
-          ],
-        ),
-      ),
+            return _HistoryCard(
+              description: data['description'] ?? '',
+              status: data['status'] ?? '',
+              date: data['createdAt'] != null
+                  ? DateFormat('dd MMM yyyy • hh:mm a')
+                  .format((data['createdAt'] as Timestamp).toDate())
+                  : "Recent",
+              imageUrl: data['imageUrl'],
+            );
+          },
+        );
+      },
     );
   }
+}
+
+////////////////////////////////////////////////////////////
+/// CARD
+////////////////////////////////////////////////////////////
+
+class _HistoryCard extends StatelessWidget {
+
+  final String description;
+  final String status;
+  final String date;
+  final String? imageUrl;
+
+  const _HistoryCard({
+    required this.description,
+    required this.status,
+    required this.date,
+    this.imageUrl,
+  });
 
   @override
-  void dispose() {
-    descriptionController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+
+          ListTile(
+            title: const Text("Illegal Dumping"),
+            subtitle: Text(date),
+            trailing: Text(status),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(description),
+          ),
+
+          if (imageUrl != null)
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(imageUrl!,
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
