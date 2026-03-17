@@ -45,6 +45,13 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
     );
   }
 
+  Future<void> _updatePassword() async {
+    // Validation logic goes here
+    setState(() => _isLoading = true);
+    // Service call goes here
+    setState(() => _isLoading = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
