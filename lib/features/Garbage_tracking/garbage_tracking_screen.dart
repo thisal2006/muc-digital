@@ -105,7 +105,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
     _movementTimers[truckId]?.cancel();
 
     _movementTimers[truckId] =
-        Timer.periodic(const Duration(milliseconds: 120), (timer) {
+        Timer.periodic(const Duration(milliseconds: 40), (timer) {
 
           if (!_markers.containsKey(truckId) ||
               !_targetPositions.containsKey(truckId)) {
@@ -344,13 +344,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
                 MainAxisAlignment.spaceEvenly,
                 children: [
 
-                  _actionButton(
-                    icon:
-                    Icons.calendar_month,
-                    label: "Schedule",
-                    color: Colors.green,
-                    onTap: () {},
-                  ),
+
 
                   _actionButton(
                     icon: Icons.delete,

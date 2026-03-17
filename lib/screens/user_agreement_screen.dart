@@ -9,8 +9,6 @@ class UserAgreementScreen extends StatefulWidget {
 }
 
 class _UserAgreementScreenState extends State<UserAgreementScreen> {
-  bool _agreed = false;
-
   Future<void> _acceptAgreement() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('user_agreed', true);
@@ -111,7 +109,7 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
                             SizedBox(height: 32),
 
                             Text(
-                              'By tapping "Accept & Continue", you confirm that you accept these terms.',
+                              'By tapping "Accept & Continue", you confirm that you accept these terms and conditions.',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontStyle: FontStyle.italic,
@@ -122,8 +120,7 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
 
                             Text(
                               'Last updated: March 2026',
-                              style:
-                              TextStyle(fontSize: 14, color: Colors.grey),
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -132,52 +129,33 @@ class _UserAgreementScreenState extends State<UserAgreementScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/sign_in');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF2E7D32),
-                          ),
-                          child: const Text(
-                            'I Agree',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                // Only one button now
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: _acceptAgreement,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1B5E20),
+                      foregroundColor: Colors.white,
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-
-                      const SizedBox(height: 12),
-
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _agreed ? _acceptAgreement : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1B5E20),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: const Text(
-                            'Accept & Continue',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                    ),
+                    child: const Text(
+                      'Accept & Continue',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
+                    ),
                   ),
                 ),
+
+                const SizedBox(height: 16),
               ],
             ),
           ),
