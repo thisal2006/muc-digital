@@ -46,7 +46,18 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
   }
 
   Future<void> _updatePassword() async {
-    // Validation logic goes here
+    if (_newPasswordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("New passwords do not match!")),
+      );
+      return;
+    }
+    if (_newPasswordController.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Password must be at least 6 characters.")),
+      );
+      return;
+    }
     setState(() => _isLoading = true);
     // Service call goes here
     setState(() => _isLoading = false);
