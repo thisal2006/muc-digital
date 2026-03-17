@@ -8,6 +8,7 @@ import '../widgets/change_password_form.dart';
 import '../widgets/edit_profile_form.dart';
 import 'package:flutter/material.dart';
 
+import 'about_screen.dart';
 import 'help_center_screen.dart';
 import 'privacy_policy_screen.dart';
 
@@ -310,8 +311,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 20),
           ], // End of Column children
         ), // End of Column
-      ), // End of SingleChildScrollView
-    ); // End of Scaffold
+          ]), // End of SingleChildScrollView
+    )); // End of Scaffold
   }
 
   Widget _buildSettingsCard(List<Widget> children) {
