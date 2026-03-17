@@ -1,9 +1,9 @@
+import org.gradle.api.JavaVersion
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-
-    // ⭐ THIS WAS MISSING
     id("com.google.gms.google-services")
 }
 
@@ -13,21 +13,19 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "17"
     }
 
     defaultConfig {
         applicationId = "com.example.muc_digital"
         minSdk = flutter.minSdkVersion
-
-        // ⭐ VERY IMPORTANT FOR FIREBASE STORAGE
         targetSdk = 34
-
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -37,6 +35,10 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
 
 flutter {
