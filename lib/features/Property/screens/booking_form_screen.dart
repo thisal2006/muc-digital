@@ -101,6 +101,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      // This blocks the dates. Booked dates will become gray and unclickable.
       selectableDayPredicate: (DateTime day) {
         String formattedDay = day.toString().split(' ')[0];
         List<String>? slotsTaken = bookedSlots[formattedDay];
@@ -110,16 +111,23 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
           if (slotsTaken.contains(timeSlots[0]) &&
               slotsTaken.contains(timeSlots[1]) &&
               slotsTaken.contains(timeSlots[2])) {
-            return false; // All individual slots taken
+            return false; // Morning, Evening, and Night all taken
           }
         }
-        return true;
+        return true; // Date is available
       },
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFFE67E22), onPrimary: Colors.white, onSurface: Colors.black,
+              primary: Colors.green, // Header, selected date, and active elements are green
+              onPrimary: Colors.white,
+              onSurface: Colors.black, // Available dates text
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green, // "OK" and "Cancel" buttons
+              ),
             ),
           ),
           child: child!,
@@ -130,7 +138,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
-        selectedSlot = null; // Reset slot when date changes
+        selectedSlot = null; // Reset slot when a new valid date changes
       });
     }
   }
