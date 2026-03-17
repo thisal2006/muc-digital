@@ -22,6 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isLoading = true;
   bool _isSaving = false;
   int _complaintCount = 0;
+  int _bookingCount = 0; // Commit 1
   String _memberSince = "---";
 
   final _formKey = GlobalKey<FormState>();
@@ -69,12 +70,23 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _loadStats() async {
     if (currentUser == null) return;
     try {
-      final snapshot = await _firestore
+      // Load complaints count
+      final complaintSnapshot = await _firestore
           .collection('complaints')
           .where('userId', isEqualTo: currentUser!.uid)
           .get();
+      
+      // Load bookings count (Commit 1)
+      final bookingSnapshot = await _firestore
+          .collection('crematorium_bookings')
+          .where('userId', isEqualTo: currentUser!.uid)
+          .get();
+
       if (mounted) {
-        setState(() => _complaintCount = snapshot.docs.length);
+        setState(() {
+          _complaintCount = complaintSnapshot.docs.length;
+          _bookingCount = bookingSnapshot.docs.length; // Commit 1
+        });
       }
     } catch (e) {
       debugPrint("Error loading stats: $e");
@@ -116,7 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    HapticFeedback.mediumImpact(); // --- COMMIT 10: Feedback
+    HapticFeedback.mediumImpact();
     setState(() => _isSaving = true);
     try {
       String? newUrl = _photoUrl;
@@ -170,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 40),
-                    Tooltip( // --- COMMIT 10: Tooltip
+                    Tooltip(
                       message: "Profile Photo",
                       child: CircleAvatar(
                         radius: 50,
@@ -187,10 +199,10 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             actions: [
               IconButton(
-                tooltip: _isEditing ? "Cancel" : "Edit Profile", // --- COMMIT 10: Tooltip
+                tooltip: _isEditing ? "Cancel" : "Edit Profile",
                 icon: Icon(_isEditing ? Icons.close : Icons.edit),
                 onPressed: () {
-                  HapticFeedback.lightImpact(); // --- COMMIT 10: Feedback
+                  HapticFeedback.lightImpact();
                   setState(() => _isEditing = !_isEditing);
                 },
               ),
@@ -213,7 +225,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       children: [
                         _buildStatCard("Complaints", _complaintCount.toString(), Icons.report_problem, Colors.orange),
                         const SizedBox(width: 15),
-                        _buildStatCard("Bookings", "0", Icons.calendar_today, Colors.blue),
+                        _buildStatCard("Bookings", _bookingCount.toString(), Icons.calendar_today, Colors.blue), // Commit 1
                       ],
                     ),
                     const SizedBox(height: 30),
@@ -292,7 +304,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _logout() async {
-    HapticFeedback.heavyImpact(); // --- COMMIT 10: Feedback
+    HapticFeedback.heavyImpact();
     await _auth.signOut();
     if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
   }
