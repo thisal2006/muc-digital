@@ -252,6 +252,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
 
               _SettingsTile(
+                icon: Icons.privacy_tip_outlined,
+                title: "Privacy Policy",
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+                ),
+              ),
+
+              _SettingsTile(
                 icon: Icons.info_outline,
                 title: "About App",
                 onTap: () {
