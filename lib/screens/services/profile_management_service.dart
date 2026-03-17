@@ -41,6 +41,8 @@ class ProfileManagementService {
 
       // 2. Re-authenticate the user
       await user.reauthenticateWithCredential(credential);
+      // 3. Update to the new password
+      await user.updatePassword(newPassword);
     }
   }
 }
