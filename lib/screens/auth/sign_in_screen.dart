@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:muc_digital/screens//services/auth_service.dart';
+import 'package:muc_digital/screens/services/auth_service.dart';
 import 'sign_up_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -15,9 +15,13 @@ class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
   bool _isLoading = false;
   String? _errorMessage;
   final _authService = AuthService();
+
+  // NEW: visibility toggle for password
+  bool _obscurePassword = true;
 
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
@@ -67,45 +71,58 @@ class _SignInScreenState extends State<SignInScreen> {
               children: [
                 const SizedBox(height: 32),
                 const Text(
-                  'Welcome Back',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  'Welcome Back!',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20)),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 32),
+
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Email',
-                    border: OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF2E7D32)),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5)),
                   ),
-                  validator: (val) => val!.isEmpty || !val.contains('@') ? 'Valid email required' : null,
+                  validator: (v) => v!.isEmpty ? 'Required' : !v.contains('@') ? 'Enter valid email' : null,
                 ),
                 const SizedBox(height: 16),
+
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
                     labelText: 'Password',
-                    border: OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF2E7D32)),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: const Color(0xFF2E7D32),
+                      ),
+                      onPressed: () {
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5)),
                   ),
-                  validator: (val) => val!.isEmpty ? 'Password required' : null,
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
                 ),
-                const SizedBox(height: 8),
 
+                const SizedBox(height: 8),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-                      );
-                    },
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.w600),
-                    ),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
+                    child: const Text('Forgot Password?', style: TextStyle(color: Color(0xFF1B5E20), fontWeight: FontWeight.w600)),
                   ),
                 ),
 
@@ -138,16 +155,11 @@ class _SignInScreenState extends State<SignInScreen> {
                     style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
+
                 const SizedBox(height: 24),
                 TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                  ),
-                  child: const Text(
-                    'Don\'t have an account? Sign Up',
-                    style: TextStyle(fontSize: 16),
-                  ),
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignUpScreen())),
+                  child: const Text("Don't have an account? Sign Up", style: TextStyle(fontSize: 16)),
                 ),
               ],
             ),
