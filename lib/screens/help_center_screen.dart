@@ -114,6 +114,13 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {}, // Logic for calling will be added here once i make that screen
+        backgroundColor: const Color(0xFF2E7D32),
+        icon: const Icon(Icons.call, color: Colors.white),
+        label: const Text("Call Council", style: TextStyle(color: Colors.white)),
+      ),
+
     );
   }
 }
