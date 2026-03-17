@@ -129,10 +129,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     HapticFeedback.heavyImpact();
     setState(() => _isSaving = true);
-    
+
     try {
       String? newUrl = _photoUrl;
       if (_tempImageFile != null) {
@@ -155,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _tempImageFile = null;
         _isEditing = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -285,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             padding: const EdgeInsets.only(right: 8.0),
             child: IconButton(
               tooltip: "Save changes",
-              icon: _isSaving 
+              icon: _isSaving
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : const Icon(Icons.check_circle_outline, size: 28),
               onPressed: _isSaving ? null : _saveProfile,
@@ -422,11 +422,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildModernField(
-    String label, 
-    TextEditingController controller, 
-    IconData icon, 
-    {int maxLines = 1, bool enabled = true, String? Function(String?)? validator, TextInputType type = TextInputType.text}
-  ) {
+      String label,
+      TextEditingController controller,
+      IconData icon,
+      {int maxLines = 1, bool enabled = true, String? Function(String?)? validator, TextInputType type = TextInputType.text}
+      ) {
     return TextFormField(
       controller: controller,
       enabled: _isEditing && enabled,
