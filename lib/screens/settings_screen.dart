@@ -5,6 +5,11 @@ import 'package:muc_digital/screens/profile_screen.dart';
 import 'package:muc_digital/screens/services/edit_profile_form.dart';
 import '../screens/auth/sign_in_screen.dart';
 
+// New screens (create these files in lib/screens/settings/ or same folder)
+import 'help_center_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'about_app_screen.dart';
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -17,6 +22,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   User? get currentUser => _auth.currentUser;
+
+  // Notification toggle state
+  bool _notificationsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationPreference();
+  }
+
+  Future<void> _loadNotificationPreference() async {
+    if (currentUser == null) return;
+    final doc = await _firestore.collection('users').doc(currentUser!.uid).get();
+    if (mounted && doc.exists && doc.data()!.containsKey('notificationsEnabled')) {
+      setState(() {
+        _notificationsEnabled = doc.data()!['notificationsEnabled'] as bool;
+      });
+    }
+  }
+
+  Future<void> _toggleNotifications(bool value) async {
+    if (currentUser == null) return;
+    setState(() => _notificationsEnabled = value);
+    await _firestore.collection('users').doc(currentUser!.uid).set({
+      'notificationsEnabled': value,
+    }, SetOptions(merge: true));
+  }
 
   void _showLogoutDialog() {
     showDialog(
@@ -37,7 +69,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const SignInScreen()),
-                  (route) => false,
+                      (route) => false,
                 );
               }
             },
@@ -53,112 +85,199 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _showChangePasswordDialog() {
+    final oldPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmNewPasswordController = TextEditingController();
+    bool obscureOld = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+    String? errorMsg;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("Change Password"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (errorMsg != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(errorMsg!, style: const TextStyle(color: Colors.red)),
+                  ),
+                TextFormField(
+                  controller: oldPasswordController,
+                  obscureText: obscureOld,
+                  decoration: InputDecoration(
+                    labelText: 'Current Password',
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureOld ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setDialogState(() => obscureOld = !obscureOld),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: newPasswordController,
+                  obscureText: obscureNew,
+                  decoration: InputDecoration(
+                    labelText: 'New Password',
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setDialogState(() => obscureNew = !obscureNew),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: confirmNewPasswordController,
+                  obscureText: obscureConfirm,
+                  decoration: InputDecoration(
+                    labelText: 'Confirm New Password',
+                    suffixIcon: IconButton(
+                      icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setDialogState(() => obscureConfirm = !obscureConfirm),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final oldPass = oldPasswordController.text.trim();
+                final newPass = newPasswordController.text.trim();
+                final confirmPass = confirmNewPasswordController.text.trim();
+
+                if (newPass != confirmPass) {
+                  setDialogState(() => errorMsg = "New passwords do not match");
+                  return;
+                }
+                if (newPass.length < 6) {
+                  setDialogState(() => errorMsg = "Password must be at least 6 characters");
+                  return;
+                }
+
+                try {
+                  final credential = EmailAuthProvider.credential(
+                    email: currentUser!.email!,
+                    password: oldPass,
+                  );
+                  await currentUser!.reauthenticateWithCredential(credential);
+                  await currentUser!.updatePassword(newPass);
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Password changed successfully")),
+                    );
+                  }
+                } on FirebaseAuthException catch (e) {
+                  setDialogState(() {
+                    errorMsg = e.code == 'wrong-password' ? 'Incorrect current password' : e.message;
+                  });
+                } catch (e) {
+                  setDialogState(() => errorMsg = 'Failed to change password');
+                }
+              },
+              child: const Text("Change"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showDeleteAccountDialog() {
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
     bool isDeleting = false;
     bool obscurePassword = true;
+    String? errorMsg;
 
     showDialog(
       context: context,
-      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text("Delete Account", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          title: const Text("Delete Account", style: TextStyle(color: Colors.red)),
           content: Form(
             key: formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  "This action is permanent and cannot be undone. Please enter your password to confirm.",
-                  style: TextStyle(fontSize: 14),
+                Text(
+                  "This action is permanent and cannot be undone.",
+                  style: TextStyle(color: Colors.red[700]),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: passwordController,
                   obscureText: obscurePassword,
                   decoration: InputDecoration(
-                    labelText: "Password",
-                    prefixIcon: const Icon(Icons.lock_outline),
+                    labelText: 'Enter your password to confirm',
                     suffixIcon: IconButton(
-                      icon: Icon(
-                        obscurePassword ? Icons.visibility_off : Icons.visibility,
-                        color: Colors.grey,
-                      ),
-                      onPressed: () {
-                        setDialogState(() => obscurePassword = !obscurePassword);
-                      },
+                      icon: Icon(obscurePassword ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
                     ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  validator: (v) => v == null || v.isEmpty ? "Password required" : null,
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
                 ),
+                if (errorMsg != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(errorMsg!, style: const TextStyle(color: Colors.red)),
+                  ),
               ],
             ),
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           actions: [
             TextButton(
-              onPressed: isDeleting ? null : () => Navigator.pop(context),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: isDeleting
                   ? null
                   : () async {
-                      if (!formKey.currentState!.validate()) return;
+                if (!formKey.currentState!.validate()) return;
+                setDialogState(() => isDeleting = true);
 
-                      setDialogState(() => isDeleting = true);
-
-                      try {
-                        // 1. Re-authenticate user
-                        AuthCredential credential = EmailAuthProvider.credential(
-                          email: currentUser!.email!,
-                          password: passwordController.text.trim(),
-                        );
-
-                        await currentUser!.reauthenticateWithCredential(credential);
-
-                        // 2. Delete data from Firestore
-                        await _firestore.collection('users').doc(currentUser!.uid).delete();
-
-                        // 3. Delete Auth account
-                        await currentUser!.delete();
-
-                        if (context.mounted) {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (_) => const SignInScreen()),
-                            (route) => false,
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Account deleted successfully")),
-                          );
-                        }
-                      } on FirebaseAuthException catch (e) {
-                        setDialogState(() => isDeleting = false);
-                        String msg = e.message ?? "Error deleting account";
-                        if (e.code == 'wrong-password') msg = "Incorrect password";
-                        
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(msg), backgroundColor: Colors.red),
-                        );
-                      } catch (e) {
-                        setDialogState(() => isDeleting = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-                        );
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
+                try {
+                  final credential = EmailAuthProvider.credential(
+                    email: currentUser!.email!,
+                    password: passwordController.text.trim(),
+                  );
+                  await currentUser!.reauthenticateWithCredential(credential);
+                  await currentUser!.delete();
+                  await _firestore.collection('users').doc(currentUser!.uid).delete();
+                  if (mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SignInScreen()),
+                          (route) => false,
+                    );
+                  }
+                } on FirebaseAuthException catch (e) {
+                  setDialogState(() {
+                    errorMsg = e.code == 'wrong-password' ? 'Incorrect password' : e.message;
+                  });
+                } catch (e) {
+                  setDialogState(() => errorMsg = 'Failed to delete account');
+                } finally {
+                  if (mounted) setDialogState(() => isDeleting = false);
+                }
+              },
               child: isDeleting
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text("Delete Forever"),
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white))
+                  : const Text("Delete Account"),
             ),
           ],
         ),
@@ -169,108 +288,98 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAF8),
       appBar: AppBar(
         title: const Text("Settings"),
-        backgroundColor: const Color(0xFF2E7D32),
+        backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _SectionHeader(title: "Account"),
-            _buildSettingsCard([
-              _SettingsTile(
-                icon: Icons.person_outline,
-                title: "Profile Settings",
-                subtitle: "View and edit your profile",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const EditProfileForm()),
-                  );
-                },
-              ),
-              _SettingsTile(
-                icon: Icons.lock_reset_outlined,
-                title: "Change Password",
-                subtitle: "Update your security",
-                onTap: () {}, // Implement password reset logic
-              ),
-            ]),
-            const SizedBox(height: 24),
-            const _SectionHeader(title: "Notifications"),
-            _buildSettingsCard([
-              _SettingsTile(
-                icon: Icons.notifications_none_outlined,
-                title: "App Notifications",
-                subtitle: "Manage your alerts",
-                trailing: Switch(value: true, onChanged: (v) {}, activeColor: const Color(0xFF2E7D32)),
-                onTap: () {},
-              ),
-            ]),
-            const SizedBox(height: 24),
-            const _SectionHeader(title: "Support"),
-            _buildSettingsCard([
-              _SettingsTile(
-                icon: Icons.help_outline,
-                title: "Help Center",
-                onTap: () {},
-              ),
-              _SettingsTile(
-                icon: Icons.privacy_tip_outlined,
-                title: "Privacy Policy",
-                onTap: () {},
-              ),
-              _SettingsTile(
-                icon: Icons.info_outline,
-                title: "About App",
-                onTap: () {},
-              ),
-            ]),
-            const SizedBox(height: 40),
-            
-            // Dangerous Zone
-            const Text(
-              "Account Actions",
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.redAccent, letterSpacing: 1.1),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Profile Section
+          _buildSettingsCard([
+            ListTile(
+              leading: const Icon(Icons.person, color: Color(0xFF2E7D32)),
+              title: const Text("Edit Profile"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EditProfileForm()),
+                );
+              },
             ),
-            const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+          ]),
+
+          const SizedBox(height: 24),
+
+          // Account Section
+          _SectionHeader(title: "Account"),
+          _buildSettingsCard([
+            _SettingsTile(
+              icon: Icons.lock_outline,
+              title: "Change Password",
+              onTap: _showChangePasswordDialog,
+            ),
+            _SettingsTile(
+              icon: Icons.notifications_outlined,
+              title: "App Notifications",
+              trailing: Switch(
+                value: _notificationsEnabled,
+                activeColor: const Color(0xFF2E7D32),
+                onChanged: _toggleNotifications,
               ),
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.orange),
-                    title: const Text("Log Out", style: TextStyle(fontWeight: FontWeight.w500)),
-                    onTap: _showLogoutDialog,
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.delete_forever, color: Colors.red),
-                    title: const Text("Delete Account", style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
-                    onTap: _showDeleteAccountDialog,
-                  ),
-                ],
+              onTap: () => _toggleNotifications(!_notificationsEnabled),
+            ),
+          ]),
+
+          const SizedBox(height: 24),
+
+          // Support Section
+          _SectionHeader(title: "Support & Info"),
+          _buildSettingsCard([
+            _SettingsTile(
+              icon: Icons.help_outline,
+              title: "Help Center",
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const HelpCenterScreen()),
               ),
             ),
-            const SizedBox(height: 40),
-            const Center(
-              child: Text(
-                "Version 1.0.0",
-                style: TextStyle(color: Colors.grey, fontSize: 12),
+            _SettingsTile(
+              icon: Icons.privacy_tip_outlined,
+              title: "Privacy Policy",
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
               ),
             ),
-          ],
-        ),
+            _SettingsTile(
+              icon: Icons.info_outline,
+              title: "About App",
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AboutAppScreen()),
+              ),
+            ),
+          ]),
+
+          const SizedBox(height: 24),
+
+          // Danger Zone
+          _SectionHeader(title: "Danger Zone"),
+          _buildSettingsCard([
+            _SettingsTile(
+              icon: Icons.logout,
+              title: "Log Out",
+              onTap: _showLogoutDialog,
+            ),
+            _SettingsTile(
+              icon: Icons.delete_forever,
+              title: "Delete Account",
+              onTap: _showDeleteAccountDialog,
+            ),
+          ]),
+        ],
       ),
     );
   }
