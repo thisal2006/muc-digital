@@ -2,9 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:muc_digital/screens/profile_screen.dart';
-import 'package:muc_digital/screens/services/edit_profile_form.dart';
+import 'package:muc_digital/screens/services/edit_profile_form.dart' hide EditProfileForm;
 import '../screens/auth/sign_in_screen.dart';
 import '../widgets/change_password_form.dart';
+import '../widgets/edit_profile_form.dart' hide EditProfileForm;
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
