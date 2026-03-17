@@ -68,6 +68,18 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
             _buildPasswordField("Current Password", _currentPasswordController),
             _buildPasswordField("New Password", _newPasswordController),
             _buildPasswordField("Confirm New Password", _confirmPasswordController),
+
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _updatePassword,
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Update Password", style: TextStyle(fontSize: 16)),
+              ),
+            ),
           ],
         ),
       ),
