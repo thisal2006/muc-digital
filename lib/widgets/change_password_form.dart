@@ -26,6 +26,25 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
     super.dispose();
   }
 
+  Widget _buildPasswordField(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextFormField(
+        controller: controller,
+        obscureText: _obscureText,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: const Icon(Icons.lock_outline),
+          suffixIcon: IconButton(
+            icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+            onPressed: () => setState(() => _obscureText = !_obscureText),
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
