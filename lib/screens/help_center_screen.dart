@@ -16,7 +16,18 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     {"q": "How do I enable notifications?", "a": "Toggle the 'App Notifications' switch in the Settings menu."},
     {"q": "Is my data secure?", "a": "Yes, we use industry-standard encryption and Firebase Auth to protect your personal information."},
     {"q": "How do I delete my account?", "a": "Go to Settings > Account Actions > Delete Account. Warning: This is permanent."},
-
+    {"q": "Why am I not receiving notifications?", "a": "Ensure notifications are enabled in both the app settings and your phone's system settings."},
+    {"q": "Can I use the app offline?", "a": "Most features require an internet connection to sync with the database, but cached data may be visible."},
+    {"q": "What is the version of this app?", "a": "You can find the version number at the very bottom of the Settings screen."},
+    {"q": "How do I report a bug?", "a": "Use the 'Help Center' to find our contact details and send us a screenshot of the issue."},
+    {"q": "Can I have multiple accounts?", "a": "Each account must be linked to a unique email address."},
+    {"q": "How do I log out?", "a": "Tap 'Log Out' at the bottom of the Settings screen."},
+    {"q": "Where can I find the Privacy Policy?", "a": "The Privacy Policy link is located in the Support section of the Settings screen."},
+    {"q": "Does the app track my location?", "a": "We only collect location data if explicitly required for specific campus services, with your permission."},
+    {"q": "How do I refresh announcements?", "a": "The announcements list updates automatically, but you can navigate away and back to force a reload."},
+    {"q": "Who can see my phone number?", "a": "Your phone number is only visible to you and the system administrators."},
+    {"q": "Can I change the app theme?", "a": "Currently, the app follows the standard MUC brand colors, but Dark Mode support is coming soon."},
+    {"q": "Is there a web version?", "a": "MUC Digital is currently optimized for Android mobile devices."},
   ];
 
   List<Map<String, String>> _filteredFaqs = [];
