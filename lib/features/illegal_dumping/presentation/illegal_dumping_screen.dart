@@ -1,3 +1,5 @@
+// illegal_dumping_screen.dart
+
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -15,8 +17,8 @@ class IllegalDumpingScreen extends StatefulWidget {
       _IllegalDumpingScreenState();
 }
 
-class _IllegalDumpingScreenState
-    extends State<IllegalDumpingScreen> {
+class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -26,7 +28,21 @@ class _IllegalDumpingScreenState
         appBar: AppBar(
           backgroundColor: const Color(0xFF2E7D32),
           foregroundColor: Colors.white,
-          title: const Text("Illegal Dumping"),
+          elevation: 0,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                "Illegal Dumping",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 4),
+              Text(
+                "Help keep the city clean",
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+          ),
           bottom: const TabBar(
             tabs: [
               Tab(text: "New Report"),
@@ -46,7 +62,7 @@ class _IllegalDumpingScreenState
 }
 
 ////////////////////////////////////////////////////////////
-/// FORM
+/// FORM (SAME AS COMPLAINT)
 ////////////////////////////////////////////////////////////
 
 class _IllegalForm extends StatefulWidget {
@@ -94,7 +110,7 @@ class _IllegalFormState extends State<_IllegalForm> {
 
     if (imageFile == null ||
         descriptionController.text.isEmpty) {
-      _showError("Fill all fields");
+      _showError("Photo and description required");
       return;
     }
 
@@ -129,10 +145,12 @@ class _IllegalFormState extends State<_IllegalForm> {
           .collection("illegal_dumps")
           .add({
 
-        "userId": user.uid, // ⭐ IMPORTANT
-        "description": descriptionController.text,
+        "userId": user.uid,
+        "description": descriptionController.text.trim(),
         "imageUrl": imageUrl,
         "status": "pending",
+        "priority": "normal",
+        "reportedBy": "citizen",
         "createdAt": FieldValue.serverTimestamp(),
         "location": GeoPoint(
           position.latitude,
@@ -143,13 +161,16 @@ class _IllegalFormState extends State<_IllegalForm> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Report submitted")),
+        const SnackBar(
+          content: Text("Report submitted successfully"),
+          backgroundColor: Colors.green,
+        ),
       );
 
       DefaultTabController.of(context).animateTo(1);
 
     } catch (e) {
-      _showError(e.toString());
+      _showError("Upload failed: $e");
     }
 
     setState(() => isUploading = false);
@@ -163,7 +184,7 @@ class _IllegalFormState extends State<_IllegalForm> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       child: Column(
         children: [
 
@@ -174,11 +195,24 @@ class _IllegalFormState extends State<_IllegalForm> {
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(),
+                color: Colors.grey.shade100,
+                border: Border.all(color: Colors.grey.shade400),
               ),
               child: imageFile == null
-                  ? const Center(child: Text("Add Photo"))
-                  : Image.file(imageFile!, fit: BoxFit.cover),
+                  ? const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_a_photo,
+                      size: 50, color: Colors.green),
+                  SizedBox(height: 8),
+                  Text("Tap to capture photo"),
+                ],
+              )
+                  : ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(imageFile!,
+                    fit: BoxFit.cover),
+              ),
             ),
           ),
 
@@ -186,22 +220,39 @@ class _IllegalFormState extends State<_IllegalForm> {
 
           TextField(
             controller: descriptionController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: "Description",
+            maxLines: 4,
+            maxLength: 300,
+            decoration: InputDecoration(
+              labelText: "Describe issue",
+              hintText: "Example: garbage dumped near road",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
 
           const SizedBox(height: 20),
 
           if (isUploading)
-            LinearProgressIndicator(value: uploadProgress),
+            LinearProgressIndicator(
+              value: uploadProgress,
+              minHeight: 6,
+            ),
 
           const SizedBox(height: 20),
 
-          ElevatedButton(
-            onPressed: submitReport,
-            child: const Text("Submit"),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+              ),
+              onPressed: isUploading ? null : submitReport,
+              child: isUploading
+                  ? Text("${(uploadProgress * 100).toStringAsFixed(0)}%")
+                  : const Text("Submit Report"),
+            ),
           ),
         ],
       ),
@@ -210,7 +261,7 @@ class _IllegalFormState extends State<_IllegalForm> {
 }
 
 ////////////////////////////////////////////////////////////
-/// HISTORY
+/// HISTORY (IDENTICAL STYLE)
 ////////////////////////////////////////////////////////////
 
 class _IllegalHistory extends StatelessWidget {
@@ -240,28 +291,88 @@ class _IllegalHistory extends StatelessWidget {
         final docs = snapshot.data!.docs;
 
         if (docs.isEmpty) {
-          return const Center(child: Text("No reports"));
+          return const Center(
+            child: Text("No reports submitted yet"),
+          );
         }
 
         return ListView.builder(
+          padding: const EdgeInsets.all(16),
           itemCount: docs.length,
           itemBuilder: (context, index) {
 
             final data =
             docs[index].data() as Map<String, dynamic>;
 
-            return ListTile(
-              title: Text(data['description'] ?? ''),
-              subtitle: Text(
-                data['createdAt'] != null
-                    ? DateFormat('dd MMM yyyy')
-                    .format((data['createdAt'] as Timestamp).toDate())
-                    : '',
-              ),
+            return _HistoryCard(
+              description: data['description'] ?? '',
+              status: data['status'] ?? '',
+              date: data['createdAt'] != null
+                  ? DateFormat('dd MMM yyyy • hh:mm a')
+                  .format((data['createdAt'] as Timestamp).toDate())
+                  : "Recent",
+              imageUrl: data['imageUrl'],
             );
           },
         );
       },
+    );
+  }
+}
+
+////////////////////////////////////////////////////////////
+/// CARD
+////////////////////////////////////////////////////////////
+
+class _HistoryCard extends StatelessWidget {
+
+  final String description;
+  final String status;
+  final String date;
+  final String? imageUrl;
+
+  const _HistoryCard({
+    required this.description,
+    required this.status,
+    required this.date,
+    this.imageUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+
+          ListTile(
+            title: const Text("Illegal Dumping"),
+            subtitle: Text(date),
+            trailing: Text(status),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(description),
+          ),
+
+          if (imageUrl != null)
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(imageUrl!,
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
