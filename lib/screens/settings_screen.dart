@@ -19,6 +19,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  bool _notificationsEnabled = true; // Tracks if the switch is ON or OFF
 
   User? get currentUser => _auth.currentUser;
 
@@ -219,8 +220,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.notifications_none_outlined,
                 title: "App Notifications",
                 subtitle: "Manage your alerts",
-                trailing: Switch(value: true, onChanged: (v) {}, activeColor: const Color(0xFF2E7D32)),
-                onTap: () {},
+                // The Switch now listens to our variable
+                trailing: Switch(
+                  value: _notificationsEnabled,
+                  activeColor: const Color(0xFF2E7D32),
+                  onChanged: (bool newValue) {
+                    setState(() {
+                      _notificationsEnabled = newValue;
+                    });
+                    // You can add logic here later to mute Firebase notifications
+                  },
+                ),
+                onTap: () {
+                  // Tapping the whole row also flips the switch
+                  setState(() {
+                    _notificationsEnabled = !_notificationsEnabled;
+                  });
+                },
               ),
             ]),
             const SizedBox(height: 24),
