@@ -61,6 +61,23 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
       ),
       body: Column(
         children: [
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            color: const Color(0xFF2E7D32).withOpacity(0.1),
+            child: const Column(
+              children: [
+                Text("Need more help?", style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text(
+                  "0112 850 265",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
+                ),
+                Text("Maharagama Urban Council Support", style: TextStyle(fontSize: 12)),
+              ],
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
