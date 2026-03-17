@@ -116,7 +116,23 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {}, // Logic for calling will be added here once i make that screen
+        onPressed: () async {
+          final Uri phoneUri = Uri(scheme: 'tel', path: '0112850265');
+          try {
+            if (await canLaunchUrl(phoneUri)) {
+              await launchUrl(phoneUri);
+            } else {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Could not launch dialer")),
+                );
+              }
+            }
+          } catch (e) {
+            // Handles potential errors if the URI is malformed
+            debugPrint(e.toString());
+          }
+        },
         backgroundColor: const Color(0xFF2E7D32),
         icon: const Icon(Icons.call, color: Colors.white),
         label: const Text("Call Council", style: TextStyle(color: Colors.white)),
