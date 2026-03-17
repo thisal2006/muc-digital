@@ -24,19 +24,20 @@
 
     <!-- for launching Google Maps navigation on Android 11+ -->
     <queries>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
 
-        <!-- Allow app to check if Google Maps exists -->
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="google.navigation"/>
         </intent>
 
-        <!-- Optional fallback (opens browser maps) -->
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
         </intent>
-
     </queries>
 
     <application
