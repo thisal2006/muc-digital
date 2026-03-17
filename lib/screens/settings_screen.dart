@@ -7,6 +7,8 @@ import '../screens/auth/sign_in_screen.dart';
 import '../widgets/change_password_form.dart';
 import '../widgets/edit_profile_form.dart';
 
+
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -202,6 +204,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: "Change Password",
                 subtitle: "Update your security",
                 onTap: () {
+                  // This is the "GPS" that tells the app where to go
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const ChangePasswordForm()),
