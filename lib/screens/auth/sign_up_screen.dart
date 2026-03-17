@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:muc_digital/screens/services/auth_service.dart';
+import 'sign_in_screen.dart'; // ← Added import for navigation
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -24,7 +25,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _errorMessage;
   final _authService = AuthService();
 
-  // NEW: visibility toggles
+  // Visibility toggles
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -102,8 +103,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5)),
-        // NEW: eye icon for password fields
-        suffixIcon: (obscure && label.contains('Password'))
+        suffixIcon: (obscure && label.toLowerCase().contains('password'))
             ? IconButton(
           icon: Icon(
             isConfirmPassword
@@ -239,17 +239,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
 
                 const SizedBox(height: 24),
+
+                // FIXED: correct text + correct navigation
                 Center(
-                  child: RichText(
-                    text: const TextSpan(
-                      text: "Already have an account? ",
-                      style: TextStyle(color: Colors.black54),
-                      children: [
-                        TextSpan(
-                          text: "Sign In",
-                          style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SignInScreen()),
+                      );
+                    },
+                    child: RichText(
+                      text: const TextSpan(
+                        text: "Already have an account? ",
+                        style: TextStyle(color: Colors.black54),
+                        children: [
+                          TextSpan(
+                            text: "Sign In",
+                            style: TextStyle(
+                              color: Color(0xFF2E7D32),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
