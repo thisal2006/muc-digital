@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:muc_digital/screens/profile_screen.dart';
 import 'package:muc_digital/screens/services/edit_profile_form.dart';
 import '../screens/auth/sign_in_screen.dart';
+import '../widgets/change_password_form.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -199,7 +200,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.lock_reset_outlined,
                 title: "Change Password",
                 subtitle: "Update your security",
-                onTap: () {}, // Implement password reset logic
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ChangePasswordForm()),
+                  );
+                },
               ),
             ]),
             const SizedBox(height: 24),
