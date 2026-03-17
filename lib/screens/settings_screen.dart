@@ -264,10 +264,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.info_outline,
                 title: "About App",
                 onTap: () {
-                  // Add navigation here later
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AboutAppScreen()),
+                  );
                 },
               ),
-            ]),
             const SizedBox(height: 40),
 
             // Dangerous Zone
