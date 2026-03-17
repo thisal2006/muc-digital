@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/services/profile_management_service.dart';
-import '../services/profile_management_service.dart';
+
+import '../services/profile_management_service.dart' hide ProfileManagementService;
 
 class ChangePasswordForm extends StatefulWidget {
   const ChangePasswordForm({super.key});
