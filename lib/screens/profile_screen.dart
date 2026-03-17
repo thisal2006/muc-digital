@@ -31,7 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
   late TextEditingController _emailController;
-  late TextEditingController _nicController; // Commit 2
+  late TextEditingController _nicController;
 
   File? _tempImageFile;
   String? _photoUrl;
@@ -53,7 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
     _emailController = TextEditingController();
-    _nicController = TextEditingController(); // Commit 2
+    _nicController = TextEditingController();
 
     _animationController = AnimationController(
       vsync: this,
@@ -107,7 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _phoneController.text = data['phone'] ?? '';
           _addressController.text = data['address'] ?? '';
           _emailController.text = data['email'] ?? currentUser!.email ?? '';
-          _nicController.text = data['nic'] ?? ''; // Commit 2
+          _nicController.text = data['nic'] ?? '';
           _photoUrl = data['photoUrl'];
 
           final createdAt = data['createdAt'] as Timestamp?;
@@ -143,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
-        'nic': _nicController.text.trim(), // Commit 2
+        'nic': _nicController.text.trim(),
         'photoUrl': newUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -222,6 +222,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
@@ -234,15 +235,20 @@ class _ProfileScreenState extends State<ProfileScreen>
                     Form(
                       key: _formKey,
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          _sectionTitle("Personal Information"), // Commit 3
+                          const SizedBox(height: 15),
                           _buildModernField("Full Name", _nameController, Icons.person_outline),
                           const SizedBox(height: 16),
-                          _buildModernField("NIC Number", _nicController, Icons.badge_outlined), // Commit 2
+                          _buildModernField("NIC Number", _nicController, Icons.badge_outlined),
                           const SizedBox(height: 16),
                           _buildModernField("Phone", _phoneController, Icons.phone_android),
                           const SizedBox(height: 16),
                           _buildModernField("Address", _addressController, Icons.location_on_outlined, maxLines: 2),
-                          const SizedBox(height: 30),
+                          const SizedBox(height: 40),
+                          _sectionTitle("Security & Account"), // Commit 3
+                          const SizedBox(height: 15),
                           ElevatedButton.icon(
                             onPressed: _logout,
                             icon: const Icon(Icons.logout),
@@ -263,6 +269,19 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // --- COMMIT 3 Helper ---
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+        color: Colors.grey[600],
+        letterSpacing: 1.2,
       ),
     );
   }
@@ -319,7 +338,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _phoneController.dispose();
     _addressController.dispose();
     _emailController.dispose();
-    _nicController.dispose(); // Commit 2
+    _nicController.dispose();
     _animationController.dispose();
     super.dispose();
   }
