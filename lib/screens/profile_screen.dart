@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Added for Haptics
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'auth/sign_in_screen.dart';
@@ -237,7 +237,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _sectionTitle("Personal Information"), // Commit 3
+                          _sectionTitle("Personal Information"),
                           const SizedBox(height: 15),
                           _buildModernField("Full Name", _nameController, Icons.person_outline),
                           const SizedBox(height: 16),
@@ -247,7 +247,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           const SizedBox(height: 16),
                           _buildModernField("Address", _addressController, Icons.location_on_outlined, maxLines: 2),
                           const SizedBox(height: 40),
-                          _sectionTitle("Security & Account"), // Commit 3
+                          _sectionTitle("Security & Account"),
                           const SizedBox(height: 15),
                           ElevatedButton.icon(
                             onPressed: _logout,
@@ -273,7 +273,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // --- COMMIT 3 Helper ---
   Widget _sectionTitle(String title) {
     return Text(
       title,
@@ -328,8 +327,26 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _logout() async {
     HapticFeedback.heavyImpact();
-    await _auth.signOut();
-    if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
+    // --- COMMIT 4: Added Confirmation Dialog ---
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to sign out?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("CANCEL")),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text("LOGOUT", style: TextStyle(color: Colors.red))
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _auth.signOut();
+      if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
+    }
   }
 
   @override
