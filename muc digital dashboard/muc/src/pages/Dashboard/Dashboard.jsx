@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const BASE_URL = 'http://localhost:3000/api';
+import { API_BASE_URL, fetchWithAuth } from '../../config/api';
 
 function fmt(d) {
   if (!d) return '---';
@@ -38,7 +37,7 @@ export default function Dashboard() {
   const loadDashboard = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/bookings`);
+      const res = await fetchWithAuth(`${API_BASE_URL}/bookings`);
       const result = await res.json();
       const data = result.data || [];
 
