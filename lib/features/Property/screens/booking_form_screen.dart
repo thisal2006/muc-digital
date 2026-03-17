@@ -101,14 +101,33 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      // We removed the selectableDayPredicate so they can tap the date and trigger the popup
+      // This blocks the dates. Booked dates will become gray and unclickable.
+      selectableDayPredicate: (DateTime day) {
+        String formattedDay = day.toString().split(' ')[0];
+        List<String>? slotsTaken = bookedSlots[formattedDay];
+
+        if (slotsTaken != null) {
+          if (slotsTaken.contains(timeSlots[3])) return false; // Full Day taken
+          if (slotsTaken.contains(timeSlots[0]) &&
+              slotsTaken.contains(timeSlots[1]) &&
+              slotsTaken.contains(timeSlots[2])) {
+            return false; // Morning, Evening, and Night all taken
+          }
+        }
+        return true; // Date is available
+      },
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFFE67E22),
+              primary: Colors.green, // Header, selected date, and active elements are green
               onPrimary: Colors.white,
-              onSurface: Colors.black, // Keeps dates black
+              onSurface: Colors.black, // Available dates text
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green, // "OK" and "Cancel" buttons
+              ),
             ),
           ),
           child: child!,
@@ -116,59 +135,11 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       },
     );
 
-    if (picked != null) {
-      String formattedDay = picked.toString().split(' ')[0];
-      List<String>? slotsTaken = bookedSlots[formattedDay];
-
-      bool isFullyBooked = false;
-
-      // Check if the venue is completely sold out for the day
-      if (slotsTaken != null) {
-        if (slotsTaken.contains(timeSlots[3])) {
-          isFullyBooked = true; // Full Day taken
-        } else if (slotsTaken.contains(timeSlots[0]) &&
-            slotsTaken.contains(timeSlots[1]) &&
-            slotsTaken.contains(timeSlots[2])) {
-          isFullyBooked = true; // Morning, Evening, and Night all taken
-        }
-      }
-
-      // If fully booked, show the popup and DO NOT update the selected date
-      if (isFullyBooked) {
-        if (!context.mounted) return;
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Row(
-              children: [
-                Icon(Icons.event_busy, color: Colors.red),
-                SizedBox(width: 10),
-                Text("Date Unavailable"),
-              ],
-            ),
-            content: const Text(
-              "Sorry, this venue is completely booked on this date. Please select another date.",
-              style: TextStyle(fontSize: 16),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("OK", style: TextStyle(color: Color(0xFFE67E22), fontSize: 16)),
-              )
-            ],
-          ),
-        );
-        return; // Stop here
-      }
-
-      // If the date is available, update the UI
-      if (picked != selectedDate) {
-        setState(() {
-          selectedDate = picked;
-          selectedSlot = null; // Reset slot when a new valid date changes
-        });
-      }
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+        selectedSlot = null; // Reset slot when a new valid date changes
+      });
     }
   }
 
