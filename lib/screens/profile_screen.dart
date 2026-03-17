@@ -202,8 +202,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                             radius: 50,
                             backgroundColor: Colors.white24,
                             backgroundImage: _getProfileImage(),
-                            child: _getProfileImage() == null 
-                                ? const Icon(Icons.camera_alt, size: 30, color: Colors.white) 
+                            child: _getProfileImage() == null
+                                ? const Icon(Icons.camera_alt, size: 30, color: Colors.white)
                                 : null,
                           ),
                         ),
@@ -227,7 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 if (_isEditing)
                   IconButton(
                       tooltip: "Save Changes",
-                      icon: _isSaving 
+                      icon: _isSaving
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : const Icon(Icons.done_all),
                       onPressed: _isSaving ? null : _saveProfile
@@ -454,7 +454,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red, 
+                backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
