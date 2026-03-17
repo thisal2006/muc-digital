@@ -33,7 +33,14 @@ class ProfileManagementService {
   Future<void> changePassword(String currentPassword, String newPassword) async {
     User? user = _auth.currentUser;
     if (user != null && user.email != null) {
-      // Logic goes here
+      // 1. Create a credential with the old password
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+
+      // 2. Re-authenticate the user
+      await user.reauthenticateWithCredential(credential);
     }
   }
 }
