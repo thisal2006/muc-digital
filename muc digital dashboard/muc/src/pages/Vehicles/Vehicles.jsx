@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const BASE_URL = 'http://localhost:3000/api';
+import { API_BASE_URL, fetchWithAuth } from '../../config/api';
 
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -38,7 +37,7 @@ export default function Vehicles() {
   const loadVehicles = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/admin/vehicles`);
+      const res = await fetchWithAuth(`${API_BASE_URL}/admin/vehicles`);
       const result = await res.json();
       setVehicles(result.data || []);
     } catch {
@@ -50,7 +49,7 @@ export default function Vehicles() {
 
   const loadVehicleTypes = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/admin/vehicle-types`);
+      const res = await fetchWithAuth(`${API_BASE_URL}/admin/vehicle-types`);
       const result = await res.json();
       setVehicleTypes((result.data || []).filter((t) => t.isActive));
     } catch {
@@ -75,7 +74,7 @@ export default function Vehicles() {
       .filter(Boolean);
 
     try {
-      const res = await fetch(`${BASE_URL}/vehicles`, {
+      const res = await fetchWithAuth(`${API_BASE_URL}/vehicles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -111,7 +110,7 @@ export default function Vehicles() {
 
   const toggleStatus = async (id, isAvailable) => {
     try {
-      const res = await fetch(`${BASE_URL}/vehicles/${id}/status`, {
+      const res = await fetchWithAuth(`${API_BASE_URL}/vehicles/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isAvailable }),
