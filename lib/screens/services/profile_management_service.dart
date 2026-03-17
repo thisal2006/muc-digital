@@ -28,4 +28,12 @@ class ProfileManagementService {
       }, SetOptions(merge: true));
     }
   }
+
+  // Logic to change user's password
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    User? user = _auth.currentUser;
+    if (user != null && user.email != null) {
+      // Logic goes here
+    }
+  }
 }
