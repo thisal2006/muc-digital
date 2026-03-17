@@ -6,7 +6,10 @@ import 'package:muc_digital/screens/services/edit_profile_form.dart' hide EditPr
 import '../screens/auth/sign_in_screen.dart';
 import '../widgets/change_password_form.dart';
 import '../widgets/edit_profile_form.dart';
+import 'package:flutter/material.dart';
 
+import 'help_center_screen.dart';
+import 'privacy_policy_screen.dart';
 
 
 class SettingsScreen extends StatefulWidget {
@@ -205,7 +208,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: "Change Password",
                 subtitle: "Update your security",
                 onTap: () {
-                  // This is the "GPS" that tells the app where to go
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const ChangePasswordForm()),
@@ -220,7 +222,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 icon: Icons.notifications_none_outlined,
                 title: "App Notifications",
                 subtitle: "Manage your alerts",
-                // The Switch now listens to our variable
                 trailing: Switch(
                   value: _notificationsEnabled,
                   activeColor: const Color(0xFF2E7D32),
@@ -228,11 +229,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     setState(() {
                       _notificationsEnabled = newValue;
                     });
-                    // You can add logic here later to mute Firebase notifications
                   },
                 ),
                 onTap: () {
-                  // Tapping the whole row also flips the switch
                   setState(() {
                     _notificationsEnabled = !_notificationsEnabled;
                   });
@@ -241,29 +240,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ]),
             const SizedBox(height: 24),
             const _SectionHeader(title: "Support"),
+            // FIX: Wrapped these in _buildSettingsCard to match the layout
             _buildSettingsCard([
               _SettingsTile(
                 icon: Icons.help_outline,
                 title: "Help Center",
-                onTap: () {},
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HelpCenterScreen()),
+                ),
               ),
-              _SettingsTile(
-                icon: Icons.privacy_tip_outlined,
-                title: "Privacy Policy",
-                onTap: () {},
-              ),
+
               _SettingsTile(
                 icon: Icons.info_outline,
                 title: "About App",
-                onTap: () {},
+                onTap: () {
+                  // Add navigation here later
+                },
               ),
             ]),
             const SizedBox(height: 40),
-            
+
             // Dangerous Zone
             const Text(
-              "Account Actions",
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.redAccent, letterSpacing: 1.1),
+              "ACCOUNT ACTIONS",
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.redAccent, letterSpacing: 1.1),
             ),
             const SizedBox(height: 12),
             Container(
@@ -295,10 +296,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ),
-          ],
-        ),
-      ),
-    );
+            const SizedBox(height: 20),
+          ], // End of Column children
+        ), // End of Column
+      ), // End of SingleChildScrollView
+    ); // End of Scaffold
   }
 
   Widget _buildSettingsCard(List<Widget> children) {
