@@ -63,6 +63,7 @@ class AboutAppScreen extends StatelessWidget {
               trailing: const Icon(Icons.open_in_new, size: 18),
               onTap: () {
                 // Link to council website
+                "https://maharagama.uc.gov.lk/sin/?page_id=1837&lang=en";
               },
             ),
             const SizedBox(height: 40),
