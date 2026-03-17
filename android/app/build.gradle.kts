@@ -12,15 +12,23 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
+    // ────────────────────────────────────────────────
+    // FIXED: both Java and Kotlin now use Java 17
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
         isCoreLibraryDesugaringEnabled = true
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        jvmToolchain(17)           // ← modern & recommended way
     }
+
+    // You can keep jvmTarget if you prefer old style, but toolchain is better
+    // kotlinOptions {
+    //     jvmTarget = "17"
+    // }
+    // ────────────────────────────────────────────────
 
     defaultConfig {
         applicationId = "com.example.muc_digital"

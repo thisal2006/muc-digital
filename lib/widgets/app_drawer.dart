@@ -4,7 +4,7 @@ import '../screens/services/auth_service.dart';
 import '../screens/auth/sign_in_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/complaints_screen.dart'; 
-import '../screens/settings_screen.dart'; // Correct import path after moving
+import '../screens/settings_screen.dart'; 
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -25,7 +25,7 @@ class AppDrawer extends StatelessWidget {
                 colors: [
                   Color(0xFF2E7D32), // dark green
                   Color(0xFF388E3C), // medium green
-                  Color(0xFF66BB6A), // lighter green-orange transition
+                  Color(0xFF66BB6A), // lighter green
                 ],
               ),
             ),
@@ -105,7 +105,7 @@ class AppDrawer extends StatelessWidget {
                   leading: const Icon(Icons.person_outline, color: Color(0xFF2E7D32)),
                   title: const Text('Profile'),
                   onTap: () {
-                    Navigator.pop(context); // Close drawer first
+                    Navigator.pop(context); 
                     Navigator.pushNamed(context, '/profile');
                   },
                 ),
@@ -114,7 +114,7 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('Booking History'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Navigator.pushNamed(context, '/booking-history');
+                    Navigator.pushNamed(context, '/booking_history');
                   },
                 ),
                 ListTile(
@@ -122,7 +122,6 @@ class AppDrawer extends StatelessWidget {
                   title: const Text('My Complaints'),
                   onTap: () {
                     Navigator.pop(context);
-                    // Navigate to complaints history tab (index 1)
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -150,7 +149,6 @@ class AppDrawer extends StatelessWidget {
 
                 const Divider(height: 32),
 
-                // Footer version info
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
