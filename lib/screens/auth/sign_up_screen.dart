@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:muc_digital/screens//services/auth_service.dart';
+import 'package:muc_digital/screens/services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -24,6 +24,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _errorMessage;
   final _authService = AuthService();
 
+  // NEW: visibility toggles
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -38,14 +42,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      // 1. Create Auth User
       final user = await _authService.signUp(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
       if (user != null) {
-        // 2. Save Additional Info to Firestore
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'uid': user.uid,
           'name': _nameController.text.trim(),
@@ -59,7 +61,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Account created successfully!"), backgroundColor: Colors.green),
+            const SnackBar(content: Text("Account created successfully!")),
           );
           Navigator.pushReplacementNamed(context, '/home');
         }
@@ -67,45 +69,86 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message ?? 'Sign up failed';
-        if (e.code == 'email-already-in-use') _errorMessage = 'Email already registered';
       });
     } catch (e) {
-      setState(() => _errorMessage = 'An unexpected error occurred');
+      setState(() => _errorMessage = 'An error occurred');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  Widget _buildModernField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    required TextInputType type,
+    bool obscure = false,
+    bool isConfirmPassword = false,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: type,
+      obscureText: obscure && (isConfirmPassword ? _obscureConfirmPassword : _obscurePassword),
+      maxLines: maxLines,
+      validator: validator ?? (v) => v!.isEmpty ? 'Required' : null,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: const Color(0xFF2E7D32)),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5)),
+        // NEW: eye icon for password fields
+        suffixIcon: (obscure && label.contains('Password'))
+            ? IconButton(
+          icon: Icon(
+            isConfirmPassword
+                ? (_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility)
+                : (_obscurePassword ? Icons.visibility_off : Icons.visibility),
+            color: const Color(0xFF2E7D32),
+          ),
+          onPressed: () {
+            setState(() {
+              if (isConfirmPassword) {
+                _obscureConfirmPassword = !_obscureConfirmPassword;
+              } else {
+                _obscurePassword = !_obscurePassword;
+              }
+            });
+          },
+        )
+            : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F8F5),
       appBar: AppBar(
-        title: const Text('Create Account'),
-        backgroundColor: const Color(0xFF2E7D32),
+        title: const Text('Sign Up'),
+        backgroundColor: const Color(0xFF1B5E20),
         foregroundColor: Colors.white,
-        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 32),
                 const Text(
-                  'Join Us',
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
+                  'Create Your Account',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20)),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Fill in your details to get started',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 32),
 
                 _buildModernField(
                   label: 'Full Name',
@@ -113,24 +156,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   icon: Icons.person_outline,
                   type: TextInputType.name,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 _buildModernField(
                   label: 'Email',
                   controller: _emailController,
                   icon: Icons.email_outlined,
                   type: TextInputType.emailAddress,
-                  validator: (v) => v!.contains('@') ? null : 'Invalid email',
+                  validator: (v) => v!.isEmpty
+                      ? 'Required'
+                      : !v.contains('@')
+                      ? 'Enter valid email'
+                      : null,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 _buildModernField(
                   label: 'Phone Number',
                   controller: _phoneController,
-                  icon: Icons.phone_android_outlined,
+                  icon: Icons.phone_outlined,
                   type: TextInputType.phone,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 _buildModernField(
                   label: 'Address',
@@ -139,7 +186,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   type: TextInputType.streetAddress,
                   maxLines: 2,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 _buildModernField(
                   label: 'Password',
@@ -147,43 +194,52 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   icon: Icons.lock_outline,
                   type: TextInputType.visiblePassword,
                   obscure: true,
-                  validator: (v) => v!.length < 6 ? 'Min 6 characters' : null,
+                  validator: (v) => v!.length < 6 ? 'At least 6 characters' : null,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 _buildModernField(
                   label: 'Confirm Password',
                   controller: _confirmPasswordController,
-                  icon: Icons.lock_clock_outlined,
+                  icon: Icons.lock_outline,
                   type: TextInputType.visiblePassword,
                   obscure: true,
+                  isConfirmPassword: true,
+                  validator: (v) => v!.length < 6 ? 'At least 6 characters' : null,
                 ),
 
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 20),
-                  Text(_errorMessage!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
-                ],
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
 
-                const SizedBox(height: 40),
-
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signUp,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E7D32),
-                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF1B5E20),
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
                   child: _isLoading
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : const Text('Sign Up', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                  )
+                      : const Text(
+                    'Sign Up',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
                 ),
 
-                const SizedBox(height: 20),
-
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
+                const SizedBox(height: 24),
+                Center(
                   child: RichText(
                     text: const TextSpan(
                       text: "Already have an account? ",
@@ -201,34 +257,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildModernField({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-    required TextInputType type,
-    bool obscure = false,
-    int maxLines = 1,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: type,
-      obscureText: obscure,
-      maxLines: maxLines,
-      validator: validator ?? (v) => v!.isEmpty ? 'Required' : null,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF2E7D32)),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5)),
       ),
     );
   }
