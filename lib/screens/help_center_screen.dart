@@ -12,6 +12,10 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
     {"q": "How do I update my profile?", "a": "Go to Settings > Profile Settings to update your name, phone number, and address."},
     {"q": "Can I change my email address?", "a": "Yes, you can update your email in Profile Settings. A verification link will be sent to your new email."},
     {"q": "How do I reset my password?", "a": "If you are logged in, use 'Change Password' in Settings. If logged out, use the 'Forgot Password' link on the Sign In page."},
+    {"q": "What are Announcements?", "a": "Announcements are real-time updates from the Municipal Council regarding municipal services and arrival of garbage trucks."},
+    {"q": "How do I enable notifications?", "a": "Toggle the 'App Notifications' switch in the Settings menu."},
+    {"q": "Is my data secure?", "a": "Yes, we use industry-standard encryption and Firebase Auth to protect your personal information."},
+    {"q": "How do I delete my account?", "a": "Go to Settings > Account Actions > Delete Account. Warning: This is permanent."},
 
   ];
 
