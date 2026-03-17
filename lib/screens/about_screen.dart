@@ -55,7 +55,7 @@ class AboutAppScreen extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.info_outline),
               title: const Text("Developed by"),
-              trailing: const Text("MUC IT Division", style: TextStyle(fontWeight: FontWeight.bold)),
+              trailing: const Text("Group CS-33, IIT", style: TextStyle(fontWeight: FontWeight.bold)),
             ),
             ListTile(
               leading: const Icon(Icons.language),
