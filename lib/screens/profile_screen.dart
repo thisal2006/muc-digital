@@ -22,7 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   bool _isLoading = true;
   bool _isSaving = false;
   int _complaintCount = 0;
-  int _bookingCount = 0; // Commit 1
+  int _bookingCount = 0;
   String _memberSince = "---";
 
   final _formKey = GlobalKey<FormState>();
@@ -31,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
   late TextEditingController _emailController;
+  late TextEditingController _nicController; // Commit 2
 
   File? _tempImageFile;
   String? _photoUrl;
@@ -52,6 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
     _emailController = TextEditingController();
+    _nicController = TextEditingController(); // Commit 2
 
     _animationController = AnimationController(
       vsync: this,
@@ -70,13 +72,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _loadStats() async {
     if (currentUser == null) return;
     try {
-      // Load complaints count
       final complaintSnapshot = await _firestore
           .collection('complaints')
           .where('userId', isEqualTo: currentUser!.uid)
           .get();
-      
-      // Load bookings count (Commit 1)
+
       final bookingSnapshot = await _firestore
           .collection('crematorium_bookings')
           .where('userId', isEqualTo: currentUser!.uid)
@@ -85,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       if (mounted) {
         setState(() {
           _complaintCount = complaintSnapshot.docs.length;
-          _bookingCount = bookingSnapshot.docs.length; // Commit 1
+          _bookingCount = bookingSnapshot.docs.length;
         });
       }
     } catch (e) {
@@ -107,6 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _phoneController.text = data['phone'] ?? '';
           _addressController.text = data['address'] ?? '';
           _emailController.text = data['email'] ?? currentUser!.email ?? '';
+          _nicController.text = data['nic'] ?? ''; // Commit 2
           _photoUrl = data['photoUrl'];
 
           final createdAt = data['createdAt'] as Timestamp?;
@@ -142,6 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
+        'nic': _nicController.text.trim(), // Commit 2
         'photoUrl': newUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -225,7 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       children: [
                         _buildStatCard("Complaints", _complaintCount.toString(), Icons.report_problem, Colors.orange),
                         const SizedBox(width: 15),
-                        _buildStatCard("Bookings", _bookingCount.toString(), Icons.calendar_today, Colors.blue), // Commit 1
+                        _buildStatCard("Bookings", _bookingCount.toString(), Icons.calendar_today, Colors.blue),
                       ],
                     ),
                     const SizedBox(height: 30),
@@ -234,6 +236,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: Column(
                         children: [
                           _buildModernField("Full Name", _nameController, Icons.person_outline),
+                          const SizedBox(height: 16),
+                          _buildModernField("NIC Number", _nicController, Icons.badge_outlined), // Commit 2
                           const SizedBox(height: 16),
                           _buildModernField("Phone", _phoneController, Icons.phone_android),
                           const SizedBox(height: 16),
@@ -315,6 +319,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _phoneController.dispose();
     _addressController.dispose();
     _emailController.dispose();
+    _nicController.dispose(); // Commit 2
     _animationController.dispose();
     super.dispose();
   }
