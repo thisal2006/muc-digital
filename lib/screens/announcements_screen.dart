@@ -64,12 +64,26 @@ class AnnouncementsScreen extends StatelessWidget {
               final data = doc.data() as Map<String, dynamic>;
               final title = data['title'] ?? 'No Title';
               final description = data['description'] ?? '';
-              final timestamp = data['timestamp'] as Timestamp?;
-              final date = timestamp != null
-                  ? DateFormat(
-                      'MMM dd, yyyy • hh:mm a',
-                    ).format(timestamp.toDate())
-                  : 'No date';
+
+// --- FIX STARTS HERE ---
+              final dynamic rawTimestamp = data['timestamp'];
+              String date = 'No date';
+
+              if (rawTimestamp != null) {
+                if (rawTimestamp is Timestamp) {
+                  // If it's a real Firebase Timestamp
+                  date = DateFormat('MMM dd, yyyy • hh:mm a').format(rawTimestamp.toDate());
+                } else if (rawTimestamp is String) {
+                  // If it's a String, try to parse it
+                  DateTime? parsedDate = DateTime.tryParse(rawTimestamp);
+                  if (parsedDate != null) {
+                    date = DateFormat('MMM dd, yyyy • hh:mm a').format(parsedDate);
+                  } else {
+                    date = rawTimestamp; // Use the raw string if parsing fails
+                  }
+                }
+              }
+// --- FIX ENDS HERE ---
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
