@@ -59,7 +59,25 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
       return;
     }
     setState(() => _isLoading = true);
-    // Service call goes here
+    try {
+      await _service.changePassword(
+        _currentPasswordController.text,
+        _newPasswordController.text,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Password updated successfully!")),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to update: ${e.toString()}")),
+        );
+      }
+    }
     setState(() => _isLoading = false);
   }
 
