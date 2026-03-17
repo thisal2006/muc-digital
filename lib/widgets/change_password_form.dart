@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../screens/services/profile_management_service.dart';
 import '../services/profile_management_service.dart';
 
 class ChangePasswordForm extends StatefulWidget {
@@ -10,13 +9,15 @@ class ChangePasswordForm extends StatefulWidget {
 }
 
 class _ChangePasswordFormState extends State<ChangePasswordForm> {
+  final _formKey = GlobalKey<FormState>();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
   final _service = ProfileManagementService();
   bool _isLoading = false;
-  bool _obscureText = true;
+  bool _obscureCurrent = true;
+  bool _obscureNew = true;
 
   @override
   void dispose() {
@@ -26,45 +27,48 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
     super.dispose();
   }
 
-  Widget _buildPasswordField(String label, TextEditingController controller) {
+  Widget _buildPasswordField({
+    required String label,
+    required TextEditingController controller,
+    required bool obscure,
+    required VoidCallback onToggle,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: TextFormField(
         controller: controller,
-        obscureText: _obscureText,
+        obscureText: obscure,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: const Icon(Icons.lock_outline),
           suffixIcon: IconButton(
-            icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
-            onPressed: () => setState(() => _obscureText = !_obscureText),
+            icon: Icon(obscure ? Icons.visibility_off : Icons.visibility),
+            onPressed: onToggle,
           ),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
+        validator: (value) =>
+        value == null || value.isEmpty ? 'Field required' : null,
       ),
     );
   }
 
-  Future<void> _updatePassword() async {
+  Future<void> _handlePasswordChange() async {
+    if (!_formKey.currentState!.validate()) return;
+
     if (_newPasswordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("New passwords do not match!")),
       );
       return;
     }
-    if (_newPasswordController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password must be at least 6 characters.")),
-      );
-      return;
-    }
+
     setState(() => _isLoading = true);
     try {
       await _service.changePassword(
-        _currentPasswordController.text,
-        _newPasswordController.text,
+        _currentPasswordController.text.trim(),
+        _newPasswordController.text.trim(),
       );
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Password updated successfully!")),
@@ -74,11 +78,12 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to update: ${e.toString()}")),
+          SnackBar(content: Text("Error: ${e.toString()}")),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-    setState(() => _isLoading = false);
   }
 
   @override
@@ -87,29 +92,42 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
       appBar: AppBar(title: const Text('Change Password')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text(
-              "Your password must be at least 6 characters long.",
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 20),
-            _buildPasswordField("Current Password", _currentPasswordController),
-            _buildPasswordField("New Password", _newPasswordController),
-            _buildPasswordField("Confirm New Password", _confirmPasswordController),
-
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _updatePassword,
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Update Password", style: TextStyle(fontSize: 16)),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _buildPasswordField(
+                label: "Current Password",
+                controller: _currentPasswordController,
+                obscure: _obscureCurrent,
+                onToggle: () => setState(() => _obscureCurrent = !_obscureCurrent),
               ),
-            ),
-          ],
+              const Divider(height: 32),
+              _buildPasswordField(
+                label: "New Password",
+                controller: _newPasswordController,
+                obscure: _obscureNew,
+                onToggle: () => setState(() => _obscureNew = !_obscureNew),
+              ),
+              _buildPasswordField(
+                label: "Confirm New Password",
+                controller: _confirmPasswordController,
+                obscure: _obscureNew,
+                onToggle: () => setState(() => _obscureNew = !_obscureNew),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _handlePasswordChange,
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Update Password", style: TextStyle(fontSize: 16)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
