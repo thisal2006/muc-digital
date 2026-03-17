@@ -49,7 +49,14 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Change Password')),
-      body: const Center(child: Text('Password Form UI goes here')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Password fields will go here
+          ],
+        ),
+      ),
     );
   }
 }
