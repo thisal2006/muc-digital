@@ -15,7 +15,6 @@ class AboutAppScreen extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 40),
-            // App Logo Placeholder
             Center(
               child: Container(
                 height: 120,
