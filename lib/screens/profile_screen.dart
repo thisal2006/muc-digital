@@ -57,11 +57,11 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1000),
     );
     _fadeAnimation = CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeIn,
     );
 
     _animationController.forward();
@@ -112,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
           final createdAt = data['createdAt'] as Timestamp?;
           if (createdAt != null) {
-            _memberSince = DateFormat('MMM yyyy').format(createdAt.toDate());
+            _memberSince = DateFormat('MMMM yyyy').format(createdAt.toDate());
           }
         });
       } else {
@@ -129,8 +129,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    HapticFeedback.mediumImpact();
+    
+    HapticFeedback.heavyImpact();
     setState(() => _isSaving = true);
+    
     try {
       String? newUrl = _photoUrl;
       if (_tempImageFile != null) {
@@ -153,8 +155,15 @@ class _ProfileScreenState extends State<ProfileScreen>
         _tempImageFile = null;
         _isEditing = false;
       });
+      
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profile Updated")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Profile Updated Successfully"),
+            backgroundColor: Color(0xFF2E7D32),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Save Error: $e")));
@@ -165,125 +174,55 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _handleRefresh() async {
     HapticFeedback.lightImpact();
-    await _loadUserData();
-    await _loadStats();
+    await Future.wait([
+      _loadUserData(),
+      _loadStats(),
+    ]);
+  }
+
+  Future<void> _pickImage() async {
+    HapticFeedback.mediumImpact();
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+    if (pickedFile != null) {
+      setState(() => _tempImageFile = File(pickedFile.path));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF2E7D32))),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF8),
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
         color: const Color(0xFF2E7D32),
+        edgeOffset: 100,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            SliverAppBar(
-              expandedHeight: 200.0,
-              pinned: true,
-              backgroundColor: const Color(0xFF2E7D32),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)]),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 40),
-                      GestureDetector(
-                        onTap: _isEditing ? _pickImage : null,
-                        child: Tooltip(
-                          message: "Tap to change photo",
-                          child: CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.white24,
-                            backgroundImage: _getProfileImage(),
-                            child: _getProfileImage() == null
-                                ? const Icon(Icons.camera_alt, size: 30, color: Colors.white)
-                                : null,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(_nameController.text, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                      Text("Member Since: $_memberSince", style: const TextStyle(color: Colors.white70, fontSize: 13)),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                IconButton(
-                  tooltip: _isEditing ? "Cancel" : "Edit Profile",
-                  icon: Icon(_isEditing ? Icons.close : Icons.edit_note, size: 28),
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    setState(() => _isEditing = !_isEditing);
-                  },
-                ),
-                if (_isEditing)
-                  IconButton(
-                      tooltip: "Save Changes",
-                      icon: _isSaving
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Icon(Icons.done_all),
-                      onPressed: _isSaving ? null : _saveProfile
-                  ),
-              ],
-            ),
+            _buildAppBar(),
             SliverToBoxAdapter(
               child: FadeTransition(
                 opacity: _fadeAnimation,
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          _buildStatCard("Complaints", _complaintCount.toString(), Icons.report_problem_outlined, Colors.orange),
-                          const SizedBox(width: 15),
-                          _buildStatCard("Bookings", _bookingCount.toString(), Icons.calendar_today_outlined, Colors.blue),
-                        ],
-                      ),
-                      const SizedBox(height: 30),
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _sectionTitle("Personal Information"),
-                            const SizedBox(height: 15),
-                            _buildModernField("Full Name", _nameController, Icons.person_outline),
-                            const SizedBox(height: 16),
-                            _buildModernField("NIC Number", _nicController, Icons.badge_outlined),
-                            const SizedBox(height: 16),
-                            _buildModernField("Phone", _phoneController, Icons.phone_android_outlined),
-                            const SizedBox(height: 16),
-                            _buildModernField("Address", _addressController, Icons.location_on_outlined, maxLines: 2),
-                            const SizedBox(height: 40),
-                            _sectionTitle("Security & Account"),
-                            const SizedBox(height: 15),
-                            _buildActionTile(
-                              label: "Logout",
-                              icon: Icons.logout,
-                              color: const Color(0xFF2E7D32),
-                              onTap: _logout,
-                            ),
-                            const SizedBox(height: 12),
-                            _buildActionTile(
-                              label: "Delete Account",
-                              icon: Icons.delete_forever_outlined,
-                              color: Colors.red,
-                              onTap: _showDeleteAccountDialog,
-                            ),
-                            const SizedBox(height: 50),
-                          ],
-                        ),
-                      ),
+                      _buildStatsRow(),
+                      const SizedBox(height: 32),
+                      _buildProfileForm(),
+                      const SizedBox(height: 40),
+                      _buildAccountActions(),
+                      const SizedBox(height: 60),
                     ],
                   ),
                 ),
@@ -295,13 +234,161 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      expandedHeight: 220.0,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: const Color(0xFF2E7D32),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+        onPressed: () => Navigator.pop(context),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
+              _buildAvatar(),
+              const SizedBox(height: 12),
+              Text(
+                _nameController.text.isEmpty ? "User Profile" : _nameController.text,
+                style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                "Member since $_memberSince",
+                style: const TextStyle(color: Colors.white70, fontSize: 13, letterSpacing: 0.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        IconButton(
+          tooltip: _isEditing ? "Cancel" : "Edit Profile",
+          icon: Icon(_isEditing ? Icons.close : Icons.edit_note, size: 28),
+          onPressed: () {
+            HapticFeedback.selectionClick();
+            setState(() => _isEditing = !_isEditing);
+          },
+        ),
+        if (_isEditing)
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: IconButton(
+              tooltip: "Save changes",
+              icon: _isSaving 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Icon(Icons.check_circle_outline, size: 28),
+              onPressed: _isSaving ? null : _saveProfile,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAvatar() {
+    return GestureDetector(
+      onTap: _isEditing ? _pickImage : null,
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
+            child: CircleAvatar(
+              radius: 54,
+              backgroundColor: Colors.white,
+              backgroundImage: _getProfileImage(),
+              child: _getProfileImage() == null
+                  ? const Icon(Icons.person, size: 60, color: Color(0xFF2E7D32))
+                  : null,
+            ),
+          ),
+          if (_isEditing)
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: const Icon(Icons.add_a_photo, size: 20, color: Color(0xFF2E7D32)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsRow() {
+    return Row(
+      children: [
+        _buildStatCard("Reports", _complaintCount.toString(), Icons.analytics_outlined, Colors.orange),
+        const SizedBox(width: 16),
+        _buildStatCard("Bookings", _bookingCount.toString(), Icons.event_available_outlined, Colors.blue),
+      ],
+    );
+  }
+
+  Widget _buildProfileForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle("Personal Information"),
+          const SizedBox(height: 16),
+          _buildModernField("Full Name", _nameController, Icons.person_outline, validator: (v) => v!.isEmpty ? "Name is required" : null),
+          const SizedBox(height: 16),
+          _buildModernField("NIC Number", _nicController, Icons.badge_outlined, validator: (v) => v!.isNotEmpty && v.length < 10 ? "Invalid NIC" : null),
+          const SizedBox(height: 16),
+          _buildModernField("Email Address", _emailController, Icons.alternate_email, enabled: false),
+          const SizedBox(height: 16),
+          _buildModernField("Phone", _phoneController, Icons.phone_iphone_outlined, type: TextInputType.phone),
+          const SizedBox(height: 16),
+          _buildModernField("Address", _addressController, Icons.map_outlined, maxLines: 2),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountActions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle("Account Settings"),
+        const SizedBox(height: 16),
+        _buildActionTile(
+          label: "Logout",
+          icon: Icons.logout_rounded,
+          color: const Color(0xFF2E7D32),
+          onTap: _logout,
+        ),
+        const SizedBox(height: 12),
+        _buildActionTile(
+          label: "Delete Account",
+          icon: Icons.delete_outline_rounded,
+          color: Colors.red,
+          onTap: _showDeleteAccountDialog,
+        ),
+      ],
+    );
+  }
+
   Widget _sectionTitle(String title) {
     return Text(
       title.toUpperCase(),
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: Colors.grey[600],
+        color: Colors.black45,
         letterSpacing: 1.5,
       ),
     );
@@ -310,67 +397,72 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildStatCard(String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 15, offset: const Offset(0, 5))],
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withAlpha(8), blurRadius: 20, offset: const Offset(0, 8)),
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 10),
-            Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: color.withAlpha(20), shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 12),
+            Text(value, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+            Text(label, style: const TextStyle(color: Colors.black38, fontSize: 13, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildModernField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+  Widget _buildModernField(
+    String label, 
+    TextEditingController controller, 
+    IconData icon, 
+    {int maxLines = 1, bool enabled = true, String? Function(String?)? validator, TextInputType type = TextInputType.text}
+  ) {
     return TextFormField(
       controller: controller,
-      enabled: _isEditing,
+      enabled: _isEditing && enabled,
       maxLines: maxLines,
-      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      keyboardType: type,
+      validator: validator,
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(color: Colors.black45, fontSize: 14),
         prefixIcon: Icon(icon, color: const Color(0xFF2E7D32), size: 22),
         filled: true,
-        fillColor: _isEditing ? Colors.white : Colors.grey[100],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.grey[200]!)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5)),
+        fillColor: _isEditing && enabled ? Colors.white : Colors.white.withAlpha(100),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: Colors.grey[200]!)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       ),
     );
   }
 
   Widget _buildActionTile({required String label, required IconData icon, required Color color, required VoidCallback onTap}) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 20),
-        label: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: color,
-          side: BorderSide(color: color.withAlpha(100)),
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        ),
+      decoration: BoxDecoration(
+        color: color.withAlpha(10),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        leading: Icon(icon, color: color),
+        title: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+        trailing: Icon(Icons.arrow_forward_ios, color: color.withAlpha(100), size: 14),
       ),
     );
-  }
-
-  Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 70,
-    );
-    if (pickedFile != null) {
-      setState(() => _tempImageFile = File(pickedFile.path));
-    }
   }
 
   ImageProvider? _getProfileImage() {
@@ -386,12 +478,13 @@ class _ProfileScreenState extends State<ProfileScreen>
       builder: (context) => AlertDialog(
         title: const Text("Confirm Logout"),
         content: const Text("Are you sure you want to sign out of your account?"),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("CANCEL", style: TextStyle(color: Colors.grey))),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text("LOGOUT", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold))
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E7D32), foregroundColor: Colors.white, elevation: 0),
+            child: const Text("LOGOUT"),
           ),
         ],
       ),
@@ -399,7 +492,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     if (confirm == true) {
       await _auth.signOut();
-      if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
+      if (mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SignInScreen()), (route) => false);
     }
   }
 
@@ -416,7 +509,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("This action is permanent and cannot be undone. Please enter your password to confirm."),
+              const Text("This action is permanent. Please enter your password to confirm deletion."),
               const SizedBox(height: 20),
               TextFormField(
                 controller: passwordController,
@@ -428,14 +521,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                     icon: Icon(obscurePassword ? Icons.visibility_off : Icons.visibility),
                     onPressed: () => setDialogState(() => obscurePassword = !obscurePassword),
                   ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                 ),
               ),
             ],
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel", style: TextStyle(color: Colors.grey))),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCEL", style: TextStyle(color: Colors.grey))),
             ElevatedButton(
               onPressed: () async {
                 try {
@@ -453,12 +546,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red));
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text("Delete Forever"),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, elevation: 0),
+              child: const Text("DELETE FOREVER"),
             ),
           ],
         ),
