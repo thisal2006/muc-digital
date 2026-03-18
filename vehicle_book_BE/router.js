@@ -20,6 +20,7 @@ import {
   cancelBooking,
   approveBooking
 } from "./controller/bookingController.js";
+import { verifyToken } from "./middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -95,6 +96,9 @@ router.use((req, res, next) => {
   console.log(`${req.method} ${req.originalUrl}`);
   next();
 });
+
+// Apply Firebase token verification to all API routes
+router.use(verifyToken);
 
 /**
  * @swagger
