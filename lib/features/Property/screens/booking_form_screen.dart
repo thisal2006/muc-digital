@@ -42,6 +42,8 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   Future<void> _fetchExistingBookings() async {
     try {
+      // Notice there is NO user_id filter and NO status filter here.
+      // This grabs EVERY booking for this hall from EVERY user in the entire database
       final snapshot = await FirebaseFirestore.instance
           .collection('property_bookings')
           .where('property_name', isEqualTo: widget.property.name)
