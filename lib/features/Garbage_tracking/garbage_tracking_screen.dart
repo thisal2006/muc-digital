@@ -114,7 +114,18 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
       details,
     );
   }
+  Future<void> _requestNotificationPermission() async {
 
+    final status = await Permission.notification.status;
+
+    if (status.isDenied) {
+      await Permission.notification.request();
+    }
+
+    if (status.isPermanentlyDenied) {
+      openAppSettings();
+    }
+  }
   //--------------------------------------------------
   // USER LOCATION
   //--------------------------------------------------
