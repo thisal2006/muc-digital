@@ -42,19 +42,15 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   Future<void> _fetchExistingBookings() async {
     try {
-      print("DEBUG: Searching for bookings for property: '${widget.property.name}'");
-
       final snapshot = await FirebaseFirestore.instance
           .collection('property_bookings')
           .where('property_name', isEqualTo: widget.property.name)
           .get();
 
-      print("DEBUG: Found ${snapshot.docs.length} bookings in Firestore for this property.");
-
       Map<String, List<String>> tempBooked = {};
 
       for (var doc in snapshot.docs) {
-        // Adding a fallback just in case the fields are missing in older test data
+        // Keeping these safe fallbacks—they are excellent practice!
         String date = doc.data().containsKey('date') ? doc['date'] : 'NO_DATE';
         String slot = doc.data().containsKey('slot') ? doc['slot'] : 'NO_SLOT';
 
@@ -63,8 +59,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         }
         tempBooked[date]!.add(slot);
       }
-
-      print("DEBUG: Final Blocked Dates Map: $tempBooked");
 
       setState(() {
         bookedSlots = tempBooked;
