@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/property_model.dart';
 import 'property_details_screen.dart';
+import 'my_property_bookings_screen.dart';
 
 
 
@@ -19,6 +20,19 @@ class PropertyBookingScreen extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: const Color(0xFFE67E22),
         elevation: 0,
+        // ADDED ACTIONS BLOCK:
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.confirmation_number_outlined, color: Colors.white),
+            tooltip: 'My Bookings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MyPropertyBookingsScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
