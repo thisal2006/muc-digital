@@ -113,7 +113,7 @@ class MyPropertyBookingsScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    booking['status'] ?? 'Confirmed',
+                    "Paid & Approved",
                     style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 )
