@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const BASE_URL = 'http://localhost:3000/api';
+import { API_BASE_URL, fetchWithAuth } from '../../config/api';
 
 function Toast({ message, type, onClose }) {
   useEffect(() => {
@@ -29,7 +28,7 @@ export default function VehicleTypes() {
   const loadTypes = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/admin/vehicle-types`);
+      const res = await fetchWithAuth(`${API_BASE_URL}/admin/vehicle-types`);
       const result = await res.json();
       setTypes(result.data || []);
     } catch {
@@ -46,7 +45,7 @@ export default function VehicleTypes() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch(`${BASE_URL}/vehicle-types`, {
+      const res = await fetchWithAuth(`${API_BASE_URL}/vehicle-types`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -66,7 +65,7 @@ export default function VehicleTypes() {
 
   const toggleStatus = async (id, isActive) => {
     try {
-      const res = await fetch(`${BASE_URL}/vehicle-types/${id}/status`, {
+      const res = await fetchWithAuth(`${API_BASE_URL}/vehicle-types/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive }),

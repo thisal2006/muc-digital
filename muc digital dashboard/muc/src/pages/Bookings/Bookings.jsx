@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const BASE_URL = 'http://localhost:3000/api';
+import { API_BASE_URL, fetchWithAuth } from '../../config/api';
 
 function fmt(d) {
   if (!d) return '---';
@@ -61,7 +60,7 @@ export default function Bookings() {
   const loadBookings = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/bookings`);
+      const res = await fetchWithAuth(`${API_BASE_URL}/bookings`);
       const result = await res.json();
       setBookings(result.data || []);
     } catch {
@@ -80,7 +79,7 @@ export default function Bookings() {
 
   const handleApprove = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/bookings/${approveModal}/approve`, {
+      const res = await fetchWithAuth(`${API_BASE_URL}/bookings/${approveModal}/approve`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -103,7 +102,7 @@ export default function Bookings() {
       return;
     }
     try {
-      const res = await fetch(`${BASE_URL}/bookings/${cancelModal}/cancel`, {
+      const res = await fetchWithAuth(`${API_BASE_URL}/bookings/${cancelModal}/cancel`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: cancelReason }),
