@@ -45,7 +45,6 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       final snapshot = await FirebaseFirestore.instance
           .collection('property_bookings')
           .where('property_name', isEqualTo: widget.property.name)
-          .where('status', isEqualTo: 'Paid') // Only block officially paid slots
           .get();
 
       Map<String, List<String>> tempBooked = {};
