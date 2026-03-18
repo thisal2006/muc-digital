@@ -67,7 +67,7 @@ class _GarbageTrackingScreenState extends State<GarbageTrackingScreen> {
   }
 
   Future<void> _initialize() async {
-
+    await _requestNotificationPermission();
     await _initNotifications();
 
     truckIcon = await BitmapDescriptor.asset(
