@@ -92,6 +92,8 @@ class MUCdigitalApp extends StatelessWidget {
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/booking-history': (context) => const BookingHistoryScreen(),
+        '/crematorium-booking': (context) => const CrematoriumBookingScreen(),
+
       },
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
