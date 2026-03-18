@@ -42,24 +42,29 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
 
   Future<void> _fetchExistingBookings() async {
     try {
-      // Notice there is NO user_id filter and NO status filter here.
-      // This grabs EVERY booking for this hall from EVERY user in the entire database
+      print("DEBUG: Searching for bookings for property: '${widget.property.name}'");
+
       final snapshot = await FirebaseFirestore.instance
           .collection('property_bookings')
           .where('property_name', isEqualTo: widget.property.name)
           .get();
 
+      print("DEBUG: Found ${snapshot.docs.length} bookings in Firestore for this property.");
+
       Map<String, List<String>> tempBooked = {};
 
       for (var doc in snapshot.docs) {
-        String date = doc['date'];
-        String slot = doc['slot'];
+        // Adding a fallback just in case the fields are missing in older test data
+        String date = doc.data().containsKey('date') ? doc['date'] : 'NO_DATE';
+        String slot = doc.data().containsKey('slot') ? doc['slot'] : 'NO_SLOT';
 
         if (!tempBooked.containsKey(date)) {
           tempBooked[date] = [];
         }
         tempBooked[date]!.add(slot);
       }
+
+      print("DEBUG: Final Blocked Dates Map: $tempBooked");
 
       setState(() {
         bookedSlots = tempBooked;
