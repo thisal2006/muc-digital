@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:muc_digital/widgets/auth_wrapper.dart';
 import 'features/Garbage_tracking/garbage_tracking_screen.dart';
+import 'features/crematorium booking/crematorium_booking_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'screens/admin_dashboard_screen.dart';
@@ -20,9 +21,7 @@ import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/settings_screen.dart';
-import 'package:muc_digital/features/crematorium%20booking/crematorium_booking_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'screens/booking_history_screen.dart';
 import 'widgets/app_drawer.dart';
 
 bool _firebaseInitialized = false;
@@ -91,8 +90,8 @@ class MUCdigitalApp extends StatelessWidget {
         '/sign_up': (context) => const SignUpScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         '/settings': (context) => const SettingsScreen(),
-        '/booking-history': (context) => const BookingHistoryScreen(),
-        '/crematorium-booking': (context) => const CrematoriumBookingScreen(),
+        '/crematorium_booking': (context) => const CrematoriumBookingScreen(),
+
 
       },
       onUnknownRoute: (settings) {
