@@ -45,14 +45,14 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
       final snapshot = await FirebaseFirestore.instance
           .collection('property_bookings')
           .where('property_name', isEqualTo: widget.property.name)
-          .where('status', isEqualTo: 'Paid') // Only block officially paid slots
           .get();
 
       Map<String, List<String>> tempBooked = {};
 
       for (var doc in snapshot.docs) {
-        String date = doc['date'];
-        String slot = doc['slot'];
+        // Keeping these safe fallbacks—they are excellent practice!
+        String date = doc.data().containsKey('date') ? doc['date'] : 'NO_DATE';
+        String slot = doc.data().containsKey('slot') ? doc['slot'] : 'NO_SLOT';
 
         if (!tempBooked.containsKey(date)) {
           tempBooked[date] = [];
