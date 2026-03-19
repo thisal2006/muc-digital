@@ -139,7 +139,7 @@ class _IllegalFormState extends State<_IllegalForm> {
         "userId": user.uid,
         "description": descriptionController.text.trim(),
         "imageUrl": imageUrl,
-        "status": "pending",
+        "status": "Pending",
         "priority": "normal",
         "reportedBy": "citizen",
         "createdAt": FieldValue.serverTimestamp(),
@@ -354,6 +354,35 @@ class _HistoryCard extends StatelessWidget {
     this.imageUrl,
   });
 
+  String get normalizedStatus {
+    final value = status.trim().toLowerCase();
+    if (value == 'Resolved') return 'Resolved';
+    if (value == 'In Progress') return 'In Progress';
+    return 'Pending';
+  }
+
+  Color get statusBackgroundColor {
+    switch (normalizedStatus) {
+      case 'Resolved':
+        return const Color(0xFFDCFCE7);
+      case 'In Progress':
+        return const Color(0xFFDBEAFE);
+      default:
+        return const Color(0xFFFEF9C3);
+    }
+  }
+
+  Color get statusTextColor {
+    switch (normalizedStatus) {
+      case 'Resolved':
+        return const Color(0xFF166534);
+      case 'In Progress':
+        return const Color(0xFF1E3A8A);
+      default:
+        return const Color(0xFF854D0E);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -366,7 +395,22 @@ class _HistoryCard extends StatelessWidget {
           ListTile(
             title: const Text("Illegal Dumping"),
             subtitle: Text(date),
-            trailing: Text(status),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: statusBackgroundColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                normalizedStatus,
+                style: TextStyle(
+                  color: statusTextColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(12),
