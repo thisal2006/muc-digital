@@ -12,6 +12,7 @@ import VehicleTypes from './pages/VehicleTypes/VehicleTypes';
 import Cemetery from './pages/Cemetery/Cemetery';
 import Property from './pages/Property/Property';
 import Notifications from './pages/Notifications/Notifications';
+import Complaints from './pages/Complaints/Complaints';
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
             <Route path="/cemetery" element={<Cemetery />} />
             <Route path="/property" element={<Property />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/complaints" element={<Complaints />} />
           </Route>
 
           {/* Catch-all route to redirect unknown paths */}
