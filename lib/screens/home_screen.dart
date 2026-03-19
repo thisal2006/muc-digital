@@ -129,7 +129,7 @@ class _HomeDashboardContentState extends State<_HomeDashboardContent> {
       'title': 'Vehicle Booking',
       'subtitle': 'Reserve municipal vehicles',
       'color': const Color(0xFF1976D2),
-      'route': '/vehicle_type',
+      'route': '/vehicle_booking',
     },
     {
       'icon': Icons.local_florist_rounded,
