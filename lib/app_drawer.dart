@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:muc_digital/screens/settings_screen.dart';
-import '../screens/services/auth_service.dart';
-import '../screens/auth/sign_in_screen.dart';
 
 
 class AppDrawer extends StatelessWidget {
