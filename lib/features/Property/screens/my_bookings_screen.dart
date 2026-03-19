@@ -39,7 +39,6 @@ class MyBookingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // 1. Get the actual logged-in user's ID
     final User? currentUser = FirebaseAuth.instance.currentUser;
-    final String userId = currentUser?.uid ?? '';
 
     return Scaffold(
       appBar: AppBar(
