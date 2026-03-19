@@ -18,7 +18,6 @@ class IllegalDumpingScreen extends StatefulWidget {
 }
 
 class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
-
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -32,15 +31,11 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-              Text(
-                "Illegal Dumping",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text("Illegal Dumping",
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 4),
-              Text(
-                "Help keep the city clean",
-                style: TextStyle(fontSize: 13),
-              ),
+              Text("Help keep the city clean",
+                  style: TextStyle(fontSize: 13)),
             ],
           ),
           bottom: const TabBar(
@@ -62,7 +57,7 @@ class _IllegalDumpingScreenState extends State<IllegalDumpingScreen> {
 }
 
 ////////////////////////////////////////////////////////////
-/// FORM (SAME AS COMPLAINT)
+/// FORM
 ////////////////////////////////////////////////////////////
 
 class _IllegalForm extends StatefulWidget {
@@ -73,7 +68,6 @@ class _IllegalForm extends StatefulWidget {
 }
 
 class _IllegalFormState extends State<_IllegalForm> {
-
   final TextEditingController descriptionController =
   TextEditingController();
 
@@ -100,7 +94,6 @@ class _IllegalFormState extends State<_IllegalForm> {
   }
 
   Future<void> submitReport() async {
-
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
@@ -120,7 +113,6 @@ class _IllegalFormState extends State<_IllegalForm> {
     });
 
     try {
-
       final position = await _getLocation();
 
       final fileName =
@@ -144,7 +136,6 @@ class _IllegalFormState extends State<_IllegalForm> {
       await FirebaseFirestore.instance
           .collection("illegal_dumps")
           .add({
-
         "userId": user.uid,
         "description": descriptionController.text.trim(),
         "imageUrl": imageUrl,
@@ -168,7 +159,6 @@ class _IllegalFormState extends State<_IllegalForm> {
       );
 
       DefaultTabController.of(context).animateTo(1);
-
     } catch (e) {
       _showError("Upload failed: $e");
     }
@@ -187,7 +177,6 @@ class _IllegalFormState extends State<_IllegalForm> {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-
           GestureDetector(
             onTap: pickImage,
             child: Container(
@@ -200,7 +189,8 @@ class _IllegalFormState extends State<_IllegalForm> {
               ),
               child: imageFile == null
                   ? const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment:
+                MainAxisAlignment.center,
                 children: [
                   Icon(Icons.add_a_photo,
                       size: 50, color: Colors.green),
@@ -209,48 +199,45 @@ class _IllegalFormState extends State<_IllegalForm> {
                 ],
               )
                   : ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius:
+                BorderRadius.circular(12),
                 child: Image.file(imageFile!,
                     fit: BoxFit.cover),
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
           TextField(
             controller: descriptionController,
             maxLines: 4,
             maxLength: 300,
             decoration: InputDecoration(
               labelText: "Describe issue",
-              hintText: "Example: garbage dumped near road",
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
-
           const SizedBox(height: 20),
-
           if (isUploading)
             LinearProgressIndicator(
               value: uploadProgress,
               minHeight: 6,
             ),
-
           const SizedBox(height: 20),
-
           SizedBox(
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32),
+                backgroundColor:
+                const Color(0xFF2E7D32),
               ),
-              onPressed: isUploading ? null : submitReport,
+              onPressed:
+              isUploading ? null : submitReport,
               child: isUploading
-                  ? Text("${(uploadProgress * 100).toStringAsFixed(0)}%")
+                  ? Text(
+                  "${(uploadProgress * 100).toStringAsFixed(0)}%")
                   : const Text("Submit Report"),
             ),
           ),
@@ -261,7 +248,7 @@ class _IllegalFormState extends State<_IllegalForm> {
 }
 
 ////////////////////////////////////////////////////////////
-/// HISTORY (IDENTICAL STYLE)
+/// HISTORY WITH DELETE
 ////////////////////////////////////////////////////////////
 
 class _IllegalHistory extends StatelessWidget {
@@ -269,7 +256,6 @@ class _IllegalHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
@@ -283,9 +269,9 @@ class _IllegalHistory extends StatelessWidget {
           .orderBy('createdAt', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
-
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+              child: CircularProgressIndicator());
         }
 
         final docs = snapshot.data!.docs;
@@ -300,18 +286,49 @@ class _IllegalHistory extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           itemCount: docs.length,
           itemBuilder: (context, index) {
-
             final data =
             docs[index].data() as Map<String, dynamic>;
 
-            return _HistoryCard(
-              description: data['description'] ?? '',
-              status: data['status'] ?? '',
-              date: data['createdAt'] != null
-                  ? DateFormat('dd MMM yyyy • hh:mm a')
-                  .format((data['createdAt'] as Timestamp).toDate())
-                  : "Recent",
-              imageUrl: data['imageUrl'],
+            return Dismissible(
+              key: Key(docs[index].id),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerRight,
+                padding:
+                const EdgeInsets.only(right: 20),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius:
+                  BorderRadius.circular(16),
+                ),
+                child: const Icon(Icons.delete,
+                    color: Colors.white),
+              ),
+              onDismissed: (direction) async {
+                await FirebaseFirestore.instance
+                    .collection('illegal_dumps')
+                    .doc(docs[index].id)
+                    .delete();
+
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(
+                  const SnackBar(
+                      content: Text("Report deleted")),
+                );
+              },
+              child: _HistoryCard(
+                description:
+                data['description'] ?? '',
+                status: data['status'] ?? '',
+                date: data['createdAt'] != null
+                    ? DateFormat(
+                    'dd MMM yyyy • hh:mm a')
+                    .format((data['createdAt']
+                as Timestamp)
+                    .toDate())
+                    : "Recent",
+                imageUrl: data['imageUrl'],
+              ),
             );
           },
         );
@@ -325,7 +342,6 @@ class _IllegalHistory extends StatelessWidget {
 ////////////////////////////////////////////////////////////
 
 class _HistoryCard extends StatelessWidget {
-
   final String description;
   final String status;
   final String date;
@@ -340,7 +356,6 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
@@ -348,27 +363,27 @@ class _HistoryCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-
           ListTile(
             title: const Text("Illegal Dumping"),
             subtitle: Text(date),
             trailing: Text(status),
           ),
-
           Padding(
             padding: const EdgeInsets.all(12),
             child: Text(description),
           ),
-
           if (imageUrl != null)
             Padding(
               padding: const EdgeInsets.all(12),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(imageUrl!,
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover),
+                borderRadius:
+                BorderRadius.circular(12),
+                child: Image.network(
+                  imageUrl!,
+                  height: 120,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
         ],
