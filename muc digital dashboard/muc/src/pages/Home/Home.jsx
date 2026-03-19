@@ -3,6 +3,7 @@ import vehicleModuleImage from '../../assets/vehicle-module.svg';
 import cemeteryModuleImage from '../../assets/cemetery-module.svg';
 import propertyModuleImage from '../../assets/property-module.svg';
 import notificationModuleImage from '../../assets/notification-module.svg';
+import complaintModuleImage from '../../assets/complaint-module.svg';
 
 const sections = [
   {
@@ -15,19 +16,27 @@ const sections = [
   },
   {
     name: 'Cemetery Management',
-    description: 'Manage cemetery plots, reservations, and maintenance schedules.',
+    description: 'Manage cemetery plots, crematorium bookings, and maintenance schedules.',
     to: '/cemetery',
-    status: 'Coming Soon',
-    statusColor: 'badge-pending',
+    status: 'Active',
+    statusColor: 'badge-active',
     image: cemeteryModuleImage,
   },
   {
     name: 'Property Management',
-    description: 'Manage property listings, tenant records, and lease agreements.',
+    description: 'Manage property bookings, tenant records, and lease agreements.',
     to: '/property',
     status: 'Active',
     statusColor: 'badge-active',
     image: propertyModuleImage,
+  },
+  {
+    name: 'Complaints',
+    description: 'Manage and resolve resident complaints.',
+    to: '/complaints',
+    status: 'Active',
+    statusColor: 'badge-active',
+    image: complaintModuleImage,
   },
   {
     name: 'Notifications',
