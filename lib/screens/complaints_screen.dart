@@ -182,7 +182,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
 
       final ref = FirebaseStorage.instance
           .ref()
-          .child("illegal_dumps/$fileName");
+          .child("complaints/$fileName");
 
       UploadTask uploadTask = ref.putFile(imageFile!);
 
@@ -211,7 +211,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
       //----------------------------------
 
       await FirebaseFirestore.instance
-          .collection("illegal_dumps")
+          .collection("complaints")
           .add({
 
         "userId": user.uid,
@@ -220,7 +220,9 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
 
         "imageUrl": imageUrl,
 
-        "status": "pending",
+        "status": "Pending",
+
+        "category": "Illegal Dumping",
 
         "priority": "normal",
 
@@ -408,7 +410,7 @@ class MyComplaintsList extends StatelessWidget {
     return StreamBuilder<QuerySnapshot>(
 
       stream: FirebaseFirestore.instance
-          .collection('illegal_dumps')
+          .collection('complaints')
           .where('userId', isEqualTo: user.uid)
           .orderBy('createdAt', descending: true)
           .snapshots(),
@@ -463,7 +465,7 @@ class MyComplaintsList extends StatelessWidget {
                 ),
                 onDismissed: (direction) async {
                   await FirebaseFirestore.instance
-                      .collection('illegal_dumps')
+                      .collection('complaints')
                       .doc(docs[index].id)
                       .delete();
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -510,13 +512,20 @@ class _ComplaintHistoryCard extends StatelessWidget {
     this.imageUrl,
   });
 
+  String get normalizedStatus {
+    final value = status.trim().toLowerCase();
+    if (value == 'resolved' || value == 'completed') return 'Resolved';
+    if (value == 'in progress' || value == 'in_progress') return 'In Progress';
+    return 'Pending';
+  }
+
   @override
   Widget build(BuildContext context) {
 
     Color statusColor;
 
-    switch (status) {
-      case 'Completed':
+    switch (normalizedStatus) {
+      case 'Resolved':
         statusColor = Colors.green;
         break;
       case 'In Progress':
@@ -565,7 +574,7 @@ class _ComplaintHistoryCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                status,
+                normalizedStatus,
                 style: TextStyle(
                   color: statusColor,
                   fontWeight: FontWeight.bold,
