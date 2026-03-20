@@ -190,7 +190,9 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
           builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xFFE67E22))),
         );
 
+
         final String formattedDate = selectedDate.toString().split(' ')[0];
+        print("DEBUG (UT-PB-02) -> Formatted Date for DB: $formattedDate");
         final user = FirebaseAuth.instance.currentUser;
 
         final bookingData = {
