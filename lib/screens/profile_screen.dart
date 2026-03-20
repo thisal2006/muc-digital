@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'auth/sign_in_screen.dart';
 
+/// ProfileScreen: Allows users to view and update their personal information,
+/// see their activity statistics, and manage their account.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -18,29 +20,35 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen>
     with SingleTickerProviderStateMixin {
+  // State flags
   bool _isEditing = false;
   bool _isLoading = true;
   bool _isSaving = false;
+  
+  // User statistics
   int _complaintCount = 0;
   int _bookingCount = 0;
   String _memberSince = "---";
 
   final _formKey = GlobalKey<FormState>();
 
+  // Text controllers for profile fields
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
   late TextEditingController _emailController;
   late TextEditingController _nicController;
 
-  File? _tempImageFile;
-  String? _photoUrl;
+  File? _tempImageFile; // Local file for preview before upload
+  String? _photoUrl;    // Remote URL from Firestore
 
+  // Firebase and utility instances
   final ImagePicker _picker = ImagePicker();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  // Animation controllers
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -49,12 +57,14 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   void initState() {
     super.initState();
+    // Initialize controllers
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
     _emailController = TextEditingController();
     _nicController = TextEditingController();
 
+    // Setup entrance animations
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -69,6 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _loadStats();
   }
 
+  /// Fetches complaint and booking counts for the current user from Firestore.
   Future<void> _loadStats() async {
     if (currentUser == null) return;
     try {
@@ -93,6 +104,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  /// Loads user profile data from the 'users' collection in Firestore.
   Future<void> _loadUserData() async {
     if (currentUser == null) {
       setState(() => _isLoading = false);
@@ -116,6 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           }
         });
       } else {
+        // Fallback to auth email if Firestore document doesn't exist
         _emailController.text = currentUser!.email ?? '';
       }
     } catch (e) {
@@ -127,20 +140,23 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  /// Saves the updated profile information to Firestore and uploads a new photo if selected.
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-
+    
     HapticFeedback.heavyImpact();
     setState(() => _isSaving = true);
-
+    
     try {
       String? newUrl = _photoUrl;
+      // Upload image to Firebase Storage if a new one was picked
       if (_tempImageFile != null) {
         final ref = _storage.ref().child('profiles/${currentUser!.uid}.jpg');
         await ref.putFile(_tempImageFile!);
         newUrl = await ref.getDownloadURL();
       }
 
+      // Update Firestore document
       await _firestore.collection('users').doc(currentUser!.uid).set({
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
@@ -155,7 +171,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _tempImageFile = null;
         _isEditing = false;
       });
-
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -172,6 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  /// Refreshes user data and statistics.
   Future<void> _handleRefresh() async {
     HapticFeedback.lightImpact();
     await Future.wait([
@@ -180,6 +197,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     ]);
   }
 
+  /// Opens the gallery to pick a profile image.
   Future<void> _pickImage() async {
     HapticFeedback.mediumImpact();
     final XFile? pickedFile = await _picker.pickImage(
@@ -234,6 +252,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  /// Builds the modern SliverAppBar with profile summary and background gradient.
   Widget _buildAppBar() {
     return SliverAppBar(
       expandedHeight: 220.0,
@@ -272,6 +291,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       ),
       actions: [
+        // Toggle between Edit and View modes
         IconButton(
           tooltip: _isEditing ? "Cancel" : "Edit Profile",
           icon: Icon(_isEditing ? Icons.close : Icons.edit_note, size: 28),
@@ -280,12 +300,13 @@ class _ProfileScreenState extends State<ProfileScreen>
             setState(() => _isEditing = !_isEditing);
           },
         ),
+        // Save button visible only in edit mode
         if (_isEditing)
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: IconButton(
               tooltip: "Save changes",
-              icon: _isSaving
+              icon: _isSaving 
                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                   : const Icon(Icons.check_circle_outline, size: 28),
               onPressed: _isSaving ? null : _saveProfile,
@@ -295,6 +316,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  /// Builds the circular profile avatar with an optional edit overlay.
   Widget _buildAvatar() {
     return GestureDetector(
       onTap: _isEditing ? _pickImage : null,
@@ -327,6 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  /// Displays quick stats (reports and bookings counts).
   Widget _buildStatsRow() {
     return Row(
       children: [
@@ -337,6 +360,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  /// Builds the form with user's personal information fields.
   Widget _buildProfileForm() {
     return Form(
       key: _formKey,
@@ -359,6 +383,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  /// Builds action tiles for logout and account deletion.
   Widget _buildAccountActions() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,6 +407,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  /// Section title helper widget.
   Widget _sectionTitle(String title) {
     return Text(
       title.toUpperCase(),
@@ -394,6 +420,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  /// Stat card helper widget.
   Widget _buildStatCard(String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
@@ -421,6 +448,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  /// Modern text form field helper widget.
   Widget _buildModernField(
       String label,
       TextEditingController controller,
@@ -448,6 +476,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  /// Action tile helper widget for buttons like Logout.
   Widget _buildActionTile({required String label, required IconData icon, required Color color, required VoidCallback onTap}) {
     return Container(
       width: double.infinity,
@@ -465,12 +494,14 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+  /// Helper to get the correct ImageProvider based on state (local pick vs network).
   ImageProvider? _getProfileImage() {
     if (_tempImageFile != null) return FileImage(_tempImageFile!);
     if (_photoUrl != null && _photoUrl!.isNotEmpty) return CachedNetworkImageProvider(_photoUrl!);
     return null;
   }
 
+  /// Signs the user out after confirmation.
   Future<void> _logout() async {
     HapticFeedback.heavyImpact();
     bool? confirm = await showDialog<bool>(
@@ -496,6 +527,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  /// Deletes the user's account and Firestore data after re-authentication.
   void _showDeleteAccountDialog() {
     final passwordController = TextEditingController();
     bool obscurePassword = true;
@@ -557,6 +589,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   void dispose() {
+    // Clean up controllers and animations
     _nameController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
