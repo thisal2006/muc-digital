@@ -140,6 +140,7 @@ class _BookingFormScreenState extends State<BookingFormScreen> {
         selectedDate = picked;
         selectedSlot = null; // Reset slot when a new valid date changes
       });
+      print("DEBUG (UT-PB-05) -> setState triggered: Selected Date changed to $selectedDate");
     }
   }
 
