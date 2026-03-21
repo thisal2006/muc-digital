@@ -21,6 +21,7 @@ dependencies:
   firebase_storage: ^12.4.10
   firebase_messaging: ^15.0.0
 
+  flutter_launcher_icons: ^0.14.1
 
   google_maps_flutter: ^2.14.0
   geolocator: ^14.0.2
@@ -72,3 +73,12 @@ flutter:
     - assets/icons/truck.png
     - assets/icons/dump_active.png
     - assets/icons/dump_closed.png
+    - assets/icons/app_icon.jpeg
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#1B5E20"   # Your app's green color
+  adaptive_icon_foreground: "assets/icons/app_icon.png"
