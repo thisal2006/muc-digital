@@ -35,7 +35,7 @@ void main() async {
           options: DefaultFirebaseOptions.currentPlatform,
         );
         debugPrint('Firebase initialized successfully');
-        
+
         // Ensure anonymous auth for API requests
         try {
           if (FirebaseAuth.instance.currentUser == null) {
@@ -98,8 +98,8 @@ class MUCdigitalApp extends StatelessWidget {
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/crematorium_booking': (context) => const CrematoriumBookingScreen(),
-         '/vehicle_booking': (context) => const VehicleTypeScreen(),
-          '/chatbot': (context) => const ChatbotScreen()
+        '/vehicle_booking': (context) => const VehicleTypeScreen(),
+        '/chatbot': (context) => const ChatbotScreen()
 
       },
       onUnknownRoute: (settings) {

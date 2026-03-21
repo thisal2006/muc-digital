@@ -47,6 +47,8 @@ class MyPropertyBookingsScreen extends StatelessWidget {
               var booking = bookings[index].data() as Map<String, dynamic>;
               String docId = bookings[index].id;
 
+              print("DEBUG (UT-PB-03) -> Fetched Document ID: $docId explicitly for User ID: ${booking['user_id']}");
+
               return _buildTicketCard(booking, docId);
             },
           );

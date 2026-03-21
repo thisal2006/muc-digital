@@ -20,7 +20,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     },
   ];
   final ScrollController _scrollController = ScrollController();
-  final String _apiUrl = "http://192.168.1.184:5000";
+  final String _apiUrl = "https://mucapp-chatbot.hf.space";
   bool _isLoading = false;
 
   void _scrollToBottom() {
