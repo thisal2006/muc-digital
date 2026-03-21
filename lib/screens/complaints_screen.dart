@@ -56,6 +56,9 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
             ],
           ),
           bottom: const TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
             tabs: [
               Tab(text: "New Report"),
               Tab(text: "History"),
@@ -298,6 +301,7 @@ class _NewComplaintFormState extends State<NewComplaintForm> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: isUploading ? null : submitReport,
