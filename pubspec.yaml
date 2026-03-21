@@ -73,7 +73,7 @@ flutter:
     - assets/icons/truck.png
     - assets/icons/dump_active.png
     - assets/icons/dump_closed.png
-    - assets/icons/app_icon.jpeg
+    - assets/icons/app_icon.png
 
 flutter_launcher_icons:
   android: "launcher_icon"
