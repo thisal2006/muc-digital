@@ -19,6 +19,7 @@ import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/auth/forgot_password_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/booking_history_screen.dart';
 import 'vehicleBooking/vehicle_type_screen.dart';
 import 'chatbot.dart';
 bool _firebaseInitialized = false;
@@ -35,7 +36,7 @@ void main() async {
           options: DefaultFirebaseOptions.currentPlatform,
         );
         debugPrint('Firebase initialized successfully');
-
+        
         // Ensure anonymous auth for API requests
         try {
           if (FirebaseAuth.instance.currentUser == null) {
@@ -98,8 +99,9 @@ class MUCdigitalApp extends StatelessWidget {
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/crematorium_booking': (context) => const CrematoriumBookingScreen(),
-        '/vehicle_booking': (context) => const VehicleTypeScreen(),
-        '/chatbot': (context) => const ChatbotScreen()
+         '/vehicle_booking': (context) => const VehicleTypeScreen(),
+          '/chatbot': (context) => const ChatbotScreen(),
+          '/booking_history': (context) => const BookingHistoryScreen(),
 
       },
       onUnknownRoute: (settings) {
