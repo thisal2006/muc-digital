@@ -66,9 +66,9 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.calendar_today_outlined, size: 80, color: Colors.grey),
-                  SizedBox(height: 16),
-                  const Text('No bookings yet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const Text('Your future bookings will appear here', style: TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 16),
+                  Text('No bookings yet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text('Your future bookings will appear here', style: TextStyle(color: Colors.grey)),
                 ],
               ),
             );
@@ -79,62 +79,60 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             itemCount: bookings.length,
             itemBuilder: (context, index) {
               final data = bookings[index];
+              final source = data['source_collection'];
               
-              DateTime? bookingDate;
-              try {
-                final dynamic dateField = data['date'];
-                if (dateField is Timestamp) {
-                  bookingDate = dateField.toDate();
-                } else if (dateField is String) {
-                  bookingDate = DateTime.tryParse(dateField);
+              // Determine UI properties based on source
+              String title = 'Booking';
+              String subtitle = '';
+              String amount = '0.00';
+              String status = data['status'] ?? 'Pending';
+              IconData categoryIcon = Icons.book_online;
+              String dateInfo = 'Date not specified';
+              String timeInfo = '';
+
+              if (source == 'property_bookings') {
+                title = data['property_name'] ?? 'Property Booking';
+                amount = data['price'] ?? '0.00';
+                dateInfo = data['date'] ?? 'Date not specified';
+                timeInfo = data['slot'] ?? '';
+                categoryIcon = Icons.apartment;
+              } else if (source == 'crematorium_bookings') {
+                title = 'Crematorium Booking';
+                amount = 'Fixed Fee'; // Or get from data if available
+                categoryIcon = Icons.church;
+                
+                final dynamic d = data['date'];
+                if (d is Timestamp) {
+                  dateInfo = DateFormat('dd MMM yyyy').format(d.toDate());
+                } else {
+                  dateInfo = d?.toString() ?? 'Date not specified';
+                }
+                timeInfo = data['timeSlot'] ?? '';
+              } else if (source == 'bookings') {
+                // Vehicle Booking
+                categoryIcon = Icons.directions_car;
+                final vehicle = data['vehicleDetails'];
+                if (vehicle != null) {
+                  title = "${vehicle['brand'] ?? ''} ${vehicle['model'] ?? ''}".trim();
+                  if (title.isEmpty) title = "Vehicle Booking";
+                } else {
+                  title = data['bookingType'] ?? "Vehicle Booking";
                 }
                 
-                // Fallback to timestamp if date is missing or couldn't be parsed
-                if (bookingDate == null) {
-                  if (data['timestamp'] is Timestamp) {
-                    bookingDate = (data['timestamp'] as Timestamp).toDate();
-                  } else if (data['createdAt'] is Timestamp) {
-                    bookingDate = (data['createdAt'] as Timestamp).toDate();
-                  }
-                }
-              } catch (e) {
-                debugPrint("Error parsing date: $e");
+                amount = "LKR ${data['totalPrice'] ?? data['amount'] ?? '0.00'}";
+                dateInfo = "${data['startDate'] ?? ''} - ${data['endDate'] ?? ''}";
+                status = data['status'] ?? 'PENDING';
               }
 
-              final String status = data['status'] ?? 'Pending';
+              // Unified Status Color
               Color statusColor;
-              switch (status.toLowerCase()) {
-                case 'confirmed':
-                case 'completed':
-                case 'paid':
-                case 'approved':
-                  statusColor = Colors.green;
-                  break;
-                case 'cancelled':
-                case 'rejected':
-                  statusColor = Colors.red;
-                  break;
-                case 'pending':
-                case 'approval pending':
-                default:
-                  statusColor = Colors.orange;
-              }
-
-              // Identify Booking Type for better UI
-              String bookingTitle = data['property_name'] ?? data['type'] ?? data['category'] ?? 'General Booking';
-              IconData categoryIcon = Icons.book_online;
-              String sourceLabel = "Other";
-              
-              if (data['source_collection'] == 'property_bookings') {
-                categoryIcon = Icons.apartment;
-                sourceLabel = "Property";
-              } else if (data['source_collection'] == 'crematorium_bookings') {
-                categoryIcon = Icons.church;
-                sourceLabel = "Crematorium";
-                bookingTitle = "Crematorium Slot";
-              } else if (data['source_collection'] == 'bookings') {
-                categoryIcon = Icons.directions_car;
-                sourceLabel = "Vehicle";
+              final normalizedStatus = status.toLowerCase();
+              if (['confirmed', 'completed', 'paid', 'approved'].contains(normalizedStatus)) {
+                statusColor = Colors.green;
+              } else if (['cancelled', 'rejected', 'failed'].contains(normalizedStatus)) {
+                statusColor = Colors.red;
+              } else {
+                statusColor = Colors.orange;
               }
 
               return Card(
@@ -152,11 +150,11 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                           Expanded(
                             child: Row(
                               children: [
-                                Icon(categoryIcon, color: const Color(0xFF1B5E20), size: 20),
-                                const SizedBox(width: 8),
+                                Icon(categoryIcon, color: const Color(0xFF1B5E20), size: 22),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    bookingTitle,
+                                    title,
                                     style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -181,47 +179,39 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          const Icon(Icons.event, size: 16, color: Colors.grey),
+                          const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
                           const SizedBox(width: 8),
                           Text(
-                            bookingDate != null
-                                ? DateFormat('EEEE, dd MMM yyyy').format(bookingDate)
-                                : 'Date not specified',
+                            dateInfo,
                             style: const TextStyle(fontSize: 14, color: Colors.black87),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                          const SizedBox(width: 8),
-                          Text(
-                            data['slot'] ?? data['timeSlot'] ?? data['time'] ?? 'Time not specified',
-                            style: const TextStyle(fontSize: 14, color: Colors.black87),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(Icons.label_outline, size: 16, color: Colors.grey),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Type: $sourceLabel",
-                            style: const TextStyle(fontSize: 13, color: Colors.black54),
-                          ),
-                        ],
-                      ),
+                      if (timeInfo.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                            const SizedBox(width: 8),
+                            Text(
+                              timeInfo,
+                              style: const TextStyle(fontSize: 14, color: Colors.black87),
+                            ),
+                          ],
+                        ),
+                      ],
                       const Divider(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Amount', style: TextStyle(color: Colors.grey, fontSize: 13)),
                           Text(
-                            'LKR ${data['price'] ?? data['amount'] ?? '0.00'}',
+                            source.toString().split('_')[0].toUpperCase(),
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            amount.startsWith('LKR') ? amount : 'LKR $amount',
                             style: const TextStyle(
-                              fontSize: 17, 
+                              fontSize: 18, 
                               fontWeight: FontWeight.bold, 
                               color: Color(0xFF1B5E20)
                             ),
@@ -243,25 +233,26 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   Stream<List<Map<String, dynamic>>> _getAllBookingsStream() {
     final userId = user?.uid;
     
-    // 1. Property Bookings Stream
+    // 1. Property Bookings
     final propertyStream = FirebaseFirestore.instance
         .collection('property_bookings')
         .where('user_id', isEqualTo: userId)
         .snapshots();
 
-    // 2. Crematorium Bookings Stream
+    // 2. Crematorium Bookings
     final crematoriumStream = FirebaseFirestore.instance
         .collection('crematorium_bookings')
         .where('userId', isEqualTo: userId)
         .snapshots();
 
-    // 3. Vehicle Bookings Stream (Generic 'bookings' collection)
+    // 3. Vehicle Bookings
+    // Note: If vehicle bookings are only in the API, we might need to handle it differently.
+    // However, assuming they are also mirrored in Firestore 'bookings' as per typical logic here.
     final vehicleStream = FirebaseFirestore.instance
         .collection('bookings')
         .where('userId', isEqualTo: userId)
         .snapshots();
 
-    // Merge streams using a helper that doesn't require extra packages
     return _zipStreams([propertyStream, crematoriumStream, vehicleStream]).map((snapshots) {
       final List<Map<String, dynamic>> allBookings = [];
 
@@ -271,12 +262,12 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
         for (var doc in snapshots[i].docs) {
           var data = doc.data() as Map<String, dynamic>;
           data['source_collection'] = collections[i];
-          data['id'] = doc.id;
+          data['doc_id'] = doc.id;
           allBookings.add(data);
         }
       }
 
-      // Sort combined list by date (newest first)
+      // Sort by timestamp (newest first)
       allBookings.sort((a, b) {
         DateTime? dateA = _getDateTime(a);
         DateTime? dateB = _getDateTime(b);
@@ -293,6 +284,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     try {
       if (data['timestamp'] is Timestamp) return (data['timestamp'] as Timestamp).toDate();
       if (data['createdAt'] is Timestamp) return (data['createdAt'] as Timestamp).toDate();
+      if (data['createdAt'] is String) return DateTime.tryParse(data['createdAt']);
       
       final dynamic dateField = data['date'];
       if (dateField is Timestamp) return dateField.toDate();
@@ -301,7 +293,6 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     return null;
   }
 
-  // Helper to zip multiple streams manually
   Stream<List<QuerySnapshot>> _zipStreams(List<Stream<QuerySnapshot>> streams) {
     final controller = StreamController<List<QuerySnapshot>>();
     final List<QuerySnapshot?> latestResults = List.filled(streams.length, null);
@@ -319,9 +310,10 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
           latestResults[i] = data;
           update();
         },
-        onError: controller.addError,
-        onDone: () {
-          // If any stream is done, we could potentially close, but snapshots don't usually close
+        onError: (err) {
+          debugPrint("Stream Error in collection index $i: $err");
+          // Optionally send a partial result or empty snapshot if one collection fails
+          latestResults[i] = null;
         },
       ));
     }
