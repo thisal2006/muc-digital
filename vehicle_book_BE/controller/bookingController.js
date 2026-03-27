@@ -20,6 +20,7 @@ export const createBooking = async (req, res, next) => {
       endDate,
       userName,
       userPhone,
+      userId,
     } = req.body;
 
     if (!vehicleId) {
@@ -46,7 +47,7 @@ export const createBooking = async (req, res, next) => {
       end.setHours(17, 59, 59, 999);
     }
 
-    // Check availability (In-memory overlap check due to Firestore inequality limitations)
+    // Check availability
     const bookingsSnapshot = await db.collection('bookings')
       .where('vehicle', '==', vehicleId)
       .where('status', 'in', ["CONFIRMED", "PENDING"])
@@ -109,15 +110,23 @@ export const createBooking = async (req, res, next) => {
 
     const bookingData = {
       vehicle: vehicleId,
+      vehicleDetails: { // Store details for easy history display
+        brand: vehicle.brand,
+        model: vehicle.model,
+        type: vehicle.type,
+        imageUrl: vehicle.imageUrl
+      },
       bookingType,
       startDate: start,
       endDate: end,
       totalAmount,
       userName,
       userPhone,
+      user_id: userId, // Match property_bookings key
       status: "PENDING",
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      timestamp: new Date()
     };
 
     const id = randomUUID();
