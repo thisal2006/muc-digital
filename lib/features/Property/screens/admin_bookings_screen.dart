@@ -8,7 +8,6 @@ class AdminBookingsScreen extends StatelessWidget {
 
   // --- 1. THE EMAILJS FUNCTION ---
   Future<void> _sendApprovalEmail(Map<String, dynamic> data) async {
-    // ⚠️ IMPORTANT: This assumes you have a 'contact_email' field saved in Firestore!
     final userEmail = data['contact_email'] ?? 'test@example.com';
     final userName = data['contact_name'] ?? 'Citizen';
     final propertyName = data['property_name'] ?? 'Property';
@@ -26,11 +25,11 @@ class AdminBookingsScreen extends StatelessWidget {
           'template_id': 'template_dbs6us5',
           'user_id': '5H5N3VlVfcyVX3hbD',
           'template_params': {
-            'user_name': userName,         // Matches {{user_name}} in your template
-            'user_email': userEmail,       // Matches {{user_email}} in your template
-            'property_name': propertyName, // Matches {{property_name}} in your template
-            'date': date,                  // Matches {{date}} in your template
-            'slot': slot,                  // Matches {{slot}} in your template
+            'user_name': userName,
+            'user_email': userEmail,
+            'property_name': propertyName,
+            'date': date,
+            'slot': slot,
           }
         }),
       );
@@ -49,8 +48,8 @@ class AdminBookingsScreen extends StatelessWidget {
 
   Future<void> _updateBookingStatus(BuildContext context, String docId, String newStatus, Map<String, dynamic> bookingData) async {
     try {
-      // Update the database
-      await FirebaseFirestore.instance.collection('bookings').doc(docId).update({'status': newStatus});
+      // Update the database - CHANGED TO property_bookings
+      await FirebaseFirestore.instance.collection('property_bookings').doc(docId).update({'status': newStatus});
 
       // If approved, trigger the email!
       if (newStatus == 'Approved') {
@@ -75,17 +74,20 @@ class AdminBookingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Admin: Manage Bookings"),
-        backgroundColor: Colors.red.shade800, // Danger/Admin color!
+        backgroundColor: Colors.red.shade800,
         foregroundColor: Colors.white,
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Grabs ALL bookings in the database, newest first
+        // Grabs ALL bookings from property_bookings, newest first
         stream: FirebaseFirestore.instance
-            .collection('bookings')
+            .collection('property_bookings')
             .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasError) return const Center(child: Text("Error loading bookings"));
+          if (snapshot.hasError) {
+            debugPrint("Firestore Error: ${snapshot.error}");
+            return const Center(child: Text("Error loading bookings. Check if index is created."));
+          }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: Colors.red));
           }
@@ -102,56 +104,52 @@ class AdminBookingsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final doc = bookings[index];
               final data = doc.data() as Map<String, dynamic>;
-              final docId = doc.id; // Needed later for updating!
+              final docId = doc.id;
 
               final propertyName = data['property_name'] ?? 'Unknown';
               final status = data['status'] ?? 'Pending';
 
               final contactName = data['contact_name'] ?? 'No Name';
               final contactPhone = data['contact_number'] ?? 'No Phone';
-              final reason = data['reason'] ?? 'No Reason';
+              final purpose = data['purpose'] ?? 'No Reason'; // Changed from 'reason' to 'purpose' to match booking_form_screen
               final date = data['date'] ?? '';
               final slot = data['slot'] ?? '';
 
-              // Dynamic colors for the badge
               Color statusColor = Colors.orange;
-              if (status == 'Approved') statusColor = Colors.blue;
+              if (status == 'Approved' || status == 'Approved, Payment Pending') statusColor = Colors.blue;
               if (status == 'Rejected') statusColor = Colors.red;
-              if (status == 'Confirmed') statusColor = Colors.green;
+              if (status == 'Confirmed' || status == 'Paid') statusColor = Colors.green;
 
               return Card(
                 elevation: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: statusColor.withValues(alpha: 0.5), width: 2)
+                    side: BorderSide(color: statusColor.withOpacity(0.5), width: 2)
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header: Property Name & Status
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(child: Text(propertyName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
                           Chip(
-                            label: Text(status, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                            label: Text(status, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
                             backgroundColor: statusColor,
                           ),
                         ],
                       ),
                       const Divider(),
 
-                      // User Details & Reason
                       Text("👤 $contactName", style: const TextStyle(fontWeight: FontWeight.w600)),
                       Text("📞 $contactPhone", style: const TextStyle(color: Colors.blue)),
                       const SizedBox(height: 8),
-                      Text("📝 Purpose: $reason", style: TextStyle(color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
+                      Text("📝 Purpose: $purpose", style: TextStyle(color: Colors.grey.shade700, fontStyle: FontStyle.italic)),
                       const SizedBox(height: 12),
 
-                      // Date and Time
                       Row(
                         children: [
                           const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
@@ -160,7 +158,6 @@ class AdminBookingsScreen extends StatelessWidget {
                         ],
                       ),
 
-                      // Action Buttons
                       if (status == 'Pending') ...[
                         const SizedBox(height: 16),
                         Row(
@@ -175,7 +172,7 @@ class AdminBookingsScreen extends StatelessWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: ElevatedButton(
-                                onPressed: () => _updateBookingStatus(context, docId, 'Approved', data),
+                                onPressed: () => _updateBookingStatus(context, docId, 'Approved, Payment Pending', data),
                                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                                 child: const Text("Approve"),
                               ),
@@ -183,8 +180,6 @@ class AdminBookingsScreen extends StatelessWidget {
                           ],
                         )
                       ]
-
-
                     ],
                   ),
                 ),
