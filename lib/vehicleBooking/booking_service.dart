@@ -24,6 +24,7 @@ class BookingService {
     required String endDate,
     required String userName,
     required String userPhone,
+    String? userId, // Added userId
   }) async {
     try {
       final response = await http.post(
@@ -36,6 +37,7 @@ class BookingService {
           'endDate': endDate,
           'userName': userName,
           'userPhone': userPhone,
+          'userId': userId ?? FirebaseAuth.instance.currentUser?.uid, // Send userId
         }),
       );
 
